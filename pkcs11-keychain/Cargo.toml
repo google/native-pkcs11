@@ -1,0 +1,38 @@
+[package]
+name = "pkcs11-keychain"
+version = "0.1.0"
+authors = [
+    "Brandon Weeks <bweeks@google.com>",
+    "Kevin King <kcking@google.com>",
+]
+edition = "2021"
+rust-version = "1.59"
+repository = "https://github.com/google/native-pkcs11"
+license = "Apache-2.0"
+
+[dependencies]
+const-oid = { version = "0.9.1", default-features = false }
+der = { version = "0.6.1", default-features = false }
+p256 = { version = "0.12.0-pre.0", default-features = false, features = [
+    "pkcs8",
+    "std",
+    "arithmetic",
+] }
+pkcs1 = { version = "0.4.1", default-features = false }
+pkcs11-traits = { version = "0.1.0", path = "../pkcs11-traits" }
+pkcs8 = { version = "0.9.0", default-features = false }
+rand = "0.8.5"
+rsa = { version = "0.7.2", default-features = false, features = ["std"] }
+spki = { version = "0.6.0", default-features = false }
+thiserror = "1.0.37"
+tracing = "0.1.37"
+tracing-error = { version = "0.2.0", default-features = false }
+x509-cert = { version = "0.1.0", default-features = false }
+
+[dev-dependencies]
+serial_test = "0.9.0"
+
+[target.'cfg(target_os="macos")'.dependencies]
+core-foundation = { version = "0.9.3", features = ["mac_os_10_8_features"] }
+security-framework = { version = "2.8.0-beta.1", features = ["OSX_10_15"] }
+security-framework-sys = { version = "2.8.0-beta.1", features = ["OSX_10_15"] }

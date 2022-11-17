@@ -1,0 +1,14 @@
+[package]
+name = "pkcs11-sys"
+version = "0.1.0"
+authors = [
+    "Brandon Weeks <bweeks@google.com>",
+    "Kevin King <kcking@google.com>",
+]
+edition = "2021"
+rust-version = "1.59"
+repository = "https://github.com/google/native-pkcs11"
+license = "Apache-2.0"
+
+[build-dependencies]
+bindgen = "0.63.0"

@@ -1,0 +1,25 @@
+[package]
+name = "pkcs11-windows"
+version = "0.1.0"
+authors = [
+    "Brandon Weeks <bweeks@google.com>",
+    "Kevin King <kcking@google.com>",
+]
+edition = "2021"
+rust-version = "1.59"
+repository = "https://github.com/google/native-pkcs11"
+license = "Apache-2.0"
+
+[dependencies]
+pkcs11-traits = { path = "../pkcs11-traits" }
+
+[target.'cfg(target_os="windows")'.dependencies.windows]
+version = "0.43.0"
+features = [
+    "Foundation",
+    "Foundation_Collections",
+    "Security_Cryptography_Certificates",
+    "Security_Cryptography_Core",
+    "Storage_Streams",
+    "Win32_System_WinRT",
+]

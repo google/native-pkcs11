@@ -1,0 +1,37 @@
+targets = [
+    { triple = "aarch64-apple-darwin" },
+    { triple = "x86_64-apple-darwin" },
+    { triple = "x86_64-pc-windows-msvc" },
+    { triple = "x86_64-unknown-linux-gnu" },
+]
+
+[advisories]
+vulnerability = "deny"
+unmaintained = "deny"
+unsound = "deny"
+yanked = "deny"
+notice = "deny"
+ignore = [
+    #TODO(bweeks): disambiguate our pkcs11 crate name.
+    "RUSTSEC-2022-0034",
+]
+
+[licenses]
+allow = [
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "ISC",
+    "MIT",
+    "Unicode-DFS-2016",
+]
+copyleft = "deny"
+
+[bans]
+multiple-versions = "deny"
+skip = [
+    { name = "signature", version = "=2.0.0-pre.2" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

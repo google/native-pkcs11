@@ -1,0 +1,13 @@
+[workspace]
+members = [
+    "native-pkcs11",
+    "pkcs11-keychain",
+    "pkcs11-sys",
+    "pkcs11-traits",
+    "pkcs11-windows",
+    "pkcs11",
+]
+
+[profile.release]
+strip = "symbols"
+panic = "abort"

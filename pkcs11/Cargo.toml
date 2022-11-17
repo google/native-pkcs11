@@ -1,0 +1,31 @@
+[package]
+name = "pkcs11"
+version = "0.1.0"
+authors = [
+    "Brandon Weeks <bweeks@google.com>",
+    "Kevin King <kcking@google.com>",
+]
+edition = "2021"
+rust-version = "1.58"
+repository = "https://github.com/google/native-pkcs11"
+license = "Apache-2.0"
+
+[dependencies]
+once_cell = "1.16.0"
+p256 = { version = "0.12.0-pre.0", default-features = false, features = ["arithmetic"] }
+pkcs1 = { version = "0.4.1", default-features = false }
+pkcs11-sys = { path = "../pkcs11-sys" }
+pkcs11-traits = { version = "0.1.0", path = "../pkcs11-traits" }
+strum = "0.24.1"
+strum_macros = "0.24.3"
+thiserror = "1.0.37"
+tracing = "0.1.37"
+
+[dev-dependencies]
+serial_test = "0.9.0"
+
+[target.'cfg(target_os="macos")'.dependencies]
+pkcs11-keychain = { path = "../pkcs11-keychain" }
+
+[target.'cfg(target_os="windows")'.dependencies]
+pkcs11-windows = { path = "../pkcs11-windows" }

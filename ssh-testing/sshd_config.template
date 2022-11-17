@@ -1,0 +1,11 @@
+Port 17777
+HostKey $PWD/ssh_host_ecdsa_key
+AuthorizedKeysFile $PWD/authorized_keys
+
+Protocol 2
+PubkeyAuthentication yes
+IgnoreRhosts yes
+PasswordAuthentication no 
+
+
+

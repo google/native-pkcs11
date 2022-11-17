@@ -1,0 +1,6 @@
+Host test
+	Hostname localhost
+	Port 17777
+	#User test
+	PKCS11Provider ../target/libnative_pkcs11.dylib
+	StrictHostKeyChecking no
