@@ -13,12 +13,13 @@
 # limitations under the License.
 
 name: Scorecards supply-chain security
+
 on:
   branch_protection_rule:
   schedule:
-    - cron: '24 7 * * 0'
+    - cron: "24 7 * * 0"
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions: read-all
 
@@ -29,7 +30,6 @@ jobs:
     permissions:
       security-events: write
       id-token: write
-
     steps:
       - name: "Checkout code"
         uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
