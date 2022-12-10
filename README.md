@@ -1,6 +1,6 @@
-# `native-pkcs11`
+# native-pkcs11
 
-> pkcs11 module for native credential stores
+> A pkcs11 module for native credential stores
 
 `native-pkcs11` is a crate for building PKCS#11 modules. Its primary use-case is
 authenticating with client certificates. `native-pkcs11` aims to support native
@@ -11,7 +11,7 @@ box. It can also be extended with a custom backend (see
 ## Host Software Compatibility
 
 Software compatibility is a core goal of `native-pkcs11`. It is currently tested
-with
+with:
 
 - openssh
 - openvpn
