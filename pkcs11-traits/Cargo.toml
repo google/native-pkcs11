@@ -11,7 +11,7 @@ repository = "https://github.com/google/native-pkcs11"
 license = "Apache-2.0"
 
 [dependencies]
-inventory = "0.2.3"
+inventory = "0.3.2"
 once_cell = "1.16.0"
 rand = "0.8.5"
 x509-cert = { version = "0.1.1", default-features = false }
