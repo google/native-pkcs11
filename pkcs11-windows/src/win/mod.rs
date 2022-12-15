@@ -11,16 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#![allow(dead_code, unused_variables)]
 
-use std::{ffi::OsString, ops::Deref, str::FromStr};
+use std::{ffi::OsString, ops::Deref, str::FromStr, sync::Arc};
 
 use pkcs11_traits::{once_cell::sync::Lazy, Backend, RegisteredBackend};
 use windows::{
     core::Interface,
-    Foundation::MemoryBuffer,
     Security::Cryptography::Certificates::CertificateStores,
     Storage::Streams::{Buffer, IBuffer},
-    Win32::System::WinRT::{IBufferByteAccess, IMemoryBufferByteAccess},
+    Win32::System::WinRT::IBufferByteAccess,
 };
 
 pub static BACKEND: Lazy<Box<dyn Backend>> = Lazy::new(|| Box::new(WindowsBackend {}));
@@ -83,7 +83,7 @@ impl Backend for WindowsBackend {
     fn find_private_key(
         &self,
         _query: pkcs11_traits::KeySearchOptions,
-    ) -> pkcs11_traits::Result<Option<Box<dyn pkcs11_traits::PrivateKey>>> {
+    ) -> pkcs11_traits::Result<Option<Arc<dyn pkcs11_traits::PrivateKey>>> {
         Ok(None)
     }
 
@@ -96,7 +96,7 @@ impl Backend for WindowsBackend {
 
     fn find_all_private_keys(
         &self,
-    ) -> pkcs11_traits::Result<Vec<Box<dyn pkcs11_traits::PrivateKey>>> {
+    ) -> pkcs11_traits::Result<Vec<Arc<dyn pkcs11_traits::PrivateKey>>> {
         Ok(vec![])
     }
 
@@ -104,8 +104,12 @@ impl Backend for WindowsBackend {
         &self,
         _algorithm: pkcs11_traits::KeyAlgorithm,
         _label: Option<&str>,
-    ) -> pkcs11_traits::Result<Box<dyn pkcs11_traits::PrivateKey>> {
+    ) -> pkcs11_traits::Result<Arc<dyn pkcs11_traits::PrivateKey>> {
         Err("")?
+    }
+
+    fn name(&self) -> String {
+        "Windows CNG".into()
     }
 }
 
@@ -138,13 +142,10 @@ fn backend() {
 #[cfg(test)]
 mod test {
     use pkcs11_traits::random_label;
-    use windows::{
-        Security::Cryptography::Core::{
-            AsymmetricAlgorithmNames,
-            AsymmetricKeyAlgorithmProvider,
-            CryptographicEngine,
-        },
-        Storage::Streams::IBuffer,
+    use windows::Security::Cryptography::Core::{
+        AsymmetricAlgorithmNames,
+        AsymmetricKeyAlgorithmProvider,
+        CryptographicEngine,
     };
 
     use super::*;
