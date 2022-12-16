@@ -14,4 +14,4 @@ license = "Apache-2.0"
 inventory = "0.2.3"
 once_cell = "1.16.0"
 rand = "0.8.5"
-x509-cert = { version = "0.1.0", default-features = false }
+x509-cert = { version = "0.1.1", default-features = false }

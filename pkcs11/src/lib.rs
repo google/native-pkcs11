@@ -135,10 +135,12 @@ impl From<Error> for CK_RV {
             | Error::FromUtf8(_)
             | Error::FromVecWithNul(_)
             | Error::NullPtr
-            | Error::Pkcs11Keychain(_)
             | Error::Todo(_)
             | Error::TryFromInt(_)
             | Error::TryFromSlice(_) => CKR_GENERAL_ERROR,
+
+            #[cfg(target_os = "macos")]
+            Error::Pkcs11Keychain(_) => CKR_GENERAL_ERROR,
         }
     }
 }
