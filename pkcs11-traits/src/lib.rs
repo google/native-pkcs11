@@ -77,7 +77,7 @@ impl std::fmt::Debug for dyn PrivateKey {
 
 impl PartialEq for dyn PrivateKey {
     fn eq(&self, other: &Self) -> bool {
-        self.public_key_hash() == other.public_key_hash()
+        self.public_key_hash() == other.public_key_hash() && self.label() == other.label()
     }
 }
 
@@ -85,7 +85,8 @@ impl Eq for dyn PrivateKey {}
 impl Hash for dyn PrivateKey {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.type_id().hash(state);
-        self.public_key_hash().hash(state)
+        self.public_key_hash().hash(state);
+        self.label().hash(state);
     }
 }
 
@@ -100,7 +101,7 @@ pub trait PublicKey: Send + Sync + std::fmt::Debug {
 
 impl PartialEq for dyn PublicKey {
     fn eq(&self, other: &Self) -> bool {
-        self.public_key_hash() == other.public_key_hash()
+        self.public_key_hash() == other.public_key_hash() && self.label() == other.label()
     }
 }
 
@@ -108,7 +109,8 @@ impl Eq for dyn PublicKey {}
 impl Hash for dyn PublicKey {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.type_id().hash(state);
-        self.public_key_hash().hash(state)
+        self.public_key_hash().hash(state);
+        self.label().hash(state);
     }
 }
 
@@ -124,14 +126,15 @@ pub trait Certificate: Send + Sync + std::fmt::Debug {
 
 impl PartialEq for dyn Certificate {
     fn eq(&self, other: &Self) -> bool {
-        self.to_der() == other.to_der()
+        self.to_der() == other.to_der() && self.label() == other.label()
     }
 }
 impl Eq for dyn Certificate {}
 impl Hash for dyn Certificate {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.type_id().hash(state);
-        self.to_der().hash(state)
+        self.to_der().hash(state);
+        self.label().hash(state);
     }
 }
 
