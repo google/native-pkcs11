@@ -34,6 +34,7 @@ jobs:
           [
             { os: "macos-latest", toolchain: "1.59.0" },
             { os: "windows-latest", toolchain: "stable" },
+            { os: "ubuntu-latest", toolchain: "stable" },
           ]
     runs-on: ${{ matrix.os-and-toolchain.os }}
     steps:
