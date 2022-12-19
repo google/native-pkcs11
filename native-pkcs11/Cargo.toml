@@ -16,7 +16,7 @@ lazy_static = "1.4.0"
 pkcs11 = { path = "../pkcs11" }
 pkcs11-sys = { path = "../pkcs11-sys" }
 pkcs11-traits = { version = "0.1.0", path = "../pkcs11-traits" }
-thiserror = "1.0.37"
+thiserror = "1.0.38"
 tracing = "0.1.37"
 tracing-error = "0.2.0"
 tracing-subscriber = "0.3.16"
