@@ -917,9 +917,9 @@ dependencies = [
 
 [[package]]
 name = "serial_test"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92761393ee4dc3ff8f4af487bd58f4307c9329bbedea02cac0089ad9c411e153"
+checksum = "1c789ec87f4687d022a2405cf46e0cd6284889f1839de292cadeb6c6019506f2"
 dependencies = [
  "dashmap",
  "futures",
@@ -931,11 +931,10 @@ dependencies = [
 
 [[package]]
 name = "serial_test_derive"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b6f5d1c3087fb119617cff2966fe3808a80e5eb59a8c1601d5994d66f4346a5"
+checksum = "b64f9e531ce97c88b4778aad0ceee079216071cffec6ac9b904277f8f92e7fe3"
 dependencies = [
- "proc-macro-error",
  "proc-macro2",
  "quote",
  "syn",
@@ -1044,18 +1043,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.37"
+version = "1.0.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10deb33631e3c9018b9baf9dcbbc4f737320d2b576bac10f6aefa048fa407e3e"
+checksum = "6a9cd18aa97d5c45c6603caea1da6628790b37f7a34b6ca89522331c5180fed0"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.37"
+version = "1.0.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "982d17546b47146b28f7c22e3d08465f6b8903d0ea13c1660d9d84a6e7adcdbb"
+checksum = "1fb327af4685e4d03fa8cbcf1716380da910eeb2bb8be417e7f9fd3fb164f36f"
 dependencies = [
  "proc-macro2",
  "quote",
