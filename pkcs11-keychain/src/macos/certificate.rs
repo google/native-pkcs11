@@ -29,6 +29,7 @@ use security_framework::{
     key::SecKey,
     os::macos::{identity::SecIdentityExt, keychain::SecKeychain},
 };
+use security_framework_sys::base::errSecItemNotFound;
 use spki::{
     der::{asn1::BitStringRef, Encode},
     EncodePublicKey,
@@ -149,6 +150,12 @@ pub fn find_all_certificates() -> Result<Vec<SecIdentity>> {
         .class(ItemClass::identity())
         .limit(99)
         .search();
+
+    if let Err(e) = results {
+        if e.code() == errSecItemNotFound {
+            return Ok(vec![]);
+        }
+    }
 
     let loaded_identites = results?
         .into_iter()
