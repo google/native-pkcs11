@@ -1,0 +1,3 @@
+[[IgnoredVulns]]
+id = "RUSTSEC-2022-0034"
+reason = "pkcs11 crate in this repository is distinct from https://crates.io/crates/pkcs11"
