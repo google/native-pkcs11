@@ -17,20 +17,12 @@ ignore = [
 ]
 
 [licenses]
-allow = [
-    "Apache-2.0",
-    "BSD-3-Clause",
-    "ISC",
-    "MIT",
-    "Unicode-DFS-2016",
-]
+allow = ["Apache-2.0", "BSD-3-Clause", "ISC", "MIT", "Unicode-DFS-2016"]
 copyleft = "deny"
 
 [bans]
 multiple-versions = "deny"
-skip = [
-    { name = "signature", version = "=2.0.0-pre.2" },
-]
+skip = [{ name = "signature", version = "=2.0.0-pre.3" }]
 
 [sources]
 unknown-registry = "deny"
