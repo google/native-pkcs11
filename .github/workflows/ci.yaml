@@ -38,7 +38,7 @@ jobs:
           ]
     runs-on: ${{ matrix.os-and-toolchain.os }}
     steps:
-      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       - uses: dtolnay/rust-toolchain@e645b0cf01249a964ec099494d38d2da0f0b349f
         with:
           toolchain: ${{ matrix.os-and-toolchain.toolchain }}
@@ -48,13 +48,13 @@ jobs:
   cargo-deny:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       - uses: EmbarkStudios/cargo-deny-action@8a8607bd8e2b3a514d5a40174cc7c55b229d9ba7 # v1.4.0
 
   clippy:
     name: clippy
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v1.2.0
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v1.2.0
       - run: rustup component add clippy
       - uses: actions-rs-plus/clippy-check@6f0b6d890ba378af1e3fa09f796f6e01dad7fa9b
