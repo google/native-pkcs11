@@ -14,7 +14,7 @@ license = "Apache-2.0"
 pkcs11-traits = { path = "../pkcs11-traits" }
 
 [target.'cfg(target_os="windows")'.dependencies.windows]
-version = "0.43.0"
+version = "0.44.0"
 features = [
     "Foundation",
     "Foundation_Collections",
