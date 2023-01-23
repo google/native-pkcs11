@@ -57,4 +57,4 @@ jobs:
     steps:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v1.2.0
       - run: rustup component add clippy
-      - uses: actions-rs-plus/clippy-check@02fcef91666c1f7a6d82c05da66378898a34d79f
+      - uses: actions-rs-plus/clippy-check@c4cb3d7cf87d13aecc990e47afde9c08a9550db9
