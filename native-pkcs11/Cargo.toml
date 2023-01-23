@@ -11,7 +11,7 @@ repository = "https://github.com/google/native-pkcs11"
 license = "Apache-2.0"
 
 [dependencies]
-inventory = "0.2.3"
+inventory = "0.3.3"
 lazy_static = "1.4.0"
 pkcs11 = { path = "../pkcs11" }
 pkcs11-sys = { path = "../pkcs11-sys" }
