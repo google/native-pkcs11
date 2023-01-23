@@ -34,5 +34,5 @@ serial_test = "0.10.0"
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = { version = "0.9.3", features = ["mac_os_10_8_features"] }
-security-framework = { version = "2.8.0-beta.1", features = ["OSX_10_15"] }
+security-framework = { version = "2.8.0", features = ["OSX_10_15"] }
 security-framework-sys = { version = "2.8.0", features = ["OSX_10_15"] }
