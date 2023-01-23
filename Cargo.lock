@@ -907,9 +907,9 @@ dependencies = [
 
 [[package]]
 name = "security-framework-sys"
-version = "2.8.0-beta.1"
+version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1f91d78ed626a91fda851607e9889e682fca07af209523fad5548c44c299361"
+checksum = "31c9bb296072e961fcbd8853511dd39c2d8be2deb1e17c6860b1d30732b323b4"
 dependencies = [
  "core-foundation-sys",
  "libc",
