@@ -19,7 +19,7 @@ use der::{
     asn1::{GeneralizedTime, Ia5StringRef, OctetStringRef},
     Decode,
 };
-use pkcs11_traits::random_label;
+use native_pkcs11_traits::random_label;
 use pkcs8::AssociatedOid;
 use rsa::pkcs1::UIntRef;
 use security_framework::{
@@ -91,12 +91,12 @@ impl std::fmt::Debug for KeychainCertificate {
     }
 }
 
-impl pkcs11_traits::Certificate for KeychainCertificate {
+impl native_pkcs11_traits::Certificate for KeychainCertificate {
     fn label(&self) -> String {
         self.label.to_string()
     }
 
-    fn public_key(&self) -> &dyn pkcs11_traits::PublicKey {
+    fn public_key(&self) -> &dyn native_pkcs11_traits::PublicKey {
         &self.public_key
     }
 
@@ -214,7 +214,7 @@ pub fn import_identity(certificate: &SecCertificate) -> Result<SecIdentity> {
 
 #[cfg(test)]
 mod test {
-    use pkcs11_traits::random_label;
+    use native_pkcs11_traits::random_label;
     use serial_test::serial;
 
     use super::*;

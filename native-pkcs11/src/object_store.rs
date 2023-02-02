@@ -14,10 +14,11 @@
 
 use std::collections::HashMap;
 
-use pkcs11::{
+use native_pkcs11_core::{
     attribute::{Attribute, AttributeType, Attributes},
     Result,
 };
+use native_pkcs11_traits::{backend, KeySearchOptions};
 use pkcs11_sys::{
     CKO_CERTIFICATE,
     CKO_PRIVATE_KEY,
@@ -25,7 +26,6 @@ use pkcs11_sys::{
     CKP_BASELINE_PROVIDER,
     CK_OBJECT_HANDLE,
 };
-use pkcs11_traits::{backend, KeySearchOptions};
 use tracing::{instrument, warn};
 
 use crate::{object::Object, Error};
@@ -176,8 +176,8 @@ impl Default for ObjectStore {
 mod tests {
     use std::vec;
 
+    use native_pkcs11_traits::{backend, random_label};
     use pkcs11_sys::CKO_PRIVATE_KEY;
-    use pkcs11_traits::{backend, random_label};
 
     use super::*;
 
@@ -186,7 +186,7 @@ mod tests {
         let label = &format!("objectstore test {}", random_label());
 
         let key = backend()
-            .generate_key(pkcs11_traits::KeyAlgorithm::Rsa, Some(label))
+            .generate_key(native_pkcs11_traits::KeyAlgorithm::Rsa, Some(label))
             .unwrap();
 
         let mut store = ObjectStore::default();

@@ -1,11 +1,11 @@
 [workspace]
 members = [
     "native-pkcs11",
+    "native-pkcs11-core",
+    "native-pkcs11-traits",
     "pkcs11-keychain",
     "pkcs11-sys",
-    "pkcs11-traits",
     "pkcs11-windows",
-    "pkcs11",
 ]
 
 [profile.release]

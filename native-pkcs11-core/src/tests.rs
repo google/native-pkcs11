@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use pkcs11_traits::{backend, random_label, KeyAlgorithm};
+use native_pkcs11_traits::{backend, random_label, KeyAlgorithm};
 use serial_test::serial;
 
 use crate::*;

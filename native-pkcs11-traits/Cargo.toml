@@ -1,5 +1,5 @@
 [package]
-name = "pkcs11-traits"
+name = "native-pkcs11-traits"
 version = "0.1.0"
 authors = [
     "Brandon Weeks <bweeks@google.com>",
