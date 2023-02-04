@@ -16,7 +16,7 @@ use std::fmt::Debug;
 
 pub use backend::KeychainBackend;
 use core_foundation::error::CFError;
-use pkcs11_traits::{once_cell::sync::Lazy, Backend, RegisteredBackend};
+use native_pkcs11_traits::{once_cell::sync::Lazy, Backend, RegisteredBackend};
 use thiserror::Error;
 use tracing_error::SpanTrace;
 
@@ -26,7 +26,7 @@ pub mod key;
 
 static BACKEND: Lazy<Box<dyn Backend>> = Lazy::new(|| Box::new(KeychainBackend::new()));
 
-pkcs11_traits::inventory::submit! {RegisteredBackend(&BACKEND)}
+native_pkcs11_traits::inventory::submit! {RegisteredBackend(&BACKEND)}
 
 //  NOTE(kcking): I think this just works because any non-System path defaults
 //  to the Login keychain

@@ -15,8 +15,8 @@
 #![allow(non_snake_case)]
 #![allow(clippy::missing_safety_doc)]
 
-pub use pkcs11::Error;
-use pkcs11_traits::backend;
+pub use native_pkcs11_core::Error;
+use native_pkcs11_traits::backend;
 use tracing_error::ErrorLayer;
 use tracing_subscriber::{prelude::*, Registry};
 mod object_store;
@@ -33,7 +33,7 @@ use std::{
     },
 };
 
-use pkcs11::{
+use native_pkcs11_core::{
     attribute::{Attribute, Attributes},
     mechanism::{Mechanism, MECHANISMS},
     object::{self, Object},
@@ -598,7 +598,7 @@ cryptoki_fn!(
         let template: Attributes = slice::from_raw_parts(pTemplate, ulCount as usize)
             .iter()
             .map(|attr| (*attr).try_into())
-            .collect::<pkcs11::Result<Vec<Attribute>>>()?
+            .collect::<native_pkcs11_core::Result<Vec<Attribute>>>()?
             .into();
         sessions::session(hSession, |session| -> Result {
             session.find_ctx = Some(FindContext {

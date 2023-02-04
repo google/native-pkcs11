@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use native_pkcs11_traits::SignatureAlgorithm;
 use once_cell::sync::Lazy;
 use pkcs11_sys::*;
-use pkcs11_traits::SignatureAlgorithm;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 

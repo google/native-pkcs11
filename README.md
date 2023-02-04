@@ -23,7 +23,7 @@ issue.
 
 ## Building a Custom Backend
 
-The `pkcs11_traits::Backend` trait can be implemented to add support for a new
+The `native_pkcs11_traits::Backend` trait can be implemented to add support for a new
 credential store. The [`inventory`](https://crates.io/inventory) crate is used
 to register Backend implementations a build time. This allows backends to be
 registered without being a direct dependency of the `native-pkcs11` crate.

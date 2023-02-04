@@ -475,16 +475,44 @@ version = "0.1.0"
 dependencies = [
  "inventory",
  "lazy_static",
- "pkcs11",
+ "native-pkcs11-core",
+ "native-pkcs11-traits",
  "pkcs11-keychain",
  "pkcs11-sys",
- "pkcs11-traits",
  "pkcs11-windows",
  "serial_test",
  "thiserror",
  "tracing",
  "tracing-error",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "native-pkcs11-core"
+version = "0.1.0"
+dependencies = [
+ "native-pkcs11-traits",
+ "once_cell",
+ "p256",
+ "pkcs1",
+ "pkcs11-keychain",
+ "pkcs11-sys",
+ "pkcs11-windows",
+ "serial_test",
+ "strum",
+ "strum_macros",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "native-pkcs11-traits"
+version = "0.1.0"
+dependencies = [
+ "inventory",
+ "once_cell",
+ "rand",
+ "x509-cert",
 ]
 
 [[package]]
@@ -643,33 +671,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "pkcs11"
-version = "0.1.0"
-dependencies = [
- "once_cell",
- "p256",
- "pkcs1",
- "pkcs11-keychain",
- "pkcs11-sys",
- "pkcs11-traits",
- "pkcs11-windows",
- "serial_test",
- "strum",
- "strum_macros",
- "thiserror",
- "tracing",
-]
-
-[[package]]
 name = "pkcs11-keychain"
 version = "0.1.0"
 dependencies = [
  "const-oid",
  "core-foundation",
  "der",
+ "native-pkcs11-traits",
  "p256",
  "pkcs1",
- "pkcs11-traits",
  "pkcs8",
  "rand",
  "rsa",
@@ -691,20 +701,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "pkcs11-traits"
-version = "0.1.0"
-dependencies = [
- "inventory",
- "once_cell",
- "rand",
- "x509-cert",
-]
-
-[[package]]
 name = "pkcs11-windows"
 version = "0.1.0"
 dependencies = [
- "pkcs11-traits",
+ "native-pkcs11-traits",
  "windows",
 ]
 

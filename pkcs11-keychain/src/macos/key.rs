@@ -15,7 +15,7 @@
 use std::fmt::Debug;
 
 use core_foundation::base::ToVoid;
-use pkcs11_traits::{KeyAlgorithm, PrivateKey, PublicKey, SignatureAlgorithm};
+use native_pkcs11_traits::{KeyAlgorithm, PrivateKey, PublicKey, SignatureAlgorithm};
 use security_framework::{
     item::{ItemClass, ItemSearchOptions, KeyClass, Limit, Reference},
     key::{GenerateKeyOptions, KeyType, SecKey},
@@ -42,13 +42,21 @@ fn sigalg_to_seckeyalg(
 ) -> security_framework_sys::key::Algorithm {
     use security_framework_sys::key::Algorithm::*;
     match signature_algorithm {
-        pkcs11_traits::SignatureAlgorithm::Ecdsa => ECDSASignatureRFC4754,
-        pkcs11_traits::SignatureAlgorithm::RsaRaw => RSASignatureRaw,
-        pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Raw => RSASignatureDigestPKCS1v15Raw,
-        pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Sha1 => RSASignatureMessagePKCS1v15SHA1,
-        pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Sha384 => RSASignatureMessagePKCS1v15SHA384,
-        pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Sha256 => RSASignatureMessagePKCS1v15SHA256,
-        pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Sha512 => RSASignatureMessagePKCS1v15SHA512,
+        native_pkcs11_traits::SignatureAlgorithm::Ecdsa => ECDSASignatureRFC4754,
+        native_pkcs11_traits::SignatureAlgorithm::RsaRaw => RSASignatureRaw,
+        native_pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Raw => RSASignatureDigestPKCS1v15Raw,
+        native_pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Sha1 => {
+            RSASignatureMessagePKCS1v15SHA1
+        }
+        native_pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Sha384 => {
+            RSASignatureMessagePKCS1v15SHA384
+        }
+        native_pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Sha256 => {
+            RSASignatureMessagePKCS1v15SHA256
+        }
+        native_pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Sha512 => {
+            RSASignatureMessagePKCS1v15SHA512
+        }
     }
 }
 
@@ -101,9 +109,9 @@ impl PrivateKey for KeychainPrivateKey {
     #[instrument]
     fn sign(
         &self,
-        algorithm: &pkcs11_traits::SignatureAlgorithm,
+        algorithm: &native_pkcs11_traits::SignatureAlgorithm,
         data: &[u8],
-    ) -> pkcs11_traits::Result<Vec<u8>> {
+    ) -> native_pkcs11_traits::Result<Vec<u8>> {
         let algorithm = sigalg_to_seckeyalg(algorithm);
         Ok(self.sec_key.create_signature(algorithm, data.as_ref())?)
     }
@@ -119,8 +127,8 @@ impl PrivateKey for KeychainPrivateKey {
     }
     fn find_public_key(
         &self,
-        _backend: &dyn pkcs11_traits::Backend,
-    ) -> pkcs11_traits::Result<Option<Box<dyn PublicKey>>> {
+        _backend: &dyn native_pkcs11_traits::Backend,
+    ) -> native_pkcs11_traits::Result<Option<Box<dyn PublicKey>>> {
         let sec_copy = self
             .sec_key
             .public_key()
@@ -205,10 +213,10 @@ impl PublicKey for KeychainPublicKey {
     #[instrument]
     fn verify(
         &self,
-        algorithm: &pkcs11_traits::SignatureAlgorithm,
+        algorithm: &native_pkcs11_traits::SignatureAlgorithm,
         data: &[u8],
         signature: &[u8],
-    ) -> pkcs11_traits::Result<()> {
+    ) -> native_pkcs11_traits::Result<()> {
         let algorithm = sigalg_to_seckeyalg(algorithm);
         let result = self.sec_key.verify_signature(algorithm, data, signature)?;
         if !result {
@@ -319,7 +327,7 @@ pub fn find_all_private_keys() -> Result<Vec<SecKey>> {
 #[cfg(test)]
 mod test {
     use core_foundation::base::{TCFType, ToVoid};
-    use pkcs11_traits::{random_label, Backend};
+    use native_pkcs11_traits::{random_label, Backend};
     use security_framework::item::{add_item, AddRef, ItemAddOptions, Limit};
     use security_framework_sys::item::{kSecAttrLabel, kSecValueRef};
     use serial_test::serial;
@@ -510,7 +518,7 @@ mod test {
         //  SecurityFramework when importing a SecKey
         //
         //  let found_key =
-        //     KeychainBackend::find_private_key(pkcs11_traits::KeySearchOptions::PublicKeyHash(
+        //     KeychainBackend::find_private_key(native_pkcs11_traits::KeySearchOptions::PublicKeyHash(
         //         pubkey_hash
         //             .as_slice()
         //             .try_into()
@@ -523,7 +531,7 @@ mod test {
         //     .unwrap();
 
         let found_key = KeychainBackend
-            .find_private_key(pkcs11_traits::KeySearchOptions::Label(label))
+            .find_private_key(native_pkcs11_traits::KeySearchOptions::Label(label))
             .map_err(|e| {
                 dbg!(e);
                 "find"

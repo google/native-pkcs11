@@ -17,12 +17,12 @@
 
 #[cfg(target_os = "macos")]
 mod macos {
+    pub use native_pkcs11_traits::random_label;
     pub use pkcs11_keychain::certificate::{
         find_all_certificates,
         import_certificate,
         self_signed_certificate,
     };
-    pub use pkcs11_traits::random_label;
     pub use security_framework::{
         item::{add_item, AddRef, ItemAddOptions, ItemClass, ItemSearchOptions, KeyClass},
         key::{GenerateKeyOptions, KeyType},
@@ -135,8 +135,8 @@ fn key_lifecycle() -> Result<(), pkcs11_keychain::Error> {
 #[cfg(target_os = "macos")]
 fn unpersisted_public_key() -> Result<(), pkcs11_keychain::Error> {
     use macos::*;
+    use native_pkcs11_traits::Backend;
     use pkcs11_keychain::KeychainBackend;
-    use pkcs11_traits::Backend;
     use security_framework::key::SecKey;
     let label = random_label();
     let key1 = SecKey::generate(
@@ -161,7 +161,7 @@ fn unpersisted_public_key() -> Result<(), pkcs11_keychain::Error> {
     )?;
 
     let found_key = KeychainBackend {}
-        .find_private_key(pkcs11_traits::KeySearchOptions::Label(label))
+        .find_private_key(native_pkcs11_traits::KeySearchOptions::Label(label))
         .map_err(|e| {
             dbg!(e);
             "find"

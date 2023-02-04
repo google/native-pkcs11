@@ -14,6 +14,7 @@
 
 use std::{ffi::CString, fmt::Debug, sync::Arc};
 
+use native_pkcs11_traits::{backend, Certificate, CertificateExt, PrivateKey, PublicKey};
 use p256::pkcs8::AssociatedOid;
 use pkcs1::{der::Decode, RsaPrivateKey, RsaPublicKey};
 use pkcs11_sys::{
@@ -26,7 +27,6 @@ use pkcs11_sys::{
     CKO_PUBLIC_KEY,
     CK_PROFILE_ID,
 };
-use pkcs11_traits::{backend, Certificate, CertificateExt, PrivateKey, PublicKey};
 use tracing::warn;
 
 use crate::attribute::{Attribute, AttributeType, Attributes};
@@ -94,8 +94,8 @@ impl Object {
                 }
                 AttributeType::Id => Some(Attribute::Id(private_key.public_key_hash())),
                 AttributeType::KeyType => Some(Attribute::KeyType(match private_key.algorithm() {
-                    pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
-                    pkcs11_traits::KeyAlgorithm::Ecc => CKK_EC,
+                    native_pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
+                    native_pkcs11_traits::KeyAlgorithm::Ecc => CKK_EC,
                 })),
                 AttributeType::Label => Some(Attribute::Label(private_key.label())),
                 AttributeType::Modulus => {
@@ -172,8 +172,8 @@ impl Object {
                     Some(Attribute::Modulus(key.public_exponent.as_bytes().to_vec()))
                 }
                 AttributeType::KeyType => Some(Attribute::KeyType(match pk.algorithm() {
-                    pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
-                    pkcs11_traits::KeyAlgorithm::Ecc => CKK_EC,
+                    native_pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
+                    native_pkcs11_traits::KeyAlgorithm::Ecc => CKK_EC,
                 })),
                 AttributeType::Id => Some(Attribute::Id(pk.public_key_hash())),
                 _ => {

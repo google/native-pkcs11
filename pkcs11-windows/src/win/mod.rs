@@ -15,7 +15,7 @@
 
 use std::{ffi::OsString, ops::Deref, str::FromStr, sync::Arc};
 
-use pkcs11_traits::{once_cell::sync::Lazy, Backend, RegisteredBackend};
+use native_pkcs11_traits::{once_cell::sync::Lazy, Backend, RegisteredBackend};
 use windows::{
     core::Interface,
     Security::Cryptography::Certificates::CertificateStores,
@@ -25,11 +25,11 @@ use windows::{
 
 pub static BACKEND: Lazy<Box<dyn Backend>> = Lazy::new(|| Box::new(WindowsBackend {}));
 
-pkcs11_traits::inventory::submit! {RegisteredBackend(&BACKEND)}
+native_pkcs11_traits::inventory::submit! {RegisteredBackend(&BACKEND)}
 
 #[no_mangle]
 pub extern "C" fn _dummy_windows_backend() {
-    pkcs11_traits::backend();
+    native_pkcs11_traits::backend();
 }
 
 //  https://stackoverflow.com/questions/2742739/how-do-i-know-what-the-storename-of-a-certificate-is
@@ -73,7 +73,7 @@ pub struct WindowsBackend {}
 impl Backend for WindowsBackend {
     fn find_all_certificates(
         &self,
-    ) -> pkcs11_traits::Result<Vec<Box<dyn pkcs11_traits::Certificate>>> {
+    ) -> native_pkcs11_traits::Result<Vec<Box<dyn native_pkcs11_traits::Certificate>>> {
         let store_name = OsString::from_str(STORE_NAME)?;
         let store = CertificateStores::GetStoreByName(&store_name.into()).unwrap();
 
@@ -82,29 +82,29 @@ impl Backend for WindowsBackend {
 
     fn find_private_key(
         &self,
-        _query: pkcs11_traits::KeySearchOptions,
-    ) -> pkcs11_traits::Result<Option<Arc<dyn pkcs11_traits::PrivateKey>>> {
+        _query: native_pkcs11_traits::KeySearchOptions,
+    ) -> native_pkcs11_traits::Result<Option<Arc<dyn native_pkcs11_traits::PrivateKey>>> {
         Ok(None)
     }
 
     fn find_public_key(
         &self,
-        _query: pkcs11_traits::KeySearchOptions,
-    ) -> pkcs11_traits::Result<Option<Box<dyn pkcs11_traits::PublicKey>>> {
+        _query: native_pkcs11_traits::KeySearchOptions,
+    ) -> native_pkcs11_traits::Result<Option<Box<dyn native_pkcs11_traits::PublicKey>>> {
         Ok(None)
     }
 
     fn find_all_private_keys(
         &self,
-    ) -> pkcs11_traits::Result<Vec<Arc<dyn pkcs11_traits::PrivateKey>>> {
+    ) -> native_pkcs11_traits::Result<Vec<Arc<dyn native_pkcs11_traits::PrivateKey>>> {
         Ok(vec![])
     }
 
     fn generate_key(
         &self,
-        _algorithm: pkcs11_traits::KeyAlgorithm,
+        _algorithm: native_pkcs11_traits::KeyAlgorithm,
         _label: Option<&str>,
-    ) -> pkcs11_traits::Result<Arc<dyn pkcs11_traits::PrivateKey>> {
+    ) -> native_pkcs11_traits::Result<Arc<dyn native_pkcs11_traits::PrivateKey>> {
         Err("")?
     }
 
@@ -116,7 +116,7 @@ impl Backend for WindowsBackend {
 #[derive(Debug)]
 pub struct WindowsCertificate {}
 
-impl pkcs11_traits::Certificate for WindowsCertificate {
+impl native_pkcs11_traits::Certificate for WindowsCertificate {
     fn label(&self) -> String {
         todo!()
     }
@@ -125,7 +125,7 @@ impl pkcs11_traits::Certificate for WindowsCertificate {
         todo!()
     }
 
-    fn public_key(&self) -> &dyn pkcs11_traits::PublicKey {
+    fn public_key(&self) -> &dyn native_pkcs11_traits::PublicKey {
         todo!()
     }
 
@@ -136,12 +136,12 @@ impl pkcs11_traits::Certificate for WindowsCertificate {
 
 #[test]
 fn backend() {
-    pkcs11_traits::backend();
+    native_pkcs11_traits::backend();
 }
 
 #[cfg(test)]
 mod test {
-    use pkcs11_traits::random_label;
+    use native_pkcs11_traits::random_label;
     use windows::Security::Cryptography::Core::{
         AsymmetricAlgorithmNames,
         AsymmetricKeyAlgorithmProvider,
@@ -151,7 +151,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn keygen() -> pkcs11_traits::Result<()> {
+    fn keygen() -> native_pkcs11_traits::Result<()> {
         let ecdsa = AsymmetricAlgorithmNames::EcdsaP256Sha256()?;
         let key_provider = AsymmetricKeyAlgorithmProvider::OpenAlgorithm(&ecdsa)?;
         let key_pair = key_provider.CreateKeyPair(256)?;

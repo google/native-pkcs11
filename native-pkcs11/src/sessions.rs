@@ -18,8 +18,8 @@ use std::{
 };
 
 use lazy_static::lazy_static;
+use native_pkcs11_traits::{PrivateKey, SignatureAlgorithm};
 use pkcs11_sys::{CK_FLAGS, CK_OBJECT_HANDLE, CK_SESSION_HANDLE};
-use pkcs11_traits::{PrivateKey, SignatureAlgorithm};
 
 use crate::object_store::ObjectStore;
 
