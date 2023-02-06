@@ -14,6 +14,7 @@
 
 #![allow(non_snake_case)]
 #![allow(clippy::missing_safety_doc)]
+#![deny(unsafe_op_in_unsafe_fn)]
 
 pub use native_pkcs11_core::Error;
 use native_pkcs11_traits::backend;
@@ -208,7 +209,7 @@ cryptoki_fn!(C_Initialize, pInitArgs: CK_VOID_PTR, {
         let _ = subscriber.try_init();
     });
     if !pInitArgs.is_null() {
-        let args = *(pInitArgs as CK_C_INITIALIZE_ARGS_PTR);
+        let args = unsafe { *(pInitArgs as CK_C_INITIALIZE_ARGS_PTR) };
         if !args.pReserved.is_null() {
             return Err(Error::ArgumentsBad);
         }
@@ -231,7 +232,7 @@ cryptoki_fn!(C_Finalize, pReserved: CK_VOID_PTR, {
 cryptoki_fn!(C_GetInfo, pInfo: CK_INFO_PTR, {
     initialized!();
     not_null!(pInfo);
-    *pInfo = CK_INFO {
+    let info = CK_INFO {
         cryptokiVersion: CK_VERSION {
             major: CRYPTOKI_VERSION_MAJOR,
             minor: CRYPTOKI_VERSION_MINOR,
@@ -241,6 +242,7 @@ cryptoki_fn!(C_GetInfo, pInfo: CK_INFO_PTR, {
         libraryDescription: *LIBRARY_DESCRIPTION,
         libraryVersion: CK_VERSION { major: 0, minor: 1 },
     };
+    unsafe { *pInfo = info };
     Ok(())
 });
 
@@ -249,7 +251,7 @@ cryptoki_fn!(
     ppFunctionList: CK_FUNCTION_LIST_PTR_PTR,
     {
         not_null!(ppFunctionList);
-        *ppFunctionList = &mut FUNC_LIST;
+        unsafe { *ppFunctionList = &mut FUNC_LIST };
         Ok(())
     }
 );
@@ -263,13 +265,13 @@ cryptoki_fn!(
         initialized!();
         not_null!(pulCount);
         if !pSlotList.is_null() {
-            if *pulCount < 1 {
+            if unsafe { *pulCount } < 1 {
                 return Err(Error::BufferTooSmall);
             }
             // TODO: this should be an array.
-            *pSlotList = SLOT_ID;
+            unsafe { *pSlotList = SLOT_ID };
         }
-        *pulCount = 1;
+        unsafe { *pulCount = 1 };
         Ok(())
     }
 );
@@ -282,13 +284,14 @@ cryptoki_fn!(
         initialized!();
         valid_slot!(slotID);
         not_null!(pInfo);
-        *pInfo = CK_SLOT_INFO {
+        let info = CK_SLOT_INFO {
             slotDescription: *SLOT_DESCRIPTION,
             manufacturerID: *MANUFACTURER_ID,
             flags: CKF_TOKEN_PRESENT,
             // TODO: populate all fields.
             ..Default::default()
         };
+        unsafe { *pInfo = info };
         Ok(())
     }
 );
@@ -303,7 +306,7 @@ cryptoki_fn!(
         not_null!(pInfo);
         let label = right_pad_string_to_array(backend().name());
 
-        *pInfo = CK_TOKEN_INFO {
+        let info = CK_TOKEN_INFO {
             label,
             manufacturerID: *MANUFACTURER_ID,
             model: *TOKEN_MODEL,
@@ -320,6 +323,7 @@ cryptoki_fn!(
             // TODO: populate all fields.
             ..Default::default()
         };
+        unsafe { *pInfo = info };
         Ok(())
     }
 );
@@ -334,14 +338,14 @@ cryptoki_fn!(
         not_null!(pulCount);
         valid_slot!(slotID);
         if !pMechanismList.is_null() {
-            if (*pulCount as usize) < MECHANISMS.len() {
-                *pulCount = MECHANISMS.len() as CK_ULONG;
+            if (unsafe { *pulCount } as usize) < MECHANISMS.len() {
+                unsafe { *pulCount = MECHANISMS.len() as CK_ULONG };
                 return Err(Error::BufferTooSmall);
             }
-            slice::from_raw_parts_mut(pMechanismList, MECHANISMS.len())
+            unsafe { slice::from_raw_parts_mut(pMechanismList, MECHANISMS.len()) }
                 .copy_from_slice(&MECHANISMS);
         }
-        *pulCount = MECHANISMS.len() as CK_ULONG;
+        unsafe { *pulCount = MECHANISMS.len() as CK_ULONG };
         Ok(())
     }
 );
@@ -356,10 +360,11 @@ cryptoki_fn!(
         valid_slot!(slotID);
         not_null!(pInfo);
         TryInto::<Mechanism>::try_into(mechType)?;
-        *pInfo = CK_MECHANISM_INFO {
+        let info = CK_MECHANISM_INFO {
             flags: CKF_SIGN,
             ..Default::default()
         };
+        unsafe { *pInfo = info };
         Ok(())
     }
 );
@@ -417,8 +422,7 @@ cryptoki_fn!(
         if flags & CKF_SERIAL_SESSION == 0 {
             return Err(Error::SessionParallelNotSupported);
         }
-        let handle = sessions::create(flags);
-        *phSession = handle;
+        unsafe { *phSession = sessions::create(flags) };
         Ok(())
     }
 );
@@ -452,12 +456,13 @@ cryptoki_fn!(
         } else {
             CKS_RW_USER_FUNCTIONS
         };
-        *pInfo = CK_SESSION_INFO {
+        let info = CK_SESSION_INFO {
             slotID: SLOT_ID,
             state,
             flags,
             ulDeviceError: 0,
         };
+        unsafe { *pInfo = info };
         Ok(())
     }
 );
@@ -549,7 +554,7 @@ cryptoki_fn!(
                 if pTemplate.is_null() {
                     return Err(Error::ArgumentsBad);
                 }
-                slice::from_raw_parts_mut(pTemplate, ulCount as usize)
+                unsafe { slice::from_raw_parts_mut(pTemplate, ulCount as usize) }
             } else {
                 &mut []
             };
@@ -568,7 +573,7 @@ cryptoki_fn!(
                     if (attribute.ulValueLen as usize) < value.len() {
                         continue;
                     }
-                    slice::from_raw_parts_mut(attribute.pValue as *mut u8, value.len())
+                    unsafe { slice::from_raw_parts_mut(attribute.pValue as *mut u8, value.len()) }
                         .copy_from_slice(&value);
                 } else {
                     return Err(Error::AttributeTypeInvalid(attribute.type_));
@@ -595,7 +600,7 @@ cryptoki_fn!(
     {
         initialized!();
         valid_session!(hSession);
-        let template: Attributes = slice::from_raw_parts(pTemplate, ulCount as usize)
+        let template: Attributes = unsafe { slice::from_raw_parts(pTemplate, ulCount as usize) }
             .iter()
             .map(|attr| (*attr).try_into())
             .collect::<native_pkcs11_core::Result<Vec<Attribute>>>()?
@@ -624,23 +629,23 @@ cryptoki_fn!(
             let find_ctx = match &mut session.find_ctx {
                 Some(find_ctx) => find_ctx,
                 None => {
-                    *pulObjectCount = 0;
+                    unsafe { *pulObjectCount = 0 };
                     return Err(Error::OperationNotInitialized);
                 }
             };
             if find_ctx.objects.is_empty() {
-                *pulObjectCount = 0;
+                unsafe { *pulObjectCount = 0 };
                 return Ok(());
             }
             let max_objects = cmp::min(find_ctx.objects.len(), ulMaxObjectCount as usize);
-            let output = slice::from_raw_parts_mut(phObject, max_objects);
+            let output = unsafe { slice::from_raw_parts_mut(phObject, max_objects) };
             output.copy_from_slice(
                 &find_ctx
                     .objects
                     .drain(0..max_objects)
                     .collect::<Vec<CK_OBJECT_HANDLE>>(),
             );
-            *pulObjectCount = max_objects as CK_ULONG;
+            unsafe { *pulObjectCount = max_objects as CK_ULONG };
             Ok(())
         })
     }
@@ -772,7 +777,7 @@ cryptoki_fn!(
                 Some(Object::PrivateKey(private_key)) => private_key,
                 Some(_) | None => return Err(Error::KeyHandleInvalid(hKey)),
             };
-            let mechanism: Mechanism = ((*pMechanism).mechanism).try_into()?;
+            let mechanism: Mechanism = unsafe { *pMechanism }.mechanism.try_into()?;
             session.sign_ctx = Some(SignContext {
                 algorithm: mechanism.into(),
                 private_key: private_key.clone(),
@@ -802,7 +807,7 @@ cryptoki_fn!(
                 }
             };
 
-            let data = slice::from_raw_parts(pData, ulDataLen as usize);
+            let data = unsafe { slice::from_raw_parts(pData, ulDataLen as usize) };
             let signature = match sign_ctx.private_key.sign(&sign_ctx.algorithm, data) {
                 Ok(sig) => sig,
                 Err(_) => {
@@ -811,12 +816,13 @@ cryptoki_fn!(
             };
             // TODO(bweeks): do we really need to sign twice for ECDSA?
             if !pSignature.is_null() {
-                if (*pulSignatureLen as usize) < signature.len() {
+                if (unsafe { *pulSignatureLen } as usize) < signature.len() {
                     return Err(Error::BufferTooSmall);
                 }
-                slice::from_raw_parts_mut(pSignature, signature.len()).copy_from_slice(&signature);
+                unsafe { slice::from_raw_parts_mut(pSignature, signature.len()) }
+                    .copy_from_slice(&signature);
             }
-            *pulSignatureLen = signature.len().try_into().unwrap();
+            unsafe { *pulSignatureLen = signature.len().try_into().unwrap() };
             Ok(())
         })
     }
