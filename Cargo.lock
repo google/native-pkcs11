@@ -474,9 +474,9 @@ name = "native-pkcs11"
 version = "0.1.0"
 dependencies = [
  "inventory",
- "lazy_static",
  "native-pkcs11-core",
  "native-pkcs11-traits",
+ "once_cell",
  "pkcs11-keychain",
  "pkcs11-sys",
  "pkcs11-windows",

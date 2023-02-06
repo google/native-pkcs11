@@ -17,8 +17,8 @@ use std::{
     sync::{self, atomic::Ordering, Arc},
 };
 
-use lazy_static::lazy_static;
 use native_pkcs11_traits::{PrivateKey, SignatureAlgorithm};
+use once_cell::sync::Lazy;
 use pkcs11_sys::{CK_FLAGS, CK_OBJECT_HANDLE, CK_SESSION_HANDLE};
 
 use crate::object_store::ObjectStore;
@@ -31,10 +31,8 @@ static NEXT_SESSION_HANDLE: std::sync::atomic::AtomicU32 = std::sync::atomic::At
 
 type SessionMap = HashMap<CK_SESSION_HANDLE, Session>;
 
-lazy_static! {
-    static ref SESSIONS: sync::Mutex<SessionMap> = Default::default();
-    pub static ref OBJECT_STORE: sync::Mutex<ObjectStore> = Default::default();
-}
+static SESSIONS: Lazy<sync::Mutex<SessionMap>> = Lazy::new(Default::default);
+pub static OBJECT_STORE: Lazy<sync::Mutex<ObjectStore>> = Lazy::new(Default::default);
 
 #[derive(Debug)]
 pub struct FindContext {
