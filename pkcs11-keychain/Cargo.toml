@@ -30,7 +30,7 @@ tracing-error = { version = "0.2.0", default-features = false }
 x509-cert = { version = "0.1.1", default-features = false }
 
 [dev-dependencies]
-serial_test = "1.0.0"
+serial_test = { version = "1.0.0", default-features = false }
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-foundation = { version = "0.9.3", features = ["mac_os_10_8_features"] }
