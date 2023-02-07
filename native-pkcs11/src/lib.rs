@@ -72,7 +72,7 @@ where
 }
 
 macro_rules! cryptoki_fn {
-    ($name:ident, $($arg:ident: $type:ty),*, $body:block) => {
+    (fn $name:ident ( $($arg:ident : $type:ty),* $(,)?) $body:block) => {
         #[tracing::instrument]
         #[no_mangle]
         pub unsafe extern "C" fn $name($($arg: $type),*) -> CK_RV {
@@ -84,7 +84,7 @@ macro_rules! cryptoki_fn {
 
 macro_rules! cryptoki_fn_not_supported {
     ($name:ident, $($arg:ident: $type:ty),*) => {
-        cryptoki_fn!($name, $($arg: $type),*, {Err(Error::FunctionNotSupported)});
+        cryptoki_fn!(fn $name($($arg: $type),*) {Err(Error::FunctionNotSupported)});
     };
 }
 
@@ -198,55 +198,59 @@ pub static mut FUNC_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
 
 static TRACING_INIT: Once = Once::new();
 
-cryptoki_fn!(C_Initialize, pInitArgs: CK_VOID_PTR, {
-    TRACING_INIT.call_once(|| {
-        let stderr = tracing_subscriber::fmt::layer().with_writer(std::io::stderr);
-        let subscriber = Registry::default().with(stderr).with(ErrorLayer::default());
-        let _ = subscriber.try_init();
-    });
-    if !pInitArgs.is_null() {
-        let args = unsafe { *(pInitArgs as CK_C_INITIALIZE_ARGS_PTR) };
-        if !args.pReserved.is_null() {
+cryptoki_fn!(
+    fn C_Initialize(pInitArgs: CK_VOID_PTR) {
+        TRACING_INIT.call_once(|| {
+            let stderr = tracing_subscriber::fmt::layer().with_writer(std::io::stderr);
+            let subscriber = Registry::default().with(stderr).with(ErrorLayer::default());
+            let _ = subscriber.try_init();
+        });
+        if !pInitArgs.is_null() {
+            let args = unsafe { *(pInitArgs as CK_C_INITIALIZE_ARGS_PTR) };
+            if !args.pReserved.is_null() {
+                return Err(Error::ArgumentsBad);
+            }
+        }
+        if INITIALIZED.swap(true, Ordering::SeqCst) {
+            return Err(Error::CryptokiAlreadyInitialized);
+        }
+        Ok(())
+    }
+);
+
+cryptoki_fn!(
+    fn C_Finalize(pReserved: CK_VOID_PTR) {
+        initialized!();
+        if !pReserved.is_null() {
             return Err(Error::ArgumentsBad);
         }
+        INITIALIZED.store(false, Ordering::SeqCst);
+        Ok(())
     }
-    if INITIALIZED.swap(true, Ordering::SeqCst) {
-        return Err(Error::CryptokiAlreadyInitialized);
-    }
-    Ok(())
-});
+);
 
-cryptoki_fn!(C_Finalize, pReserved: CK_VOID_PTR, {
-    initialized!();
-    if !pReserved.is_null() {
-        return Err(Error::ArgumentsBad);
+cryptoki_fn!(
+    fn C_GetInfo(pInfo: CK_INFO_PTR) {
+        initialized!();
+        not_null!(pInfo);
+        let info = CK_INFO {
+            cryptokiVersion: CK_VERSION {
+                major: CRYPTOKI_VERSION_MAJOR,
+                minor: CRYPTOKI_VERSION_MINOR,
+            },
+            manufacturerID: *MANUFACTURER_ID,
+            flags: 0,
+            libraryDescription: *LIBRARY_DESCRIPTION,
+            libraryVersion: CK_VERSION { major: 0, minor: 1 },
+        };
+        unsafe { *pInfo = info };
+        Ok(())
     }
-    INITIALIZED.store(false, Ordering::SeqCst);
-    Ok(())
-});
-
-cryptoki_fn!(C_GetInfo, pInfo: CK_INFO_PTR, {
-    initialized!();
-    not_null!(pInfo);
-    let info = CK_INFO {
-        cryptokiVersion: CK_VERSION {
-            major: CRYPTOKI_VERSION_MAJOR,
-            minor: CRYPTOKI_VERSION_MINOR,
-        },
-        manufacturerID: *MANUFACTURER_ID,
-        flags: 0,
-        libraryDescription: *LIBRARY_DESCRIPTION,
-        libraryVersion: CK_VERSION { major: 0, minor: 1 },
-    };
-    unsafe { *pInfo = info };
-    Ok(())
-});
+);
 
 #[cfg(not(feature = "custom-function-list"))]
 cryptoki_fn!(
-    C_GetFunctionList,
-    ppFunctionList: CK_FUNCTION_LIST_PTR_PTR,
-    {
+    fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) {
         not_null!(ppFunctionList);
         unsafe { *ppFunctionList = &mut FUNC_LIST };
 
@@ -261,11 +265,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_GetSlotList,
-    _tokenPresent: CK_BBOOL,
-    pSlotList: CK_SLOT_ID_PTR,
-    pulCount: CK_ULONG_PTR,
-    {
+    fn C_GetSlotList(_tokenPresent: CK_BBOOL, pSlotList: CK_SLOT_ID_PTR, pulCount: CK_ULONG_PTR) {
         initialized!();
         not_null!(pulCount);
         if !pSlotList.is_null() {
@@ -281,10 +281,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_GetSlotInfo,
-    slotID: CK_SLOT_ID,
-    pInfo: CK_SLOT_INFO_PTR,
-    {
+    fn C_GetSlotInfo(slotID: CK_SLOT_ID, pInfo: CK_SLOT_INFO_PTR) {
         initialized!();
         valid_slot!(slotID);
         not_null!(pInfo);
@@ -301,10 +298,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_GetTokenInfo,
-    slotID: CK_SLOT_ID,
-    pInfo: CK_TOKEN_INFO_PTR,
-    {
+    fn C_GetTokenInfo(slotID: CK_SLOT_ID, pInfo: CK_TOKEN_INFO_PTR) {
         initialized!();
         valid_slot!(slotID);
         not_null!(pInfo);
@@ -333,11 +327,11 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_GetMechanismList,
-    slotID: CK_SLOT_ID,
-    pMechanismList: CK_MECHANISM_TYPE_PTR,
-    pulCount: CK_ULONG_PTR,
-    {
+    fn C_GetMechanismList(
+        slotID: CK_SLOT_ID,
+        pMechanismList: CK_MECHANISM_TYPE_PTR,
+        pulCount: CK_ULONG_PTR,
+    ) {
         initialized!();
         not_null!(pulCount);
         valid_slot!(slotID);
@@ -355,11 +349,11 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_GetMechanismInfo,
-    slotID: CK_SLOT_ID,
-    mechType: CK_MECHANISM_TYPE,
-    pInfo: CK_MECHANISM_INFO_PTR,
-    {
+    fn C_GetMechanismInfo(
+        slotID: CK_SLOT_ID,
+        mechType: CK_MECHANISM_TYPE,
+        pInfo: CK_MECHANISM_INFO_PTR,
+    ) {
         initialized!();
         valid_slot!(slotID);
         not_null!(pInfo);
@@ -374,12 +368,12 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_InitToken,
-    slotID: CK_SLOT_ID,
-    _pPin: CK_UTF8CHAR_PTR,
-    _ulPinLen: CK_ULONG,
-    _pLabel: CK_UTF8CHAR_PTR,
-    {
+    fn C_InitToken(
+        slotID: CK_SLOT_ID,
+        _pPin: CK_UTF8CHAR_PTR,
+        _ulPinLen: CK_ULONG,
+        _pLabel: CK_UTF8CHAR_PTR,
+    ) {
         initialized!();
         valid_slot!(slotID);
         Err(Error::TokenWriteProtected)
@@ -387,11 +381,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_InitPIN,
-    hSession: CK_SESSION_HANDLE,
-    _pPin: CK_UTF8CHAR_PTR,
-    _ulPinLen: CK_ULONG,
-    {
+    fn C_InitPIN(hSession: CK_SESSION_HANDLE, _pPin: CK_UTF8CHAR_PTR, _ulPinLen: CK_ULONG) {
         initialized!();
         valid_session!(hSession);
         Err(Error::TokenWriteProtected)
@@ -399,13 +389,13 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_SetPIN,
-    hSession: CK_SESSION_HANDLE,
-    _pOldPin: CK_UTF8CHAR_PTR,
-    _ulOldLen: CK_ULONG,
-    _pNewPin: CK_UTF8CHAR_PTR,
-    _ulNewLen: CK_ULONG,
-    {
+    fn C_SetPIN(
+        hSession: CK_SESSION_HANDLE,
+        _pOldPin: CK_UTF8CHAR_PTR,
+        _ulOldLen: CK_ULONG,
+        _pNewPin: CK_UTF8CHAR_PTR,
+        _ulNewLen: CK_ULONG,
+    ) {
         initialized!();
         valid_session!(hSession);
         Err(Error::TokenWriteProtected)
@@ -413,13 +403,13 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_OpenSession,
-    slotID: CK_SLOT_ID,
-    flags: CK_FLAGS,
-    _pApplication: CK_VOID_PTR,
-    _Notify: CK_NOTIFY,
-    phSession: CK_SESSION_HANDLE_PTR,
-    {
+    fn C_OpenSession(
+        slotID: CK_SLOT_ID,
+        flags: CK_FLAGS,
+        _pApplication: CK_VOID_PTR,
+        _Notify: CK_NOTIFY,
+        phSession: CK_SESSION_HANDLE_PTR,
+    ) {
         initialized!();
         valid_slot!(slotID);
         not_null!(phSession);
@@ -431,26 +421,27 @@ cryptoki_fn!(
     }
 );
 
-cryptoki_fn!(C_CloseSession, hSession: CK_SESSION_HANDLE, {
-    initialized!();
-    if sessions::close(hSession) {
-        return Ok(());
+cryptoki_fn!(
+    fn C_CloseSession(hSession: CK_SESSION_HANDLE) {
+        initialized!();
+        if sessions::close(hSession) {
+            return Ok(());
+        }
+        Err(Error::SessionHandleInvalid(hSession))
     }
-    Err(Error::SessionHandleInvalid(hSession))
-});
-
-cryptoki_fn!(C_CloseAllSessions, slotID: CK_SLOT_ID, {
-    initialized!();
-    valid_slot!(slotID);
-    sessions::close_all();
-    Ok(())
-});
+);
 
 cryptoki_fn!(
-    C_GetSessionInfo,
-    hSession: CK_SESSION_HANDLE,
-    pInfo: CK_SESSION_INFO_PTR,
-    {
+    fn C_CloseAllSessions(slotID: CK_SLOT_ID) {
+        initialized!();
+        valid_slot!(slotID);
+        sessions::close_all();
+        Ok(())
+    }
+);
+
+cryptoki_fn!(
+    fn C_GetSessionInfo(hSession: CK_SESSION_HANDLE, pInfo: CK_SESSION_INFO_PTR) {
         initialized!();
         valid_session!(hSession);
         not_null!(pInfo);
@@ -488,23 +479,25 @@ cryptoki_fn_not_supported!(
 );
 
 cryptoki_fn!(
-    C_Login,
-    hSession: CK_SESSION_HANDLE,
-    _userType: CK_USER_TYPE,
-    _pPin: CK_UTF8CHAR_PTR,
-    _ulPinLen: CK_ULONG,
-    {
+    fn C_Login(
+        hSession: CK_SESSION_HANDLE,
+        _userType: CK_USER_TYPE,
+        _pPin: CK_UTF8CHAR_PTR,
+        _ulPinLen: CK_ULONG,
+    ) {
         initialized!();
         valid_session!(hSession);
         Ok(())
     }
 );
 
-cryptoki_fn!(C_Logout, hSession: CK_SESSION_HANDLE, {
-    initialized!();
-    valid_session!(hSession);
-    Ok(())
-});
+cryptoki_fn!(
+    fn C_Logout(hSession: CK_SESSION_HANDLE) {
+        initialized!();
+        valid_session!(hSession);
+        Ok(())
+    }
+);
 
 cryptoki_fn_not_supported!(
     C_CreateObject,
@@ -537,12 +530,12 @@ cryptoki_fn_not_supported!(
 );
 
 cryptoki_fn!(
-    C_GetAttributeValue,
-    hSession: CK_SESSION_HANDLE,
-    hObject: CK_OBJECT_HANDLE,
-    pTemplate: CK_ATTRIBUTE_PTR,
-    ulCount: CK_ULONG,
-    {
+    fn C_GetAttributeValue(
+        hSession: CK_SESSION_HANDLE,
+        hObject: CK_OBJECT_HANDLE,
+        pTemplate: CK_ATTRIBUTE_PTR,
+        ulCount: CK_ULONG,
+    ) {
         initialized!();
         valid_session!(hSession);
         not_null!(pTemplate);
@@ -597,11 +590,11 @@ cryptoki_fn_not_supported!(
 );
 
 cryptoki_fn!(
-    C_FindObjectsInit,
-    hSession: CK_SESSION_HANDLE,
-    pTemplate: CK_ATTRIBUTE_PTR,
-    ulCount: CK_ULONG,
-    {
+    fn C_FindObjectsInit(
+        hSession: CK_SESSION_HANDLE,
+        pTemplate: CK_ATTRIBUTE_PTR,
+        ulCount: CK_ULONG,
+    ) {
         initialized!();
         valid_session!(hSession);
         let template: Attributes = unsafe { slice::from_raw_parts(pTemplate, ulCount as usize) }
@@ -619,12 +612,12 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_FindObjects,
-    hSession: CK_SESSION_HANDLE,
-    phObject: CK_OBJECT_HANDLE_PTR,
-    ulMaxObjectCount: CK_ULONG,
-    pulObjectCount: CK_ULONG_PTR,
-    {
+    fn C_FindObjects(
+        hSession: CK_SESSION_HANDLE,
+        phObject: CK_OBJECT_HANDLE_PTR,
+        ulMaxObjectCount: CK_ULONG,
+        pulObjectCount: CK_ULONG_PTR,
+    ) {
         initialized!();
         valid_session!(hSession);
         not_null!(phObject);
@@ -655,17 +648,19 @@ cryptoki_fn!(
     }
 );
 
-cryptoki_fn!(C_FindObjectsFinal, hSession: CK_SESSION_HANDLE, {
-    initialized!();
-    valid_session!(hSession);
-    sessions::session(hSession, |session| -> Result {
-        if session.find_ctx.is_none() {
-            return Err(Error::OperationNotInitialized);
-        }
-        session.find_ctx = None;
-        Ok(())
-    })
-});
+cryptoki_fn!(
+    fn C_FindObjectsFinal(hSession: CK_SESSION_HANDLE) {
+        initialized!();
+        valid_session!(hSession);
+        sessions::session(hSession, |session| -> Result {
+            if session.find_ctx.is_none() {
+                return Err(Error::OperationNotInitialized);
+            }
+            session.find_ctx = None;
+            Ok(())
+        })
+    }
+);
 
 cryptoki_fn_not_supported!(
     C_EncryptInit,
@@ -767,11 +762,11 @@ cryptoki_fn_not_supported!(
 );
 
 cryptoki_fn!(
-    C_SignInit,
-    hSession: CK_SESSION_HANDLE,
-    pMechanism: CK_MECHANISM_PTR,
-    hKey: CK_OBJECT_HANDLE,
-    {
+    fn C_SignInit(
+        hSession: CK_SESSION_HANDLE,
+        pMechanism: CK_MECHANISM_PTR,
+        hKey: CK_OBJECT_HANDLE,
+    ) {
         initialized!();
         valid_session!(hSession);
         not_null!(pMechanism);
@@ -792,13 +787,13 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_Sign,
-    hSession: CK_SESSION_HANDLE,
-    pData: CK_BYTE_PTR,
-    ulDataLen: CK_ULONG,
-    pSignature: CK_BYTE_PTR,
-    pulSignatureLen: CK_ULONG_PTR,
-    {
+    fn C_Sign(
+        hSession: CK_SESSION_HANDLE,
+        pData: CK_BYTE_PTR,
+        ulDataLen: CK_ULONG,
+        pSignature: CK_BYTE_PTR,
+        pulSignatureLen: CK_ULONG_PTR,
+    ) {
         initialized!();
         valid_session!(hSession);
         not_null!(pData);
@@ -840,11 +835,11 @@ cryptoki_fn_not_supported!(
 );
 
 cryptoki_fn!(
-    C_SignFinal,
-    hSession: CK_SESSION_HANDLE,
-    pSignature: CK_BYTE_PTR,
-    pulSignatureLen: CK_ULONG_PTR,
-    {
+    fn C_SignFinal(
+        hSession: CK_SESSION_HANDLE,
+        pSignature: CK_BYTE_PTR,
+        pulSignatureLen: CK_ULONG_PTR,
+    ) {
         initialized!();
         valid_session!(hSession);
         not_null!(pSignature);
@@ -1011,11 +1006,7 @@ cryptoki_fn_not_supported!(
 );
 
 cryptoki_fn!(
-    C_SeedRandom,
-    hSession: CK_SESSION_HANDLE,
-    pSeed: CK_BYTE_PTR,
-    _ulSeedLen: CK_ULONG,
-    {
+    fn C_SeedRandom(hSession: CK_SESSION_HANDLE, pSeed: CK_BYTE_PTR, _ulSeedLen: CK_ULONG) {
         initialized!();
         valid_session!(hSession);
         not_null!(pSeed);
@@ -1024,11 +1015,11 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    C_GenerateRandom,
-    hSession: CK_SESSION_HANDLE,
-    pRandomData: CK_BYTE_PTR,
-    _ulRandomLen: CK_ULONG,
-    {
+    fn C_GenerateRandom(
+        hSession: CK_SESSION_HANDLE,
+        pRandomData: CK_BYTE_PTR,
+        _ulRandomLen: CK_ULONG,
+    ) {
         initialized!();
         valid_session!(hSession);
         not_null!(pRandomData);
@@ -1036,17 +1027,21 @@ cryptoki_fn!(
     }
 );
 
-cryptoki_fn!(C_GetFunctionStatus, hSession: CK_SESSION_HANDLE, {
-    initialized!();
-    valid_session!(hSession);
-    Err(Error::FunctionNotParallel)
-});
+cryptoki_fn!(
+    fn C_GetFunctionStatus(hSession: CK_SESSION_HANDLE) {
+        initialized!();
+        valid_session!(hSession);
+        Err(Error::FunctionNotParallel)
+    }
+);
 
-cryptoki_fn!(C_CancelFunction, hSession: CK_SESSION_HANDLE, {
-    initialized!();
-    valid_session!(hSession);
-    Err(Error::FunctionNotParallel)
-});
+cryptoki_fn!(
+    fn C_CancelFunction(hSession: CK_SESSION_HANDLE) {
+        initialized!();
+        valid_session!(hSession);
+        Err(Error::FunctionNotParallel)
+    }
+);
 
 cryptoki_fn_not_supported!(
     C_WaitForSlotEvent,
