@@ -12,34 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{any::Any, hash::Hash, sync::Arc};
+use std::{
+    any::Any,
+    hash::Hash,
+    sync::{Arc, RwLock},
+};
 
-pub use inventory;
 pub use once_cell;
+use once_cell::sync::Lazy;
 use x509_cert::der::Decode;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 pub type Digest = [u8; 20];
 
-pub struct RegisteredBackend(pub &'static once_cell::sync::Lazy<Box<dyn Backend>>);
-inventory::collect!(RegisteredBackend);
+//  The Backend is first staged so it can be stored in a Box<dyn Backend>. This
+//  allows the Backend to be reference with `&'static`.
+static STAGED_BACKEND: RwLock<Option<Box<dyn Backend>>> = RwLock::new(None);
+static BACKEND: Lazy<Box<dyn Backend>> =
+    Lazy::new(|| STAGED_BACKEND.write().unwrap().take().unwrap());
+
+/// Stores a backend to later be returned by all calls `crate::backend()`.
+pub fn register_backend(backend: Box<dyn Backend>) {
+    *STAGED_BACKEND.write().unwrap() = Some(backend);
+}
 
 pub fn backend() -> &'static dyn Backend {
-    let mut first_backend = None;
-
-    for backend in inventory::iter::<RegisteredBackend>::iter {
-        if first_backend.is_some() {
-            panic!(
-                "More than one backend registered. Only one registered backend is currently \
-                 supported."
-            );
-        }
-        first_backend = Some(backend.0.as_ref());
-    }
-    match first_backend {
-        Some(backend) => backend,
-        None => panic!("no backend registered"),
-    }
+    BACKEND.as_ref()
 }
 
 #[derive(Debug)]
