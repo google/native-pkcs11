@@ -75,6 +75,14 @@ macro_rules! cryptoki_fn {
     (fn $name:ident ( $($arg:ident : $type:ty),* $(,)?) $body:block) => {
         #[tracing::instrument]
         #[no_mangle]
+        pub extern "C" fn $name($($arg: $type),*) -> CK_RV {
+            // TODO(bweeks): should this be `expr` instead of `block`?
+            result_to_rv(|| $body)
+        }
+    };
+    (unsafe fn $name:ident ( $($arg:ident : $type:ty),* $(,)?) $body:block) => {
+        #[tracing::instrument]
+        #[no_mangle]
         pub unsafe extern "C" fn $name($($arg: $type),*) -> CK_RV {
             // TODO(bweeks): should this be `expr` instead of `block`?
             result_to_rv(|| $body)
@@ -230,7 +238,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    fn C_GetInfo(pInfo: CK_INFO_PTR) {
+    unsafe fn C_GetInfo(pInfo: CK_INFO_PTR) {
         initialized!();
         not_null!(pInfo);
         let info = CK_INFO {
@@ -250,7 +258,7 @@ cryptoki_fn!(
 
 #[cfg(not(feature = "custom-function-list"))]
 cryptoki_fn!(
-    fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) {
+    unsafe fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) {
         not_null!(ppFunctionList);
         unsafe { *ppFunctionList = &mut FUNC_LIST };
 
@@ -265,7 +273,11 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    fn C_GetSlotList(_tokenPresent: CK_BBOOL, pSlotList: CK_SLOT_ID_PTR, pulCount: CK_ULONG_PTR) {
+    unsafe fn C_GetSlotList(
+        _tokenPresent: CK_BBOOL,
+        pSlotList: CK_SLOT_ID_PTR,
+        pulCount: CK_ULONG_PTR,
+    ) {
         initialized!();
         not_null!(pulCount);
         if !pSlotList.is_null() {
@@ -281,7 +293,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    fn C_GetSlotInfo(slotID: CK_SLOT_ID, pInfo: CK_SLOT_INFO_PTR) {
+    unsafe fn C_GetSlotInfo(slotID: CK_SLOT_ID, pInfo: CK_SLOT_INFO_PTR) {
         initialized!();
         valid_slot!(slotID);
         not_null!(pInfo);
@@ -298,7 +310,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    fn C_GetTokenInfo(slotID: CK_SLOT_ID, pInfo: CK_TOKEN_INFO_PTR) {
+    unsafe fn C_GetTokenInfo(slotID: CK_SLOT_ID, pInfo: CK_TOKEN_INFO_PTR) {
         initialized!();
         valid_slot!(slotID);
         not_null!(pInfo);
@@ -327,7 +339,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    fn C_GetMechanismList(
+    unsafe fn C_GetMechanismList(
         slotID: CK_SLOT_ID,
         pMechanismList: CK_MECHANISM_TYPE_PTR,
         pulCount: CK_ULONG_PTR,
@@ -349,7 +361,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    fn C_GetMechanismInfo(
+    unsafe fn C_GetMechanismInfo(
         slotID: CK_SLOT_ID,
         mechType: CK_MECHANISM_TYPE,
         pInfo: CK_MECHANISM_INFO_PTR,
@@ -403,7 +415,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    fn C_OpenSession(
+    unsafe fn C_OpenSession(
         slotID: CK_SLOT_ID,
         flags: CK_FLAGS,
         _pApplication: CK_VOID_PTR,
@@ -441,7 +453,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    fn C_GetSessionInfo(hSession: CK_SESSION_HANDLE, pInfo: CK_SESSION_INFO_PTR) {
+    unsafe fn C_GetSessionInfo(hSession: CK_SESSION_HANDLE, pInfo: CK_SESSION_INFO_PTR) {
         initialized!();
         valid_session!(hSession);
         not_null!(pInfo);
@@ -530,7 +542,7 @@ cryptoki_fn_not_supported!(
 );
 
 cryptoki_fn!(
-    fn C_GetAttributeValue(
+    unsafe fn C_GetAttributeValue(
         hSession: CK_SESSION_HANDLE,
         hObject: CK_OBJECT_HANDLE,
         pTemplate: CK_ATTRIBUTE_PTR,
@@ -590,7 +602,7 @@ cryptoki_fn_not_supported!(
 );
 
 cryptoki_fn!(
-    fn C_FindObjectsInit(
+    unsafe fn C_FindObjectsInit(
         hSession: CK_SESSION_HANDLE,
         pTemplate: CK_ATTRIBUTE_PTR,
         ulCount: CK_ULONG,
@@ -612,7 +624,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    fn C_FindObjects(
+    unsafe fn C_FindObjects(
         hSession: CK_SESSION_HANDLE,
         phObject: CK_OBJECT_HANDLE_PTR,
         ulMaxObjectCount: CK_ULONG,
@@ -762,7 +774,7 @@ cryptoki_fn_not_supported!(
 );
 
 cryptoki_fn!(
-    fn C_SignInit(
+    unsafe fn C_SignInit(
         hSession: CK_SESSION_HANDLE,
         pMechanism: CK_MECHANISM_PTR,
         hKey: CK_OBJECT_HANDLE,
@@ -787,7 +799,7 @@ cryptoki_fn!(
 );
 
 cryptoki_fn!(
-    fn C_Sign(
+    unsafe fn C_Sign(
         hSession: CK_SESSION_HANDLE,
         pData: CK_BYTE_PTR,
         ulDataLen: CK_ULONG,
