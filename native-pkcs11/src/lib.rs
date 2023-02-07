@@ -46,12 +46,6 @@ use crate::{
     utils::right_pad_string_to_array,
 };
 
-//  Convince linker to include inventory::submit! invocation on Windows.
-#[cfg(target_os = "windows")]
-pub extern "C" fn dummy_windows() {
-    pkcs11_windows::_dummy_windows_backend();
-}
-
 const LIBRARY_DESCRIPTION: &[u8; 32] = b"                                ";
 const MANUFACTURER_ID: &[u8; 32] = b"google                          ";
 const SLOT_DESCRIPTION: &[u8; 64] =

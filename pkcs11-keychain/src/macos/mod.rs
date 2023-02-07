@@ -16,7 +16,6 @@ use std::fmt::Debug;
 
 pub use backend::KeychainBackend;
 use core_foundation::error::CFError;
-use native_pkcs11_traits::{once_cell::sync::Lazy, Backend};
 use thiserror::Error;
 use tracing_error::SpanTrace;
 
