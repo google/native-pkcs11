@@ -15,17 +15,13 @@
 
 use std::{ffi::OsString, ops::Deref, str::FromStr, sync::Arc};
 
-use native_pkcs11_traits::{once_cell::sync::Lazy, Backend, RegisteredBackend};
+use native_pkcs11_traits::Backend;
 use windows::{
     core::Interface,
     Security::Cryptography::Certificates::CertificateStores,
     Storage::Streams::{Buffer, IBuffer},
     Win32::System::WinRT::IBufferByteAccess,
 };
-
-pub static BACKEND: Lazy<Box<dyn Backend>> = Lazy::new(|| Box::new(WindowsBackend {}));
-
-native_pkcs11_traits::inventory::submit! {RegisteredBackend(&BACKEND)}
 
 #[no_mangle]
 pub extern "C" fn _dummy_windows_backend() {

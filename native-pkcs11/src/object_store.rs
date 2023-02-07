@@ -176,13 +176,18 @@ impl Default for ObjectStore {
 mod tests {
     use std::vec;
 
-    use native_pkcs11_traits::{backend, random_label};
+    use native_pkcs11_traits::{backend, random_label, KeyAlgorithm};
     use pkcs11_sys::CKO_PRIVATE_KEY;
+    use serial_test::serial;
 
     use super::*;
+    use crate::tests::test_init;
 
     #[test]
+    #[serial]
     fn test_object_store() {
+        test_init();
+
         let label = &format!("objectstore test {}", random_label());
 
         let key = backend()
@@ -201,5 +206,23 @@ mod tests {
 
         key.find_public_key(backend()).unwrap().unwrap().delete();
         key.delete();
+    }
+
+    #[test]
+    #[serial]
+    fn key_alg() -> Result<()> {
+        test_init();
+        let ec = backend().generate_key(KeyAlgorithm::Ecc, Some(&random_label()))?;
+        let rsa = backend().generate_key(KeyAlgorithm::Rsa, Some(&random_label()))?;
+
+        assert_eq!(ec.algorithm(), KeyAlgorithm::Ecc);
+        assert_eq!(rsa.algorithm(), KeyAlgorithm::Rsa);
+
+        for key in [ec, rsa] {
+            key.find_public_key(backend()).unwrap().unwrap().delete();
+            key.delete();
+        }
+
+        Ok(())
     }
 }

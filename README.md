@@ -23,7 +23,18 @@ issue.
 
 ## Building a Custom Backend
 
-The `native_pkcs11_traits::Backend` trait can be implemented to add support for a new
-credential store. The [`inventory`](https://crates.io/inventory) crate is used
-to register Backend implementations a build time. This allows backends to be
-registered without being a direct dependency of the `native-pkcs11` crate.
+The `native_pkcs11_traits::Backend` trait can be implemented to add support for
+a new credential store. Backends are registered in the exported
+`C_GetFunctionList` function. In order to register your own backend, enable the
+`custom-function-list` feature on `native-pkcs11` and export the method from
+your crate. For example:
+
+```rs
+use native_pkcs11::{CKR_OK, CK_FUNCTION_LIST_PTR_PTR, CK_RV, FUNC_LIST};
+#[no_mangle]
+pub extern "C" fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) -> CK_RV {
+    native_pkcs11_traits::register_backend(Box::new(backend::MyBackend {}));
+    unsafe { *ppFunctionList = &mut FUNC_LIST };
+    return CKR_OK;
+}
+```

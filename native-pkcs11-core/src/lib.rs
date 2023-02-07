@@ -19,8 +19,6 @@ use thiserror::Error;
 pub mod attribute;
 pub mod mechanism;
 pub mod object;
-#[cfg(test)]
-mod tests;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
