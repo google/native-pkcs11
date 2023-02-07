@@ -23,11 +23,6 @@ use windows::{
     Win32::System::WinRT::IBufferByteAccess,
 };
 
-#[no_mangle]
-pub extern "C" fn _dummy_windows_backend() {
-    native_pkcs11_traits::backend();
-}
-
 //  https://stackoverflow.com/questions/2742739/how-do-i-know-what-the-storename-of-a-certificate-is
 const STORE_NAME: &str = "My";
 
