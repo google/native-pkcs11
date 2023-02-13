@@ -1,6 +1,7 @@
 [package]
 name = "native-pkcs11-traits"
 version = "0.2.0"
+description = "Traits for implementing and interactive with native-pkcs11 module backends."
 authors = [
     "Brandon Weeks <bweeks@google.com>",
     "Kevin King <kcking@google.com>",
