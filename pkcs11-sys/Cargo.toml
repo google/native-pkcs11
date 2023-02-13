@@ -1,6 +1,6 @@
 [package]
 name = "pkcs11-sys"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
     "Brandon Weeks <bweeks@google.com>",
     "Kevin King <kcking@google.com>",

@@ -1,6 +1,6 @@
 [package]
 name = "pkcs11-keychain"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
     "Brandon Weeks <bweeks@google.com>",
     "Kevin King <kcking@google.com>",
@@ -19,7 +19,7 @@ p256 = { version = "0.12.0", default-features = false, features = [
     "arithmetic",
 ] }
 pkcs1 = { version = "0.4.1", default-features = false }
-native-pkcs11-traits = { version = "0.1.0", path = "../native-pkcs11-traits" }
+native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
 pkcs8 = { version = "0.9.0", default-features = false }
 rand = "0.8.5"
 rsa = { version = "0.8.1", default-features = false, features = ["std"] }

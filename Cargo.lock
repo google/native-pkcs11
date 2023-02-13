@@ -363,7 +363,7 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "native-pkcs11"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "native-pkcs11-core",
  "native-pkcs11-traits",
@@ -380,7 +380,7 @@ dependencies = [
 
 [[package]]
 name = "native-pkcs11-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "native-pkcs11-traits",
  "once_cell",
@@ -398,7 +398,7 @@ dependencies = [
 
 [[package]]
 name = "native-pkcs11-traits"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "once_cell",
  "rand",
@@ -556,7 +556,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs11-keychain"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "const-oid",
  "core-foundation",
@@ -579,14 +579,14 @@ dependencies = [
 
 [[package]]
 name = "pkcs11-sys"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bindgen",
 ]
 
 [[package]]
 name = "pkcs11-windows"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "native-pkcs11-traits",
  "windows",
