@@ -1,5 +1,5 @@
 [package]
-name = "pkcs11-keychain"
+name = "native-pkcs11-keychain"
 version = "0.2.0"
 authors = [
     "Brandon Weeks <bweeks@google.com>",

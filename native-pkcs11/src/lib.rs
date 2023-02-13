@@ -263,10 +263,12 @@ cryptoki_fn!(
         unsafe { *ppFunctionList = &mut FUNC_LIST };
 
         #[cfg(target_os = "macos")]
-        native_pkcs11_traits::register_backend(Box::new(pkcs11_keychain::KeychainBackend {}));
+        native_pkcs11_traits::register_backend(Box::new(
+            native_pkcs11_keychain::KeychainBackend {},
+        ));
 
         #[cfg(target_os = "windows")]
-        native_pkcs11_traits::register_backend(Box::new(pkcs11_windows::WindowsBackend {}));
+        native_pkcs11_traits::register_backend(Box::new(native_pkcs11_windows::WindowsBackend {}));
 
         Ok(())
     }

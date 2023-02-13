@@ -17,25 +17,25 @@
 
 #[cfg(target_os = "macos")]
 mod macos {
-    pub use native_pkcs11_traits::random_label;
-    pub use pkcs11_keychain::certificate::{
+    pub use native_pkcs11_keychain::certificate::{
         find_all_certificates,
         import_certificate,
         self_signed_certificate,
     };
+    pub use native_pkcs11_traits::random_label;
     pub use security_framework::{
         item::{add_item, AddRef, ItemAddOptions, ItemClass, ItemSearchOptions, KeyClass},
         key::{GenerateKeyOptions, KeyType},
     };
 }
 #[cfg(target_os = "macos")]
-fn main() -> Result<(), pkcs11_keychain::Error> {
+fn main() -> Result<(), native_pkcs11_keychain::Error> {
     unpersisted_public_key()?;
     Ok(())
 }
 
 #[cfg(target_os = "macos")]
-fn key_lifecycle() -> Result<(), pkcs11_keychain::Error> {
+fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
     use macos::*;
     let label = &random_label();
     let args = GenerateKeyOptions::default()
@@ -103,7 +103,8 @@ fn key_lifecycle() -> Result<(), pkcs11_keychain::Error> {
         return Err("signature verification failed")?;
     }
 
-    let cert = self_signed_certificate(pkcs11_keychain::key::Algorithm::ECC, &generated_key)?;
+    let cert =
+        self_signed_certificate(native_pkcs11_keychain::key::Algorithm::ECC, &generated_key)?;
     let cert = import_certificate(&cert)?;
     let add_params = ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(
         AddRef::Certificate(cert.clone()),
@@ -133,10 +134,10 @@ fn key_lifecycle() -> Result<(), pkcs11_keychain::Error> {
 //  generated in the enclave always have a corresponding public SecKey
 //  available.
 #[cfg(target_os = "macos")]
-fn unpersisted_public_key() -> Result<(), pkcs11_keychain::Error> {
+fn unpersisted_public_key() -> Result<(), native_pkcs11_keychain::Error> {
     use macos::*;
+    use native_pkcs11_keychain::KeychainBackend;
     use native_pkcs11_traits::Backend;
-    use pkcs11_keychain::KeychainBackend;
     use security_framework::key::SecKey;
     let label = random_label();
     let key1 = SecKey::generate(
