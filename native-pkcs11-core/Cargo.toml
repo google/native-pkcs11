@@ -1,6 +1,6 @@
 [package]
 name = "native-pkcs11-core"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
     "Brandon Weeks <bweeks@google.com>",
     "Kevin King <kcking@google.com>",
@@ -18,7 +18,7 @@ p256 = { version = "0.12.0", default-features = false, features = [
 ] }
 pkcs1 = { version = "0.4.1", default-features = false }
 pkcs11-sys = { path = "../pkcs11-sys" }
-native-pkcs11-traits = { version = "0.1.0", path = "../native-pkcs11-traits" }
+native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
 strum = "0.24.1"
 strum_macros = "0.24.3"
 thiserror = "1.0.38"
