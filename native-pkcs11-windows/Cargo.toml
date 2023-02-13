@@ -1,6 +1,7 @@
 [package]
 name = "native-pkcs11-windows"
 version = "0.2.0"
+description = "[wip] native-pkcs11 backend for windows."
 authors = [
     "Brandon Weeks <bweeks@google.com>",
     "Kevin King <kcking@google.com>",
