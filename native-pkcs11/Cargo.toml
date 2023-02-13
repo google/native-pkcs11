@@ -34,7 +34,7 @@ tracing-subscriber = { version = "0.3.16", default-features = false, features = 
 ] }
 
 [target.'cfg(target_os="macos")'.dependencies]
-pkcs11-keychain = { version = "0.2.0", path = "../pkcs11-keychain" }
+native-pkcs11-keychain = { version = "0.2.0", path = "../native-pkcs11-keychain" }
 
 [target.'cfg(target_os="windows")'.dependencies]
-pkcs11-windows = { version = "0.2.0", path = "../pkcs11-windows" }
+native-pkcs11-windows = { version = "0.2.0", path = "../native-pkcs11-windows" }

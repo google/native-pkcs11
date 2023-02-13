@@ -366,11 +366,11 @@ name = "native-pkcs11"
 version = "0.2.0"
 dependencies = [
  "native-pkcs11-core",
+ "native-pkcs11-keychain",
  "native-pkcs11-traits",
+ "native-pkcs11-windows",
  "once_cell",
- "pkcs11-keychain",
  "pkcs11-sys",
- "pkcs11-windows",
  "serial_test",
  "thiserror",
  "tracing",
@@ -382,18 +382,41 @@ dependencies = [
 name = "native-pkcs11-core"
 version = "0.2.0"
 dependencies = [
+ "native-pkcs11-keychain",
  "native-pkcs11-traits",
+ "native-pkcs11-windows",
  "once_cell",
  "p256",
  "pkcs1",
- "pkcs11-keychain",
  "pkcs11-sys",
- "pkcs11-windows",
  "serial_test",
  "strum",
  "strum_macros",
  "thiserror",
  "tracing",
+]
+
+[[package]]
+name = "native-pkcs11-keychain"
+version = "0.2.0"
+dependencies = [
+ "const-oid",
+ "core-foundation",
+ "der",
+ "native-pkcs11-traits",
+ "p256",
+ "pkcs1",
+ "pkcs8",
+ "rand",
+ "rsa",
+ "security-framework",
+ "security-framework-sys",
+ "serial_test",
+ "spki",
+ "thiserror",
+ "tracing",
+ "tracing-error",
+ "x509-cert",
 ]
 
 [[package]]
@@ -403,6 +426,14 @@ dependencies = [
  "once_cell",
  "rand",
  "x509-cert",
+]
+
+[[package]]
+name = "native-pkcs11-windows"
+version = "0.2.0"
+dependencies = [
+ "native-pkcs11-traits",
+ "windows",
 ]
 
 [[package]]
@@ -555,41 +586,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "pkcs11-keychain"
-version = "0.2.0"
-dependencies = [
- "const-oid",
- "core-foundation",
- "der",
- "native-pkcs11-traits",
- "p256",
- "pkcs1",
- "pkcs8",
- "rand",
- "rsa",
- "security-framework",
- "security-framework-sys",
- "serial_test",
- "spki",
- "thiserror",
- "tracing",
- "tracing-error",
- "x509-cert",
-]
-
-[[package]]
 name = "pkcs11-sys"
 version = "0.2.0"
 dependencies = [
  "bindgen",
-]
-
-[[package]]
-name = "pkcs11-windows"
-version = "0.2.0"
-dependencies = [
- "native-pkcs11-traits",
- "windows",
 ]
 
 [[package]]

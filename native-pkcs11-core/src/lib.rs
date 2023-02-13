@@ -91,7 +91,7 @@ pub enum Error {
 
     #[cfg(target_os = "macos")]
     #[error("{0}")]
-    Pkcs11Keychain(#[from] pkcs11_keychain::Error),
+    Pkcs11Keychain(#[from] native_pkcs11_keychain::Error),
 
     #[error("{0}")]
     TryFromInt(#[from] std::num::TryFromIntError),

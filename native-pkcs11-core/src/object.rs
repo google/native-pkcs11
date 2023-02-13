@@ -89,7 +89,7 @@ impl Object {
                 AttributeType::Class => Some(Attribute::Class(CKO_PRIVATE_KEY)),
                 AttributeType::Decrypt => Some(Attribute::Decrypt(false)),
                 AttributeType::EcParams => {
-                    // TODO(kcking): expose via pkcs11-keychain.
+                    // TODO(kcking): expose via native-pkcs11-keychain.
                     Some(Attribute::EcParams(p256::NistP256::OID.as_bytes().to_vec()))
                 }
                 AttributeType::Id => Some(Attribute::Id(private_key.public_key_hash())),
