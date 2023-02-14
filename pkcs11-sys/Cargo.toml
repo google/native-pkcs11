@@ -12,4 +12,4 @@ repository = "https://github.com/google/native-pkcs11"
 license = "Apache-2.0"
 
 [build-dependencies]
-bindgen = "0.64.0"
+bindgen = { version = "0.64.0", optional = true }
