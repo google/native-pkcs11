@@ -1,6 +1,6 @@
 [package]
 name = "pkcs11-sys"
-version = "0.2.0"
+version = "0.2.2"
 description = "Generated bindings for pkcs11.h. Useful for building PKCS#11 modules in rust."
 authors = [
     "Brandon Weeks <bweeks@google.com>",
