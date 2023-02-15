@@ -25,7 +25,7 @@ tracing-error = "0.2.0"
 tracing-subscriber = "0.3.16"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib", "lib"]
 
 [dev-dependencies]
 serial_test = { version = "1.0.0", default-features = false }
