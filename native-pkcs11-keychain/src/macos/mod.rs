@@ -66,19 +66,19 @@ pub enum ErrorKind {
     Generic(String),
 
     #[error("{0}")]
-    Der(#[from] der::Error),
+    Der(#[from] x509_cert::der::Error),
 
     #[error("{0}")]
     SecurityFramework(#[from] security_framework::base::Error),
 
     #[error("{0}")]
-    Spki(#[from] spki::Error),
+    Spki(#[from] x509_cert::spki::Error),
 
     #[error("{0}")]
     P256(#[from] p256::elliptic_curve::Error),
 
     #[error("{0}")]
-    Pkcs1(#[from] pkcs1::Error),
+    Pkcs1(#[from] rsa::pkcs1::Error),
 }
 
 impl From<CFError> for ErrorKind {
