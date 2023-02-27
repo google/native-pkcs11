@@ -14,7 +14,7 @@ p256 = { version = "0.12.0", default-features = false, features = [
     "arithmetic",
     "pkcs8",
 ] }
-pkcs1 = { version = "0.4.1", default-features = false }
+pkcs1 = { version = "0.7.0", default-features = false }
 pkcs11-sys = { version = "0.2.0", path = "../pkcs11-sys" }
 native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
 strum = "0.24.1"
