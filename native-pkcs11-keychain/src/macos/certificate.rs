@@ -14,14 +14,11 @@
 
 use std::time::{Duration, SystemTime};
 
-use const_oid::ObjectIdentifier;
-use der::{
-    asn1::{GeneralizedTime, Ia5StringRef, OctetStringRef},
-    Decode,
-};
 use native_pkcs11_traits::random_label;
-use pkcs8::AssociatedOid;
-use rsa::pkcs1::UIntRef;
+use rsa::{
+    pkcs1::{DecodeRsaPublicKey, UIntRef},
+    pkcs8::AssociatedOid,
+};
 use security_framework::{
     certificate::SecCertificate,
     identity::SecIdentity,
@@ -30,12 +27,13 @@ use security_framework::{
     os::macos::{identity::SecIdentityExt, keychain::SecKeychain},
 };
 use security_framework_sys::base::errSecItemNotFound;
-use spki::{
-    der::{asn1::BitStringRef, Encode},
-    EncodePublicKey,
-    SubjectPublicKeyInfo,
-};
 use x509_cert::{
+    der::{
+        asn1::{GeneralizedTime, Ia5StringRef, OctetStringRef},
+        oid::ObjectIdentifier,
+        Decode,
+        Encode,
+    },
     ext::{
         pkix::{
             name::GeneralName,
@@ -50,6 +48,7 @@ use x509_cert::{
         Extension,
     },
     name::{Name, RdnSequence},
+    spki::{der::asn1::BitStringRef, EncodePublicKey, SubjectPublicKeyInfo},
     time::Validity,
     Certificate,
     TbsCertificate,
@@ -291,12 +290,10 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
         .to_vec();
 
     let public_key = match key_algorithm {
-        Algorithm::RSA => {
-            <rsa::RsaPublicKey as pkcs1::DecodeRsaPublicKey>::from_pkcs1_der(&public_key)?
-                .to_public_key_der()?
-                .as_bytes()
-                .to_owned()
-        }
+        Algorithm::RSA => rsa::RsaPublicKey::from_pkcs1_der(&public_key)?
+            .to_public_key_der()?
+            .as_bytes()
+            .to_owned(),
         Algorithm::ECC => p256::PublicKey::from_sec1_bytes(public_key.as_slice())?
             .to_public_key_der()?
             .as_bytes()

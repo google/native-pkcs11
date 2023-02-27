@@ -9,19 +9,14 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-const-oid = { version = "0.9.1", default-features = false }
-der = { version = "0.6.1", default-features = false }
 p256 = { version = "0.12.0", default-features = false, features = [
     "pkcs8",
     "std",
     "arithmetic",
 ] }
-pkcs1 = { version = "0.4.1", default-features = false }
 native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
-pkcs8 = { version = "0.9.0", default-features = false }
 rand = "0.8.5"
 rsa = { version = "0.8.1", default-features = false, features = ["std"] }
-spki = { version = "0.6.0", default-features = false }
 thiserror = "1.0.38"
 tracing = "0.1.37"
 tracing-error = { version = "0.2.0", default-features = false }
