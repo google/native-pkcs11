@@ -2,14 +2,11 @@
 name = "native-pkcs11-keychain"
 version = "0.2.2"
 description = "native-pkcs11 backend for macos keychain."
-authors = [
-    "Brandon Weeks <bweeks@google.com>",
-    "Kevin King <kcking@google.com>",
-]
-edition = "2021"
-rust-version = "1.63"
-repository = "https://github.com/google/native-pkcs11"
-license = "Apache-2.0"
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 const-oid = { version = "0.9.1", default-features = false }

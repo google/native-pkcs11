@@ -8,6 +8,16 @@ members = [
     "native-pkcs11-windows",
 ]
 
+[workspace.package]
+authors = [
+    "Brandon Weeks <bweeks@google.com>",
+    "Kevin King <kcking@google.com>",
+]
+edition = "2021"
+rust-version = "1.65"
+repository = "https://github.com/google/native-pkcs11"
+license = "Apache-2.0"
+
 [profile.release]
 strip = "symbols"
 panic = "abort"
