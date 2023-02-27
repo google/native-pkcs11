@@ -10,7 +10,7 @@ license.workspace = true
 
 [dependencies]
 const-oid = { version = "0.9.1", default-features = false }
-der = { version = "0.6.1", default-features = false }
+der = { version = "0.7.0", default-features = false }
 p256 = { version = "0.12.0", default-features = false, features = [
     "pkcs8",
     "std",
