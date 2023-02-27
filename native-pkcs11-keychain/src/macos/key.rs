@@ -39,9 +39,9 @@ pub enum Algorithm {
 
 fn sigalg_to_seckeyalg(
     signature_algorithm: &SignatureAlgorithm,
-) -> security_framework_sys::key::Algorithm {
+) -> Result<security_framework_sys::key::Algorithm> {
     use security_framework_sys::key::Algorithm::*;
-    match signature_algorithm {
+    let alg = match signature_algorithm {
         native_pkcs11_traits::SignatureAlgorithm::Ecdsa => ECDSASignatureRFC4754,
         native_pkcs11_traits::SignatureAlgorithm::RsaRaw => RSASignatureRaw,
         native_pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Raw => RSASignatureDigestPKCS1v15Raw,
@@ -57,7 +57,28 @@ fn sigalg_to_seckeyalg(
         native_pkcs11_traits::SignatureAlgorithm::RsaPkcs1v15Sha512 => {
             RSASignatureMessagePKCS1v15SHA512
         }
-    }
+        native_pkcs11_traits::SignatureAlgorithm::RsaPss {
+            digest,
+            mask_generation_function,
+            salt_length,
+        } => {
+            //  SecurityFramework only supports digest == mgf, salt_length == len(digest).
+            if digest != mask_generation_function || digest.digest_len() != *salt_length as usize {
+                return Err(crate::ErrorKind::UnsupportedSignatureAlgorithm(
+                    signature_algorithm.clone(),
+                )
+                .into());
+            }
+            match mask_generation_function {
+                native_pkcs11_traits::DigestType::Sha1 => RSASignatureDigestPSSSHA1,
+                native_pkcs11_traits::DigestType::Sha224 => RSASignatureDigestPSSSHA224,
+                native_pkcs11_traits::DigestType::Sha256 => RSASignatureDigestPSSSHA256,
+                native_pkcs11_traits::DigestType::Sha384 => RSASignatureDigestPSSSHA384,
+                native_pkcs11_traits::DigestType::Sha512 => RSASignatureDigestPSSSHA512,
+            }
+        }
+    };
+    Ok(alg)
 }
 
 #[derive(Debug)]
@@ -112,7 +133,7 @@ impl PrivateKey for KeychainPrivateKey {
         algorithm: &native_pkcs11_traits::SignatureAlgorithm,
         data: &[u8],
     ) -> native_pkcs11_traits::Result<Vec<u8>> {
-        let algorithm = sigalg_to_seckeyalg(algorithm);
+        let algorithm = sigalg_to_seckeyalg(algorithm)?;
         Ok(self.sec_key.create_signature(algorithm, data.as_ref())?)
     }
 
@@ -217,7 +238,7 @@ impl PublicKey for KeychainPublicKey {
         data: &[u8],
         signature: &[u8],
     ) -> native_pkcs11_traits::Result<()> {
-        let algorithm = sigalg_to_seckeyalg(algorithm);
+        let algorithm = sigalg_to_seckeyalg(algorithm)?;
         let result = self.sec_key.verify_signature(algorithm, data, signature)?;
         if !result {
             return Err("verify failed")?;

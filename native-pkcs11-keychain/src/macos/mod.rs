@@ -16,6 +16,7 @@ use std::fmt::Debug;
 
 pub use backend::KeychainBackend;
 use core_foundation::error::CFError;
+use native_pkcs11_traits::SignatureAlgorithm;
 use thiserror::Error;
 use tracing_error::SpanTrace;
 
@@ -79,6 +80,9 @@ pub enum ErrorKind {
 
     #[error("{0}")]
     Pkcs1(#[from] rsa::pkcs1::Error),
+
+    #[error("{0:?}")]
+    UnsupportedSignatureAlgorithm(SignatureAlgorithm),
 }
 
 impl From<CFError> for ErrorKind {

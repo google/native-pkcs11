@@ -36,7 +36,7 @@ use std::{
 
 use native_pkcs11_core::{
     attribute::{Attribute, Attributes},
-    mechanism::{Mechanism, MECHANISMS},
+    mechanism::{parse_mechanism, SUPPORTED_SIGNATURE_MECHANISMS},
     object::{self, Object},
 };
 use pkcs11_sys::*;
@@ -350,14 +350,16 @@ cryptoki_fn!(
         not_null!(pulCount);
         valid_slot!(slotID);
         if !pMechanismList.is_null() {
-            if (unsafe { *pulCount } as usize) < MECHANISMS.len() {
-                unsafe { *pulCount = MECHANISMS.len() as CK_ULONG };
+            if (unsafe { *pulCount } as usize) < SUPPORTED_SIGNATURE_MECHANISMS.len() {
+                unsafe { *pulCount = SUPPORTED_SIGNATURE_MECHANISMS.len() as CK_ULONG };
                 return Err(Error::BufferTooSmall);
             }
-            unsafe { slice::from_raw_parts_mut(pMechanismList, MECHANISMS.len()) }
-                .copy_from_slice(&MECHANISMS);
+            unsafe {
+                slice::from_raw_parts_mut(pMechanismList, SUPPORTED_SIGNATURE_MECHANISMS.len())
+            }
+            .copy_from_slice(&SUPPORTED_SIGNATURE_MECHANISMS);
         }
-        unsafe { *pulCount = MECHANISMS.len() as CK_ULONG };
+        unsafe { *pulCount = SUPPORTED_SIGNATURE_MECHANISMS.len() as CK_ULONG };
         Ok(())
     }
 );
@@ -371,7 +373,9 @@ cryptoki_fn!(
         initialized!();
         valid_slot!(slotID);
         not_null!(pInfo);
-        TryInto::<Mechanism>::try_into(mechType)?;
+        if !SUPPORTED_SIGNATURE_MECHANISMS.contains(&mechType) {
+            return Err(Error::MechanismInvalid(mechType));
+        }
         let info = CK_MECHANISM_INFO {
             flags: CKF_SIGN,
             ..Default::default()
@@ -790,7 +794,7 @@ cryptoki_fn!(
                 Some(Object::PrivateKey(private_key)) => private_key,
                 Some(_) | None => return Err(Error::KeyHandleInvalid(hKey)),
             };
-            let mechanism: Mechanism = unsafe { *pMechanism }.mechanism.try_into()?;
+            let mechanism = unsafe { parse_mechanism(pMechanism.read()) }?;
             session.sign_ctx = Some(SignContext {
                 algorithm: mechanism.into(),
                 private_key: private_key.clone(),
@@ -1259,7 +1263,7 @@ pub mod tests {
         unsafe {
             mechanisms.set_len(count as usize);
         }
-        assert_eq!(mechanisms, *MECHANISMS);
+        assert_eq!(mechanisms, *SUPPORTED_SIGNATURE_MECHANISMS);
         // Expect CKR_SLOT_ID_INVALID if slotID references a nonexistent slot.
         assert_eq!(
             unsafe { C_GetMechanismList(SLOT_ID + 1, ptr::null_mut(), &mut count) },
@@ -1291,7 +1295,7 @@ pub mod tests {
         assert_eq!(unsafe { C_Initialize(ptr::null_mut()) }, CKR_OK);
         let mut info = CK_MECHANISM_INFO::default();
         assert_eq!(
-            unsafe { C_GetMechanismInfo(SLOT_ID, MECHANISMS[0], &mut info) },
+            unsafe { C_GetMechanismInfo(SLOT_ID, SUPPORTED_SIGNATURE_MECHANISMS[0], &mut info) },
             CKR_OK
         );
         // Expect CKR_MECHANISM_INVALID if type is an unsupported mechanism.
@@ -1301,13 +1305,17 @@ pub mod tests {
         );
         // Expect CKR_ARGUMENTS_BAD if pInfo is null.
         assert_eq!(
-            unsafe { C_GetMechanismInfo(SLOT_ID, MECHANISMS[0], ptr::null_mut()) },
+            unsafe {
+                C_GetMechanismInfo(SLOT_ID, SUPPORTED_SIGNATURE_MECHANISMS[0], ptr::null_mut())
+            },
             CKR_ARGUMENTS_BAD
         );
         // Expect CKR_CRYPTOKI_NOT_INITIALIZED if token is not initialized.
         assert_eq!(unsafe { C_Finalize(ptr::null_mut()) }, CKR_OK);
         assert_eq!(
-            unsafe { C_GetMechanismInfo(SLOT_ID, MECHANISMS[0], ptr::null_mut()) },
+            unsafe {
+                C_GetMechanismInfo(SLOT_ID, SUPPORTED_SIGNATURE_MECHANISMS[0], ptr::null_mut())
+            },
             CKR_CRYPTOKI_NOT_INITIALIZED
         );
     }
