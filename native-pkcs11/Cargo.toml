@@ -2,14 +2,11 @@
 name = "native-pkcs11"
 version = "0.2.4"
 description = "Cross-platform PKCS#11 module written in rust. Can be extended with custom credential backends."
-authors = [
-    "Brandon Weeks <bweeks@google.com>",
-    "Kevin King <kcking@google.com>",
-]
-edition = "2021"
-rust-version = "1.63"
-repository = "https://github.com/google/native-pkcs11"
-license = "Apache-2.0"
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [features]
 custom-function-list = []
