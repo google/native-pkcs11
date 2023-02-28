@@ -372,7 +372,7 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "native-pkcs11"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "native-pkcs11-core",
  "native-pkcs11-keychain",
@@ -389,7 +389,7 @@ dependencies = [
 
 [[package]]
 name = "native-pkcs11-core"
-version = "0.2.2"
+version = "0.2.5"
 dependencies = [
  "native-pkcs11-keychain",
  "native-pkcs11-traits",
@@ -407,7 +407,7 @@ dependencies = [
 
 [[package]]
 name = "native-pkcs11-keychain"
-version = "0.2.2"
+version = "0.2.5"
 dependencies = [
  "core-foundation",
  "native-pkcs11-traits",
@@ -425,7 +425,7 @@ dependencies = [
 
 [[package]]
 name = "native-pkcs11-traits"
-version = "0.2.2"
+version = "0.2.5"
 dependencies = [
  "once_cell",
  "rand",
@@ -434,7 +434,7 @@ dependencies = [
 
 [[package]]
 name = "native-pkcs11-windows"
-version = "0.2.2"
+version = "0.2.5"
 dependencies = [
  "native-pkcs11-traits",
  "windows",
