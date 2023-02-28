@@ -16,6 +16,7 @@ use std::{ffi::CString, fmt::Debug, sync::Arc};
 
 use native_pkcs11_traits::{backend, Certificate, CertificateExt, PrivateKey, PublicKey};
 use p256::pkcs8::AssociatedOid;
+use pkcs1::{der::Decode, RsaPrivateKey, RsaPublicKey};
 use pkcs11_sys::{
     CKC_X_509,
     CKK_EC,
@@ -26,7 +27,6 @@ use pkcs11_sys::{
     CKO_PUBLIC_KEY,
     CK_PROFILE_ID,
 };
-use rsa::pkcs1::{der::Decode, RsaPrivateKey, RsaPublicKey};
 use tracing::warn;
 
 use crate::attribute::{Attribute, AttributeType, Attributes};

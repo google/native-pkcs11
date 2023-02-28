@@ -11,10 +11,7 @@ unmaintained = "deny"
 unsound = "deny"
 yanked = "deny"
 notice = "deny"
-ignore = [
-    #TODO(bweeks): disambiguate our pkcs11 crate name.
-    "RUSTSEC-2022-0034",
-]
+ignore = []
 
 [licenses]
 allow = ["Apache-2.0", "BSD-3-Clause", "ISC", "MIT", "Unicode-DFS-2016"]
@@ -22,6 +19,11 @@ copyleft = "deny"
 
 [bans]
 multiple-versions = "deny"
+skip = [
+    { name = "der", version = "=0.6.1" },
+    { name = "pkcs1", version = "=0.4.1" },
+    { name = "spki", version = "=0.6.0" },
+]
 
 [sources]
 unknown-registry = "deny"
