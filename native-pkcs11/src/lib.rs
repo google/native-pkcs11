@@ -827,7 +827,8 @@ cryptoki_fn!(
             let data = unsafe { slice::from_raw_parts(pData, ulDataLen as usize) };
             let signature = match sign_ctx.private_key.sign(&sign_ctx.algorithm, data) {
                 Ok(sig) => sig,
-                Err(_) => {
+                Err(e) => {
+                    tracing::error!("signature failed: {e:?}");
                     return Err(Error::ArgumentsBad);
                 }
             };
