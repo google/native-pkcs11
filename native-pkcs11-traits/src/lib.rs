@@ -40,7 +40,28 @@ pub fn backend() -> &'static dyn Backend {
     BACKEND.as_ref()
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum DigestType {
+    Sha1,
+    Sha224,
+    Sha256,
+    Sha384,
+    Sha512,
+}
+
+impl DigestType {
+    pub fn digest_len(&self) -> usize {
+        match self {
+            DigestType::Sha1 => 20,
+            DigestType::Sha224 => 28,
+            DigestType::Sha256 => 32,
+            DigestType::Sha384 => 48,
+            DigestType::Sha512 => 64,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum SignatureAlgorithm {
     Ecdsa,
     RsaRaw,
@@ -49,6 +70,11 @@ pub enum SignatureAlgorithm {
     RsaPkcs1v15Sha384,
     RsaPkcs1v15Sha256,
     RsaPkcs1v15Sha512,
+    RsaPss {
+        digest: DigestType,
+        mask_generation_function: DigestType,
+        salt_length: u64,
+    },
 }
 
 pub trait PrivateKey: Send + Sync {
