@@ -15,7 +15,7 @@
 use std::{ffi::CString, fmt::Debug, sync::Arc};
 
 use native_pkcs11_traits::{backend, Certificate, CertificateExt, PrivateKey, PublicKey};
-use p256::pkcs8::AssociatedOid;
+use p256::pkcs8::{der::Encode, AssociatedOid};
 use pkcs1::{der::Decode, RsaPrivateKey, RsaPublicKey};
 use pkcs11_sys::{
     CKC_X_509,
@@ -89,8 +89,7 @@ impl Object {
                 AttributeType::Class => Some(Attribute::Class(CKO_PRIVATE_KEY)),
                 AttributeType::Decrypt => Some(Attribute::Decrypt(false)),
                 AttributeType::EcParams => {
-                    // TODO(kcking): expose via native-pkcs11-keychain.
-                    Some(Attribute::EcParams(p256::NistP256::OID.as_bytes().to_vec()))
+                    Some(Attribute::EcParams(p256::NistP256::OID.to_vec().ok()?))
                 }
                 AttributeType::Id => Some(Attribute::Id(private_key.public_key_hash())),
                 AttributeType::KeyType => Some(Attribute::KeyType(match private_key.algorithm() {
