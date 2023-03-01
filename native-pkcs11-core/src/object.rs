@@ -14,8 +14,18 @@
 
 use std::{ffi::CString, fmt::Debug, sync::Arc};
 
-use native_pkcs11_traits::{backend, Certificate, CertificateExt, PrivateKey, PublicKey};
-use p256::pkcs8::{der::Encode, AssociatedOid};
+use native_pkcs11_traits::{
+    backend,
+    Certificate,
+    CertificateExt,
+    KeyAlgorithm,
+    PrivateKey,
+    PublicKey,
+};
+use p256::pkcs8::{
+    der::{asn1::OctetString, Encode},
+    AssociatedOid,
+};
 use pkcs1::{der::Decode, RsaPrivateKey, RsaPublicKey};
 use pkcs11_sys::{
     CKC_X_509,
@@ -175,6 +185,13 @@ impl Object {
                     native_pkcs11_traits::KeyAlgorithm::Ecc => CKK_EC,
                 })),
                 AttributeType::Id => Some(Attribute::Id(pk.public_key_hash())),
+                AttributeType::EcPoint => {
+                    if pk.algorithm() != KeyAlgorithm::Ecc {
+                        return None;
+                    }
+                    let wrapped = OctetString::new(pk.to_der()).ok()?;
+                    Some(Attribute::EcPoint(wrapped.to_vec().ok()?))
+                }
                 _ => {
                     warn!("public_key: type_ unimplemented: {:?}", type_);
                     None
