@@ -320,11 +320,11 @@ pub fn find_key2(class: KeyClass, label: &[u8]) -> Result<Option<SecKey>> {
 }
 
 #[instrument]
-pub fn find_all_private_keys() -> Result<Vec<SecKey>> {
+pub fn find_all_keys(key_class: KeyClass) -> Result<Vec<SecKey>> {
     let results = ItemSearchOptions::new()
         .load_refs(true)
         .class(ItemClass::key())
-        .key_class(KeyClass::private())
+        .key_class(key_class)
         .limit(Limit::All)
         .search();
 

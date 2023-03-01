@@ -91,6 +91,12 @@ impl Backend for WindowsBackend {
         Ok(vec![])
     }
 
+    fn find_all_public_keys(
+        &self,
+    ) -> native_pkcs11_traits::Result<Vec<Arc<dyn native_pkcs11_traits::PublicKey>>> {
+        Ok(vec![])
+    }
+
     fn generate_key(
         &self,
         _algorithm: native_pkcs11_traits::KeyAlgorithm,
