@@ -72,13 +72,19 @@ impl ObjectStore {
                 let private_key = backend().find_private_key(KeySearchOptions::PublicKeyHash(
                     cert.public_key().public_key_hash().as_slice().try_into()?,
                 ))?;
-                let private_key = match private_key {
+                //  Check if certificate has an associated PrivateKey.
+                match private_key {
                     Some(key) => key,
                     None => continue,
                 };
-                let cert = Object::Certificate(cert.into());
+                self.insert(Object::Certificate(cert.into()));
+            }
+            //  Add all keys, regardless of label.
+            for private_key in backend().find_all_private_keys()? {
                 self.insert(Object::PrivateKey(private_key));
-                self.insert(cert);
+            }
+            for public_key in backend().find_all_public_keys()? {
+                self.insert(Object::PublicKey(public_key));
             }
             self.last_loaded_certs = Some(std::time::Instant::now());
         }

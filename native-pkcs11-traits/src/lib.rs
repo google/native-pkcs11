@@ -186,6 +186,8 @@ impl<T: Certificate + ?Sized> CertificateExt for T {}
 
 #[derive(Debug)]
 pub enum KeySearchOptions {
+    //  TODO(kcking): search keys by _both_ label and public key hash as that is how
+    //  they are de-duped and referenced.
     Label(String),
     PublicKeyHash(Digest),
 }
@@ -202,6 +204,7 @@ pub trait Backend: Send + Sync {
     fn find_private_key(&self, query: KeySearchOptions) -> Result<Option<Arc<dyn PrivateKey>>>;
     fn find_public_key(&self, query: KeySearchOptions) -> Result<Option<Box<dyn PublicKey>>>;
     fn find_all_private_keys(&self) -> Result<Vec<Arc<dyn PrivateKey>>>;
+    fn find_all_public_keys(&self) -> Result<Vec<Arc<dyn PublicKey>>>;
     fn generate_key(
         &self,
         algorithm: KeyAlgorithm,

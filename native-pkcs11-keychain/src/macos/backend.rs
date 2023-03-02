@@ -26,7 +26,7 @@ use tracing::instrument;
 use crate::{
     certificate::{find_all_certificates, KeychainCertificate},
     key::{
-        find_all_private_keys,
+        find_all_keys,
         find_key,
         find_key2,
         generate_key,
@@ -144,7 +144,7 @@ impl Backend for KeychainBackend {
     fn find_all_private_keys(
         &self,
     ) -> native_pkcs11_traits::Result<Vec<Arc<dyn native_pkcs11_traits::PrivateKey>>> {
-        let sec_keys = find_all_private_keys()?;
+        let sec_keys = find_all_keys(KeyClass::private())?;
         let keys = sec_keys
             .into_iter()
             .filter_map(|sec_key| {
@@ -157,6 +157,29 @@ impl Backend for KeychainBackend {
                 let label: String = label.unwrap_or_default();
 
                 KeychainPrivateKey::new(sec_key, label, None).ok()
+            })
+            .map(|k| Arc::new(k) as _);
+
+        Ok(keys.collect())
+    }
+
+    fn find_all_public_keys(
+        &self,
+    ) -> native_pkcs11_traits::Result<Vec<Arc<dyn native_pkcs11_traits::PublicKey>>> {
+        let sec_keys = find_all_keys(KeyClass::public())?;
+
+        let keys = sec_keys
+            .into_iter()
+            .filter_map(|sec_key| {
+                let label: Option<String> = sec_key
+                    .attributes()
+                    .find(unsafe { kSecAttrLabel }.to_void())
+                    .map(|label| {
+                        unsafe { CFString::wrap_under_get_rule(label.cast()) }.to_string()
+                    });
+                let label: String = label.unwrap_or_default();
+
+                KeychainPublicKey::new(sec_key, label).ok()
             })
             .map(|k| Arc::new(k) as _);
 
