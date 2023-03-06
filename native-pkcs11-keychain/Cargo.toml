@@ -9,7 +9,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-p256 = { version = "0.12.0", default-features = false, features = [
+p256 = { version = "0.13.0", default-features = false, features = [
     "pkcs8",
     "std",
     "arithmetic",
