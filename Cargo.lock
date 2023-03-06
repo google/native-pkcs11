@@ -396,7 +396,7 @@ dependencies = [
  "native-pkcs11-windows",
  "once_cell",
  "p256",
- "pkcs1 0.7.0",
+ "pkcs1 0.7.1",
  "pkcs11-sys",
  "serial_test",
  "strum",
@@ -591,9 +591,9 @@ dependencies = [
 
 [[package]]
 name = "pkcs1"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aafe31c51bd5e2345ab4e6239edbee9a58da741ffe0f3d426a325d8bc9f463de"
+checksum = "178ba28ece1961eafdff1991bd1744c29564cbab5d803f3ccb4a4895a6c550a7"
 dependencies = [
  "der 0.7.0",
  "spki 0.7.0",
