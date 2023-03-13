@@ -160,9 +160,9 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc302fd9b18d66834a6f092d10ea85489c0ca8ad6b7304092135fab171d853cd"
+checksum = "bc906908ea6458456e5eaa160a9c08543ec3d1e6f71e2235cedd660cb65f9df0"
 dependencies = [
  "const-oid",
 ]
@@ -595,7 +595,7 @@ version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "178ba28ece1961eafdff1991bd1744c29564cbab5d803f3ccb4a4895a6c550a7"
 dependencies = [
- "der 0.7.0",
+ "der 0.7.1",
  "spki 0.7.0",
 ]
 
@@ -888,7 +888,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0445c905640145c7ea8c1993555957f65e7c46d0535b91ba501bc9bfc85522f"
 dependencies = [
- "der 0.7.0",
+ "der 0.7.1",
 ]
 
 [[package]]
