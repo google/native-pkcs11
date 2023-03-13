@@ -99,7 +99,7 @@ impl Object {
                 AttributeType::Class => Some(Attribute::Class(CKO_PRIVATE_KEY)),
                 AttributeType::Decrypt => Some(Attribute::Decrypt(false)),
                 AttributeType::EcParams => {
-                    Some(Attribute::EcParams(p256::NistP256::OID.to_vec().ok()?))
+                    Some(Attribute::EcParams(p256::NistP256::OID.to_der().ok()?))
                 }
                 AttributeType::Id => Some(Attribute::Id(private_key.public_key_hash())),
                 AttributeType::KeyType => Some(Attribute::KeyType(match private_key.algorithm() {
@@ -190,7 +190,7 @@ impl Object {
                         return None;
                     }
                     let wrapped = OctetString::new(pk.to_der()).ok()?;
-                    Some(Attribute::EcPoint(wrapped.to_vec().ok()?))
+                    Some(Attribute::EcPoint(wrapped.to_der().ok()?))
                 }
                 _ => {
                     warn!("public_key: type_ unimplemented: {:?}", type_);

@@ -22,6 +22,7 @@ multiple-versions = "deny"
 skip = [
     { name = "der", version = "=0.6.1" },
     { name = "pkcs1", version = "=0.4.1" },
+    { name = "pkcs8", version = "=0.9.0" },
     { name = "spki", version = "=0.6.0" },
 ]
 
