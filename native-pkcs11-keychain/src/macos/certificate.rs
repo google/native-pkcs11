@@ -17,8 +17,10 @@ use std::{
     time::{Duration, SystemTime},
 };
 
+use const_oid::AssociatedOid;
 use native_pkcs11_traits::random_label;
-use rsa::{pkcs1::DecodeRsaPublicKey, pkcs8::AssociatedOid};
+use p256::PublicKey as P256PublicKey;
+use rsa::{pkcs1::DecodeRsaPublicKey, RsaPublicKey};
 use security_framework::{
     certificate::SecCertificate,
     identity::SecIdentity,
@@ -50,7 +52,7 @@ use x509_cert::{
     name::{Name, RdnSequence},
     serial_number::SerialNumber,
     spki::{der::asn1::BitString, EncodePublicKey, SubjectPublicKeyInfo},
-    time::Validity,
+    time::{Time, Validity},
     Certificate,
     TbsCertificate,
 };
@@ -291,11 +293,11 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
         .to_vec();
 
     let public_key = match key_algorithm {
-        Algorithm::RSA => rsa::RsaPublicKey::from_pkcs1_der(&public_key)?
+        Algorithm::RSA => RsaPublicKey::from_pkcs1_der(&public_key)?
             .to_public_key_der()?
             .as_bytes()
             .to_owned(),
-        Algorithm::ECC => p256::PublicKey::from_sec1_bytes(public_key.as_slice())?
+        Algorithm::ECC => P256PublicKey::from_sec1_bytes(public_key.as_slice())?
             .to_public_key_der()?
             .as_bytes()
             .to_owned(),
@@ -345,10 +347,10 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
         signature: spki.algorithm.clone(),
         issuer: Name::from_der(&issuer_name)?,
         validity: Validity {
-            not_before: x509_cert::time::Time::GeneralTime(GeneralizedTime::from_system_time(
+            not_before: Time::GeneralTime(GeneralizedTime::from_system_time(
                 SystemTime::now() - Duration::from_secs(60 * 60 * 24),
             )?),
-            not_after: x509_cert::time::Time::GeneralTime(GeneralizedTime::from_system_time(
+            not_after: Time::GeneralTime(GeneralizedTime::from_system_time(
                 SystemTime::now() + Duration::from_secs(60 * 60 * 24),
             )?),
         },

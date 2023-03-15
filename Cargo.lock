@@ -400,6 +400,7 @@ dependencies = [
 name = "native-pkcs11-keychain"
 version = "0.2.7"
 dependencies = [
+ "const-oid",
  "core-foundation",
  "native-pkcs11-traits",
  "p256",
@@ -408,7 +409,6 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "serial_test",
- "spki",
  "thiserror",
  "tracing",
  "tracing-error",
