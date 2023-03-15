@@ -15,9 +15,11 @@
 use std::time::{Duration, SystemTime};
 
 use native_pkcs11_traits::random_label;
+// TODO: temporary workaround, remove when upgrading x509-cert crate.
+use p256::pkcs8::EncodePublicKey as EncodePublicKey2;
 use rsa::{
     pkcs1::{DecodeRsaPublicKey, UIntRef},
-    pkcs8::AssociatedOid,
+    pkcs8::{AssociatedOid, EncodePublicKey},
 };
 use security_framework::{
     certificate::SecCertificate,
@@ -48,7 +50,7 @@ use x509_cert::{
         Extension,
     },
     name::{Name, RdnSequence},
-    spki::{der::asn1::BitStringRef, EncodePublicKey, SubjectPublicKeyInfo},
+    spki::{der::asn1::BitStringRef, SubjectPublicKeyInfo},
     time::Validity,
     Certificate,
     TbsCertificate,
