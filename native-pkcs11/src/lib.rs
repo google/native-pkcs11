@@ -574,7 +574,6 @@ cryptoki_fn!(
                 &mut []
             };
             for attribute in template.iter_mut() {
-                attribute.ulValueLen = CK_UNAVAILABLE_INFORMATION;
                 let type_ = attribute
                     .type_
                     .try_into()
@@ -591,7 +590,7 @@ cryptoki_fn!(
                     unsafe { slice::from_raw_parts_mut(attribute.pValue as *mut u8, value.len()) }
                         .copy_from_slice(&value);
                 } else {
-                    return Err(Error::AttributeTypeInvalid(attribute.type_));
+                    attribute.ulValueLen = CK_UNAVAILABLE_INFORMATION;
                 }
             }
             Ok(())
