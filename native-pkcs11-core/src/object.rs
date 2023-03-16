@@ -35,6 +35,7 @@ use pkcs11_sys::{
     CKO_PRIVATE_KEY,
     CKO_PROFILE,
     CKO_PUBLIC_KEY,
+    CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
     CK_PROFILE_ID,
 };
 use tracing::debug;
@@ -80,12 +81,16 @@ impl Object {
     pub fn attribute(&self, type_: AttributeType) -> Option<Attribute> {
         match self {
             Object::Certificate(cert) => match type_ {
+                AttributeType::CertificateCategory => Some(Attribute::CertificateCategory(
+                    CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
+                )),
                 AttributeType::CertificateType => Some(Attribute::CertificateType(CKC_X_509)),
                 AttributeType::Class => Some(Attribute::Class(CKO_CERTIFICATE)),
                 AttributeType::Id => Some(Attribute::Id(cert.public_key().public_key_hash())),
                 AttributeType::Issuer => Some(Attribute::Issuer(cert.issuer())),
                 AttributeType::Label => Some(Attribute::Label(cert.label())),
                 AttributeType::Token => Some(Attribute::Token(true)),
+                AttributeType::Trusted => Some(Attribute::Trusted(false)),
                 AttributeType::SerialNumber => Some(Attribute::SerialNumber(cert.serial_number())),
                 AttributeType::Subject => Some(Attribute::Subject(cert.subject())),
                 AttributeType::Value => Some(Attribute::Value(cert.to_der())),
