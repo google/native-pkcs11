@@ -37,7 +37,7 @@ use pkcs11_sys::{
     CKO_PUBLIC_KEY,
     CK_PROFILE_ID,
 };
-use tracing::warn;
+use tracing::debug;
 
 use crate::attribute::{Attribute, AttributeType, Attributes};
 
@@ -90,7 +90,7 @@ impl Object {
                 AttributeType::Subject => Some(Attribute::Subject(cert.subject())),
                 AttributeType::Value => Some(Attribute::Value(cert.to_der())),
                 _ => {
-                    warn!("certificate: type_ unimplemented: {:?}", type_);
+                    debug!("certificate: type_ unimplemented: {:?}", type_);
                     None
                 }
             },
@@ -143,7 +143,7 @@ impl Object {
                 AttributeType::Token => Some(Attribute::Token(true)),
                 AttributeType::Unwrap => Some(Attribute::Unwrap(false)),
                 _ => {
-                    warn!("private_key: type_ unimplemented: {:?}", type_);
+                    debug!("private_key: type_ unimplemented: {:?}", type_);
                     None
                 }
             },
@@ -152,7 +152,7 @@ impl Object {
                 AttributeType::ProfileId => Some(Attribute::ProfileId(*id)),
                 AttributeType::Token => Some(Attribute::Token(true)),
                 _ => {
-                    warn!("profile: type_ unimplemented: {:?}", type_);
+                    debug!("profile: type_ unimplemented: {:?}", type_);
                     None
                 }
             },
@@ -182,7 +182,7 @@ impl Object {
                     Some(Attribute::EcPoint(wrapped.to_der().ok()?))
                 }
                 _ => {
-                    warn!("public_key: type_ unimplemented: {:?}", type_);
+                    debug!("public_key: type_ unimplemented: {:?}", type_);
                     None
                 }
             },
