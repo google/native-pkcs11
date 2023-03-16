@@ -121,13 +121,6 @@ impl PrivateKey for KeychainPrivateKey {
     }
 
     #[instrument]
-    fn to_der(&self) -> Option<Vec<u8>> {
-        self.sec_key
-            .external_representation()
-            .map(|data| data.bytes().to_vec())
-    }
-
-    #[instrument]
     fn sign(
         &self,
         algorithm: &native_pkcs11_traits::SignatureAlgorithm,

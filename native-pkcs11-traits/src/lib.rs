@@ -80,8 +80,6 @@ pub enum SignatureAlgorithm {
 pub trait PrivateKey: Send + Sync {
     fn public_key_hash(&self) -> Vec<u8>;
     fn label(&self) -> String;
-    //  `None` if the key is not exportable.
-    fn to_der(&self) -> Option<Vec<u8>>;
     fn sign(&self, algorithm: &SignatureAlgorithm, data: &[u8]) -> Result<Vec<u8>>;
     fn delete(&self);
     fn algorithm(&self) -> KeyAlgorithm;

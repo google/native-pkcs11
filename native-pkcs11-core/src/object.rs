@@ -26,7 +26,7 @@ use p256::pkcs8::{
     der::{asn1::OctetString, Encode},
     AssociatedOid,
 };
-use pkcs1::{der::Decode, RsaPrivateKey, RsaPublicKey};
+use pkcs1::{der::Decode, RsaPublicKey};
 use pkcs11_sys::{
     CKC_X_509,
     CKK_EC,
@@ -95,12 +95,14 @@ impl Object {
                 }
             },
             Object::PrivateKey(private_key) => match type_ {
+                AttributeType::AlwaysSensitive => Some(Attribute::AlwaysSensitive(true)),
                 AttributeType::AlwaysAuthenticate => Some(Attribute::AlwaysAuthenticate(false)),
                 AttributeType::Class => Some(Attribute::Class(CKO_PRIVATE_KEY)),
                 AttributeType::Decrypt => Some(Attribute::Decrypt(false)),
                 AttributeType::EcParams => {
                     Some(Attribute::EcParams(p256::NistP256::OID.to_der().ok()?))
                 }
+                AttributeType::Extractable => Some(Attribute::Extractable(false)),
                 AttributeType::Id => Some(Attribute::Id(private_key.public_key_hash())),
                 AttributeType::KeyType => Some(Attribute::KeyType(match private_key.algorithm() {
                     native_pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
@@ -120,22 +122,8 @@ impl Object {
                         });
                     modulus.map(Attribute::Modulus)
                 }
-                AttributeType::Prime1 => {
-                    let key = private_key.to_der().unwrap();
-                    let key = RsaPrivateKey::from_der(&key).unwrap();
-                    Some(Attribute::Modulus(key.prime1.as_bytes().to_vec()))
-                }
-                AttributeType::Prime2 => {
-                    let key = private_key.to_der().unwrap();
-                    let key = RsaPrivateKey::from_der(&key).unwrap();
-                    Some(Attribute::Modulus(key.prime2.as_bytes().to_vec()))
-                }
+                AttributeType::NeverExtractable => Some(Attribute::NeverExtractable(true)),
                 AttributeType::Private => Some(Attribute::Private(true)),
-                AttributeType::PrivateExponent => {
-                    let key = private_key.to_der().unwrap();
-                    let key = RsaPrivateKey::from_der(&key).unwrap();
-                    Some(Attribute::Modulus(key.private_exponent.as_bytes().to_vec()))
-                }
                 AttributeType::PublicExponent => {
                     let public_exponent = private_key
                         .find_public_key(backend())
@@ -149,6 +137,7 @@ impl Object {
                         });
                     public_exponent.map(Attribute::PublicExponent)
                 }
+                AttributeType::Sensitive => Some(Attribute::Sensitive(true)),
                 AttributeType::Sign => Some(Attribute::Sign(true)),
                 AttributeType::SignRecover => Some(Attribute::SignRecover(false)),
                 AttributeType::Token => Some(Attribute::Token(true)),
