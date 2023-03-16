@@ -23,7 +23,9 @@ use crate::{Error, Result};
 #[derive(Debug, Display, PartialEq, Eq)]
 pub enum AttributeType {
     AlwaysAuthenticate,
+    AlwaysSensitive,
     Application,
+    CertificateCategory,
     CertificateType,
     Class,
     Coefficient,
@@ -40,6 +42,7 @@ pub enum AttributeType {
     Label,
     Modulus,
     ModulusBits,
+    NeverExtractable,
     Prime1,
     Prime2,
     Private,
@@ -52,6 +55,7 @@ pub enum AttributeType {
     SignRecover,
     Subject,
     Token,
+    Trusted,
     Unwrap,
     Value,
     ValueLen,
@@ -66,7 +70,9 @@ impl TryFrom<CK_ATTRIBUTE_TYPE> for AttributeType {
     fn try_from(type_: CK_ATTRIBUTE_TYPE) -> Result<Self> {
         match type_ {
             CKA_ALWAYS_AUTHENTICATE => Ok(AttributeType::AlwaysAuthenticate),
+            CKA_ALWAYS_SENSITIVE => Ok(AttributeType::AlwaysSensitive),
             CKA_APPLICATION => Ok(AttributeType::Application),
+            CKA_CERTIFICATE_CATEGORY => Ok(AttributeType::CertificateCategory),
             CKA_CERTIFICATE_TYPE => Ok(AttributeType::CertificateType),
             CKA_CLASS => Ok(AttributeType::Class),
             CKA_COEFFICIENT => Ok(AttributeType::Coefficient),
@@ -83,6 +89,7 @@ impl TryFrom<CK_ATTRIBUTE_TYPE> for AttributeType {
             CKA_LABEL => Ok(AttributeType::Label),
             CKA_MODULUS => Ok(AttributeType::Modulus),
             CKA_MODULUS_BITS => Ok(AttributeType::ModulusBits),
+            CKA_NEVER_EXTRACTABLE => Ok(AttributeType::NeverExtractable),
             CKA_PRIME_1 => Ok(AttributeType::Prime1),
             CKA_PRIME_2 => Ok(AttributeType::Prime2),
             CKA_PRIVATE => Ok(AttributeType::Private),
@@ -95,6 +102,7 @@ impl TryFrom<CK_ATTRIBUTE_TYPE> for AttributeType {
             CKA_SERIAL_NUMBER => Ok(AttributeType::SerialNumber),
             CKA_SUBJECT => Ok(AttributeType::Subject),
             CKA_TOKEN => Ok(AttributeType::Token),
+            CKA_TRUSTED => Ok(AttributeType::Trusted),
             CKA_UNWRAP => Ok(AttributeType::Unwrap),
             CKA_VALUE => Ok(AttributeType::Value),
             CKA_VALUE_LEN => Ok(AttributeType::ValueLen),
@@ -109,7 +117,9 @@ impl TryFrom<CK_ATTRIBUTE_TYPE> for AttributeType {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Attribute {
     AlwaysAuthenticate(bool),
+    AlwaysSensitive(bool),
     Application(CString),
+    CertificateCategory(CK_CERTIFICATE_CATEGORY),
     CertificateType(CK_CERTIFICATE_TYPE),
     Class(CK_OBJECT_CLASS),
     Coefficient(Vec<u8>),
@@ -126,6 +136,7 @@ pub enum Attribute {
     Label(String),
     Modulus(Vec<u8>),
     ModulusBits(CK_ULONG),
+    NeverExtractable(bool),
     Prime1(Vec<u8>),
     Prime2(Vec<u8>),
     Private(bool),
@@ -138,6 +149,7 @@ pub enum Attribute {
     SignRecover(bool),
     Subject(Vec<u8>),
     Token(bool),
+    Trusted(bool),
     Unwrap(bool),
     Value(Vec<u8>),
     ValueLen(CK_ULONG),
@@ -150,7 +162,9 @@ impl Attribute {
     pub fn attribute_type(&self) -> AttributeType {
         match self {
             Attribute::AlwaysAuthenticate(_) => AttributeType::AlwaysAuthenticate,
+            Attribute::AlwaysSensitive(_) => AttributeType::AlwaysSensitive,
             Attribute::Application(_) => AttributeType::Application,
+            Attribute::CertificateCategory(_) => AttributeType::CertificateCategory,
             Attribute::CertificateType(_) => AttributeType::CertificateType,
             Attribute::Class(_) => AttributeType::Class,
             Attribute::Coefficient(_) => AttributeType::Coefficient,
@@ -167,6 +181,7 @@ impl Attribute {
             Attribute::Label(_) => AttributeType::Label,
             Attribute::Modulus(_) => AttributeType::Modulus,
             Attribute::ModulusBits(_) => AttributeType::ModulusBits,
+            Attribute::NeverExtractable(_) => AttributeType::NeverExtractable,
             Attribute::Prime1(_) => AttributeType::Prime1,
             Attribute::Prime2(_) => AttributeType::Prime2,
             Attribute::Private(_) => AttributeType::Private,
@@ -179,6 +194,7 @@ impl Attribute {
             Attribute::SignRecover(_) => AttributeType::SignRecover,
             Attribute::Subject(_) => AttributeType::Subject,
             Attribute::Token(_) => AttributeType::Token,
+            Attribute::Trusted(_) => AttributeType::Trusted,
             Attribute::Unwrap(_) => AttributeType::Unwrap,
             Attribute::Value(_) => AttributeType::Value,
             Attribute::ValueLen(_) => AttributeType::ValueLen,
@@ -191,21 +207,25 @@ impl Attribute {
     pub fn as_raw_value(&self) -> Vec<u8> {
         match self {
             Attribute::AlwaysAuthenticate(bool)
+            | Attribute::AlwaysSensitive(bool)
             | Attribute::Decrypt(bool)
             | Attribute::Encrypt(bool)
             | Attribute::Extractable(bool)
+            | Attribute::NeverExtractable(bool)
             | Attribute::Private(bool)
             | Attribute::Sensitive(bool)
             | Attribute::Sign(bool)
             | Attribute::SignRecover(bool)
             | Attribute::Token(bool)
+            | Attribute::Trusted(bool)
             | Attribute::Unwrap(bool)
             | Attribute::Verify(bool)
             | Attribute::VerifyRecover(bool)
             | Attribute::Wrap(bool) => {
                 CK_BBOOL::to_ne_bytes(if *bool { CK_TRUE } else { CK_FALSE }).to_vec()
             }
-            Attribute::CertificateType(int)
+            Attribute::CertificateCategory(int)
+            | Attribute::CertificateType(int)
             | Attribute::Class(int)
             | Attribute::KeyType(int)
             | Attribute::ModulusBits(int)
@@ -254,9 +274,15 @@ impl TryFrom<CK_ATTRIBUTE> for Attribute {
             AttributeType::AlwaysAuthenticate => {
                 Ok(Attribute::AlwaysAuthenticate(try_u8_into_bool(val)?))
             }
+            AttributeType::AlwaysSensitive => {
+                Ok(Attribute::AlwaysSensitive(try_u8_into_bool(val)?))
+            }
             AttributeType::Application => Ok(Attribute::Application(CString::from_vec_with_nul(
                 val.to_vec(),
             )?)),
+            AttributeType::CertificateCategory => Ok(Attribute::CertificateCategory(
+                CK_CERTIFICATE_CATEGORY::from_ne_bytes(val.try_into()?),
+            )),
             AttributeType::CertificateType => Ok(Attribute::CertificateType(
                 CK_CERTIFICATE_TYPE::from_ne_bytes(val.try_into()?),
             )),
@@ -281,6 +307,9 @@ impl TryFrom<CK_ATTRIBUTE> for Attribute {
             AttributeType::ModulusBits => Ok(Attribute::ModulusBits(CK_ULONG::from_ne_bytes(
                 val.try_into()?,
             ))),
+            AttributeType::NeverExtractable => {
+                Ok(Attribute::NeverExtractable(try_u8_into_bool(val)?))
+            }
             AttributeType::Prime1 => Ok(Attribute::Prime1(val.to_vec())),
             AttributeType::Prime2 => Ok(Attribute::Prime2(val.to_vec())),
             AttributeType::Private => Ok(Attribute::Private(try_u8_into_bool(val)?)),
@@ -295,6 +324,7 @@ impl TryFrom<CK_ATTRIBUTE> for Attribute {
             AttributeType::Sign => Ok(Attribute::Sign(try_u8_into_bool(val)?)),
             AttributeType::SignRecover => Ok(Attribute::SignRecover(try_u8_into_bool(val)?)),
             AttributeType::Token => Ok(Attribute::Token(try_u8_into_bool(val)?)),
+            AttributeType::Trusted => Ok(Attribute::Trusted(try_u8_into_bool(val)?)),
             AttributeType::Unwrap => Ok(Attribute::Unwrap(try_u8_into_bool(val)?)),
             AttributeType::Value => Ok(Attribute::Value(val.to_vec())),
             AttributeType::ValueLen => Ok(Attribute::ValueLen(CK_ULONG::from_ne_bytes(
