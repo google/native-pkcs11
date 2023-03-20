@@ -15,11 +15,10 @@
 use std::time::{Duration, SystemTime};
 
 use native_pkcs11_traits::random_label;
-// TODO: temporary workaround, remove when upgrading x509-cert crate.
-use p256::pkcs8::EncodePublicKey as EncodePublicKey2;
 use rsa::{
-    pkcs1::{DecodeRsaPublicKey, UIntRef},
-    pkcs8::{AssociatedOid, EncodePublicKey},
+    pkcs1::DecodeRsaPublicKey,
+    // TODO: temporary workaround, remove when upgrading rsa crate.
+    pkcs8::{AssociatedOid, EncodePublicKey as _},
 };
 use security_framework::{
     certificate::SecCertificate,
@@ -31,7 +30,7 @@ use security_framework::{
 use security_framework_sys::base::errSecItemNotFound;
 use x509_cert::{
     der::{
-        asn1::{GeneralizedTime, Ia5StringRef, OctetStringRef},
+        asn1::{GeneralizedTime, Ia5String, OctetString},
         oid::ObjectIdentifier,
         Decode,
         Encode,
@@ -50,7 +49,8 @@ use x509_cert::{
         Extension,
     },
     name::{Name, RdnSequence},
-    spki::{der::asn1::BitStringRef, SubjectPublicKeyInfo},
+    serial_number::SerialNumber,
+    spki::{der::asn1::BitString, EncodePublicKey, SubjectPublicKeyInfo},
     time::Validity,
     Certificate,
     TbsCertificate,
@@ -310,40 +310,40 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
 
     let serial_number = random_serial_number();
 
-    let san = GeneralName::DnsName(Ia5StringRef::new("localhost")?);
-    let san = SubjectAltName(vec![san]).to_vec()?;
+    let san = GeneralName::DnsName(Ia5String::new("localhost")?);
+    let san = SubjectAltName(vec![san]).to_der()?;
 
     let key_usage = KeyUsage(
         KeyUsages::DigitalSignature | KeyUsages::KeyEncipherment | KeyUsages::KeyAgreement,
     )
-    .to_vec()?;
+    .to_der()?;
 
     let extended_key_usage = ExtendedKeyUsage(vec![
         EXTENDED_KEY_USAGE_CLIENT_AUTHENTICATION,
         EXTENDED_KEY_USAGE_SERVER_AUTHENTICATION,
     ])
-    .to_vec()?;
+    .to_der()?;
 
     let basic_constraints = BasicConstraints {
         ca: false,
         path_len_constraint: None,
     }
-    .to_vec()?;
+    .to_der()?;
 
     let sk_and_ak_id = random_serial_number();
-    let sk_id = SubjectKeyIdentifier(OctetStringRef::new(&sk_and_ak_id)?).to_vec()?;
+    let sk_id = SubjectKeyIdentifier(OctetString::new(sk_and_ak_id)?).to_der()?;
     let ak_id = AuthorityKeyIdentifier {
-        key_identifier: Some(OctetStringRef::new(&sk_and_ak_id)?),
+        key_identifier: Some(OctetString::new(sk_and_ak_id)?),
         authority_cert_issuer: None,
         authority_cert_serial_number: None,
     }
-    .to_vec()?;
+    .to_der()?;
 
     let tbs_certificate = TbsCertificate {
         version: x509_cert::Version::V3,
         //  NOTE: can't be empty
-        serial_number: UIntRef::new(&serial_number)?,
-        signature: spki.algorithm,
+        serial_number: SerialNumber::new(&serial_number)?,
+        signature: spki.algorithm.clone(),
         issuer: Name::from_der(&issuer_name)?,
         validity: Validity {
             not_before: x509_cert::time::Time::GeneralTime(GeneralizedTime::from_system_time(
@@ -354,7 +354,7 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
             )?),
         },
         subject: Name::from_der(&subject_name)?,
-        subject_public_key_info: spki,
+        subject_public_key_info: spki.clone(),
 
         //  webpki appears to not support these fields:
         //  https://github.com/briansmith/webpki/blob/17d9189981a618120fd8217a913828e7418e2484/src/cert.rs#L78
@@ -365,37 +365,37 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
             Extension {
                 extn_id: BasicConstraints::OID,
                 critical: true,
-                extn_value: &basic_constraints,
+                extn_value: OctetString::new(basic_constraints)?,
             },
             Extension {
                 extn_id: SubjectAltName::OID,
                 critical: false,
-                extn_value: &san,
+                extn_value: OctetString::new(san)?,
             },
             Extension {
                 extn_id: KeyUsage::OID,
                 critical: true,
-                extn_value: &key_usage,
+                extn_value: OctetString::new(key_usage)?,
             },
             Extension {
                 extn_id: ExtendedKeyUsage::OID,
                 critical: false,
-                extn_value: &extended_key_usage,
+                extn_value: OctetString::new(extended_key_usage)?,
             },
             Extension {
                 extn_id: SubjectKeyIdentifier::OID,
                 critical: false,
-                extn_value: &sk_id,
+                extn_value: OctetString::new(sk_id)?,
             },
             Extension {
                 extn_id: AuthorityKeyIdentifier::OID,
                 critical: false,
-                extn_value: &ak_id,
+                extn_value: OctetString::new(ak_id)?,
             },
         ]),
     };
 
-    let payload = tbs_certificate.to_vec()?;
+    let payload = tbs_certificate.to_der()?;
     let signature = private_key.create_signature(
         match key_algorithm {
             Algorithm::RSA => security_framework_sys::key::Algorithm::RSASignatureMessagePSSSHA256,
@@ -409,8 +409,8 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
     let cert = Certificate {
         tbs_certificate,
         signature_algorithm: spki.algorithm,
-        signature: BitStringRef::from_bytes(signature.as_slice())?,
+        signature: BitString::from_bytes(signature.as_slice())?,
     };
 
-    Ok(cert.to_vec()?)
+    Ok(cert.to_der()?)
 }

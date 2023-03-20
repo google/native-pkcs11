@@ -153,8 +153,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1a467a65c5e759bce6e65eaf91cc29f466cdc57cb65777bd646872a8a1fd4de"
 dependencies = [
  "const-oid",
- "der_derive",
- "flagset",
  "zeroize",
 ]
 
@@ -165,14 +163,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc906908ea6458456e5eaa160a9c08543ec3d1e6f71e2235cedd660cb65f9df0"
 dependencies = [
  "const-oid",
+ "der_derive",
+ "flagset",
  "zeroize",
 ]
 
 [[package]]
 name = "der_derive"
-version = "0.6.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ef71ddb5b3a1f53dee24817c8f70dfa1cb29e804c18d88c228d4bc9c86ee3b9"
+checksum = "63898447d5453a504531990fb79708be1087effb2da9b2704f54dbdf8b6890e4"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -1193,14 +1193,13 @@ checksum = "9aec5da331524158c6d1a4ac0ab1541149c0b9505fde06423b02f5ef0106b9f0"
 
 [[package]]
 name = "x509-cert"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99d224a125dec5adda27d0346b9cae9794830279c4f9c27e4ab0b6c408d54012"
+checksum = "ec66d81190eaa4af3dfaaffa9775ac831e83d90bb802d9397e5fefd5f2f579db"
 dependencies = [
  "const-oid",
- "der 0.6.1",
- "flagset",
- "spki 0.6.0",
+ "der 0.7.1",
+ "spki 0.7.0",
 ]
 
 [[package]]
