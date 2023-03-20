@@ -164,19 +164,19 @@ pub trait CertificateExt: Certificate {
     fn issuer(&self) -> Vec<u8> {
         let der = self.to_der();
         let c = x509_cert::Certificate::from_der(&der).unwrap();
-        x509_cert::der::Encode::to_vec(&c.tbs_certificate.issuer).unwrap()
+        x509_cert::der::Encode::to_der(&c.tbs_certificate.issuer).unwrap()
     }
 
     fn serial_number(&self) -> Vec<u8> {
         let der = self.to_der();
         let c = x509_cert::Certificate::from_der(&der).unwrap();
-        x509_cert::der::Encode::to_vec(&c.tbs_certificate.serial_number).unwrap()
+        x509_cert::der::Encode::to_der(&c.tbs_certificate.serial_number).unwrap()
     }
 
     fn subject(&self) -> Vec<u8> {
         let der = self.to_der();
         let c = x509_cert::Certificate::from_der(&der).unwrap();
-        x509_cert::der::Encode::to_vec(&c.tbs_certificate.subject).unwrap()
+        x509_cert::der::Encode::to_der(&c.tbs_certificate.subject).unwrap()
     }
 }
 
