@@ -38,8 +38,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@e12eda571dc9a5ee5d58eecf4738ec291c66f295
         with:
           toolchain: ${{ matrix.toolchain }}
-      - name: Build
+      - name: Build workspace
         run: cargo build --verbose
+      # Catch individual crates not enabling all features they need.
+      - name: Build individual crates
+        if: matrix.os != 'windows-latest'
+        run:
+          for crate in native-pkcs11 native-pkcs11-core native-pkcs11-traits
+          pkcs11-sys native-pkcs11-keychain native-pkcs11-windows; do cargo
+          build -p $crate || exit 1 ; done
 
   cargo-deny:
     runs-on: ubuntu-latest
