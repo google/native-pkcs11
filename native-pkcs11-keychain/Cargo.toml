@@ -10,7 +10,11 @@ license.workspace = true
 
 [dependencies]
 native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
-p256 = { version = "0.13.0", default-features = false }
+p256 = { version = "0.13.0", default-features = false, features = [
+    "arithmetic",
+    "pkcs8",
+    "std",
+] }
 rand = "0.8.5"
 rsa = { version = "0.8.2", default-features = false, features = ["std"] }
 # TODO: temporary workaround for RustCrypto/traits#1262, remove after upgrading
