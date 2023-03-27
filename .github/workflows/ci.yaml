@@ -43,8 +43,7 @@ jobs:
       # Catch individual crates not enabling all features they need.
       - name: Build individual crates
         if: matrix.os != 'windows-latest'
-        run:
-          for crate in native-pkcs11 native-pkcs11-core native-pkcs11-traits
+        run: for crate in native-pkcs11 native-pkcs11-core native-pkcs11-traits
           pkcs11-sys native-pkcs11-keychain native-pkcs11-windows; do cargo
           build -p $crate || exit 1 ; done
 
@@ -63,4 +62,4 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt, clippy
-      - run: cargo clippy
+      - run: cargo clippy -- -D warnings

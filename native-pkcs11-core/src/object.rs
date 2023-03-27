@@ -50,7 +50,7 @@ pub struct DataObject {
 }
 
 // TODO(bweeks): resolve by improving the ObjectStore implementation.
-#[allow(clippy::derive_hash_xor_eq)]
+#[allow(clippy::derived_hash_with_manual_eq)]
 #[derive(Debug, Hash, Eq, Clone)]
 pub enum Object {
     Certificate(Arc<dyn Certificate>),

@@ -43,6 +43,7 @@ pub enum Mechanism {
     },
 }
 
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn parse_mechanism(mechanism: CK_MECHANISM) -> Result<Mechanism, Error> {
     match mechanism.mechanism {
         CKM_ECDSA => Ok(Mechanism::Ecdsa),
@@ -100,6 +101,7 @@ pub unsafe fn parse_mechanism(mechanism: CK_MECHANISM) -> Result<Mechanism, Erro
                 }
             };
 
+            #[allow(clippy::unnecessary_cast)]
             Ok(Mechanism::RsaPss {
                 digest_algorithm: hash_alg,
                 mask_generation_function: mgf,
