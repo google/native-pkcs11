@@ -357,7 +357,7 @@ cryptoki_fn!(
             unsafe {
                 slice::from_raw_parts_mut(pMechanismList, SUPPORTED_SIGNATURE_MECHANISMS.len())
             }
-            .copy_from_slice(&SUPPORTED_SIGNATURE_MECHANISMS);
+            .copy_from_slice(SUPPORTED_SIGNATURE_MECHANISMS);
         }
         unsafe { *pulCount = SUPPORTED_SIGNATURE_MECHANISMS.len() as CK_ULONG };
         Ok(())

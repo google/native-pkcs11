@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::time::{Duration, SystemTime};
+use std::{
+    str::FromStr,
+    time::{Duration, SystemTime},
+};
 
 use native_pkcs11_traits::random_label;
 use rsa::{
@@ -305,8 +308,8 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
     let spki = SubjectPublicKeyInfo::try_from(public_key.as_slice())?;
 
     let subject_name =
-        RdnSequence::encode_from_string(&format!("cn=Test Cert {}", random_label()))?;
-    let issuer_name = RdnSequence::encode_from_string("cn=GShoe LLC")?;
+        RdnSequence::from_str(&format!("cn=Test Cert {}", random_label()))?.to_der()?;
+    let issuer_name = RdnSequence::from_str("cn=GShoe LLC")?.to_der()?;
 
     let serial_number = random_serial_number();
 
