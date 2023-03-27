@@ -11,4 +11,4 @@ license.workspace = true
 [dependencies]
 once_cell = "1.17.1"
 rand = "0.8.5"
-x509-cert = { version = "0.2.0", default-features = false }
+x509-cert = { version = "0.2.1", default-features = false }

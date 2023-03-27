@@ -23,7 +23,7 @@ spki = { version = "0.7.0", features = ["std"] }
 thiserror = "1.0.40"
 tracing = "0.1.37"
 tracing-error = { version = "0.2.0", default-features = false }
-x509-cert = { version = "0.2.0", default-features = false }
+x509-cert = { version = "0.2.1", default-features = false }
 
 [dev-dependencies]
 serial_test = { version = "1.0.0", default-features = false }
