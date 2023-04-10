@@ -10,7 +10,7 @@ license.workspace = true
 
 [dependencies]
 native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
-p256 = { version = "0.13.0", default-features = false, features = [
+p256 = { version = "0.13.1", default-features = false, features = [
     "arithmetic",
     "pkcs8",
     "std",
