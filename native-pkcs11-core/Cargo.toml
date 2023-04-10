@@ -16,7 +16,7 @@ p256 = { version = "0.13.1", default-features = false, features = [
     "pkcs8",
     "std",
 ] }
-pkcs1 = { version = "0.7.1", default-features = false }
+pkcs1 = { version = "0.7.2", default-features = false }
 pkcs11-sys = { version = "0.2.0", path = "../pkcs11-sys" }
 strum = "0.24.1"
 strum_macros = "0.24.3"
