@@ -209,10 +209,10 @@ static TRACING_INIT: Once = Once::new();
 
 cryptoki_fn!(
     fn C_Initialize(pInitArgs: CK_VOID_PTR) {
-        let env_filter = EnvFilter::builder()
-            .with_default_directive(LevelFilter::WARN.into())
-            .from_env_lossy();
         TRACING_INIT.call_once(|| {
+            let env_filter = EnvFilter::builder()
+                .with_default_directive(LevelFilter::WARN.into())
+                .from_env_lossy();
             let force_stderr = std::env::var("NATIVE_PKCS11_LOG_STDERR").is_ok();
             if !force_stderr {
                 if let Ok(journald_layer) = tracing_journald::layer() {
