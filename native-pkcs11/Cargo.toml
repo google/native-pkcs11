@@ -19,6 +19,7 @@ pkcs11-sys = { version = "0.2.0", path = "../pkcs11-sys" }
 thiserror = "1.0.40"
 tracing = "0.1.37"
 tracing-error = "0.2.0"
+tracing-journald = "0.3"
 tracing-subscriber = "0.3.16"
 
 [lib]

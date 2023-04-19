@@ -209,9 +209,20 @@ static TRACING_INIT: Once = Once::new();
 cryptoki_fn!(
     fn C_Initialize(pInitArgs: CK_VOID_PTR) {
         TRACING_INIT.call_once(|| {
-            let stderr = tracing_subscriber::fmt::layer().with_writer(std::io::stderr);
-            let subscriber = Registry::default().with(stderr).with(ErrorLayer::default());
-            let _ = subscriber.try_init();
+            let force_stderr = std::env::var("NATIVE_PKCS11_LOG_STDERR").is_ok();
+            if !force_stderr {
+                if let Ok(journald_layer) = tracing_journald::layer() {
+                    _ = Registry::default()
+                        .with(journald_layer.with_syslog_identifier("native-pkcs11".into()))
+                        .with(ErrorLayer::default())
+                        .try_init();
+                    return;
+                }
+            }
+            _ = Registry::default()
+                .with(tracing_subscriber::fmt::layer().with_writer(std::io::stderr))
+                .with(ErrorLayer::default())
+                .try_init();
         });
         if !pInitArgs.is_null() {
             let args = unsafe { *(pInitArgs as CK_C_INITIALIZE_ARGS_PTR) };
