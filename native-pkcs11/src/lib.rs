@@ -18,8 +18,9 @@
 
 pub use native_pkcs11_core::Error;
 use native_pkcs11_traits::backend;
+use tracing::metadata::LevelFilter;
 use tracing_error::ErrorLayer;
-use tracing_subscriber::{prelude::*, Registry};
+use tracing_subscriber::{prelude::*, EnvFilter, Registry};
 mod object_store;
 mod sessions;
 mod utils;
@@ -208,12 +209,16 @@ static TRACING_INIT: Once = Once::new();
 
 cryptoki_fn!(
     fn C_Initialize(pInitArgs: CK_VOID_PTR) {
+        let env_filter = EnvFilter::builder()
+            .with_default_directive(LevelFilter::WARN.into())
+            .from_env_lossy();
         TRACING_INIT.call_once(|| {
             let force_stderr = std::env::var("NATIVE_PKCS11_LOG_STDERR").is_ok();
             if !force_stderr {
                 if let Ok(journald_layer) = tracing_journald::layer() {
                     _ = Registry::default()
                         .with(journald_layer.with_syslog_identifier("native-pkcs11".into()))
+                        .with(env_filter)
                         .with(ErrorLayer::default())
                         .try_init();
                     return;
@@ -221,6 +226,7 @@ cryptoki_fn!(
             }
             _ = Registry::default()
                 .with(tracing_subscriber::fmt::layer().with_writer(std::io::stderr))
+                .with(env_filter)
                 .with(ErrorLayer::default())
                 .try_init();
         });
