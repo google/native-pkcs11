@@ -18,11 +18,7 @@ use std::{
 };
 
 use native_pkcs11_traits::random_label;
-use rsa::{
-    pkcs1::DecodeRsaPublicKey,
-    // TODO: temporary workaround, remove when upgrading rsa crate.
-    pkcs8::{AssociatedOid, EncodePublicKey as _},
-};
+use rsa::{pkcs1::DecodeRsaPublicKey, pkcs8::AssociatedOid};
 use security_framework::{
     certificate::SecCertificate,
     identity::SecIdentity,
