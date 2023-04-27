@@ -36,11 +36,11 @@ use std::{
 };
 
 use native_pkcs11_core::{
-    attribute::{Attribute, Attributes},
+    attribute::Attribute,
     mechanism::{parse_mechanism, SUPPORTED_SIGNATURE_MECHANISMS},
     object::{self, Object},
 };
-use pkcs11_sys::*;
+use pkcs11_sys::{Attributes as Attributes2, *};
 
 use crate::{
     sessions::{FindContext, SignContext},
@@ -582,32 +582,17 @@ cryptoki_fn!(
                     return Err(Error::ObjectHandleInvalid(hObject));
                 }
             };
-            let template = if ulCount > 0 {
-                if pTemplate.is_null() {
-                    return Err(Error::ArgumentsBad);
-                }
-                unsafe { slice::from_raw_parts_mut(pTemplate, ulCount as usize) }
-            } else {
-                &mut []
-            };
-            for attribute in template.iter_mut() {
-                let type_ = attribute
-                    .type_
+
+            let template = Attributes2::from_raw_parts(pTemplate, ulCount as usize);
+            for mut attr in template.attributes {
+                let type_ = attr
+                    .type_()
                     .try_into()
-                    .map_err(|_| Error::AttributeTypeInvalid(attribute.type_))?;
+                    .map_err(|_| Error::AttributeTypeInvalid(attr.type_()))?;
                 if let Some(value) = object.attribute(type_) {
-                    let value = value.as_raw_value();
-                    attribute.ulValueLen = value.len() as CK_ULONG;
-                    if attribute.pValue.is_null() {
-                        continue;
-                    }
-                    if (attribute.ulValueLen as usize) < value.len() {
-                        continue;
-                    }
-                    unsafe { slice::from_raw_parts_mut(attribute.pValue as *mut u8, value.len()) }
-                        .copy_from_slice(&value);
+                    attr.set_value(value.as_raw_value());
                 } else {
-                    attribute.ulValueLen = CK_UNAVAILABLE_INFORMATION;
+                    attr.set_unavailable();
                 }
             }
             Ok(())
@@ -631,9 +616,10 @@ cryptoki_fn!(
     ) {
         initialized!();
         valid_session!(hSession);
-        let template: Attributes = unsafe { slice::from_raw_parts(pTemplate, ulCount as usize) }
+        let template = Attributes2::from_raw_parts(pTemplate, ulCount as usize)
+            .attributes
             .iter()
-            .map(|attr| (*attr).try_into())
+            .map(|attr| attr.try_into())
             .collect::<native_pkcs11_core::Result<Vec<Attribute>>>()?
             .into();
         sessions::session(hSession, |session| -> Result {

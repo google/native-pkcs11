@@ -252,24 +252,12 @@ impl Attribute {
     }
 }
 
-impl TryFrom<CK_ATTRIBUTE> for Attribute {
+impl TryFrom<&pkcs11_sys::Attribute<'_>> for Attribute {
     type Error = Error;
 
-    fn try_from(attribute: CK_ATTRIBUTE) -> Result<Self> {
-        let attr_type = AttributeType::try_from(attribute.type_)?;
-        let val = if attribute.ulValueLen > 0 {
-            if attribute.pValue.is_null() {
-                return Err(Error::NullPtr);
-            }
-            unsafe {
-                std::slice::from_raw_parts(
-                    attribute.pValue as *const u8,
-                    attribute.ulValueLen.try_into()?,
-                )
-            }
-        } else {
-            &[]
-        };
+    fn try_from(attribute: &pkcs11_sys::Attribute) -> Result<Self> {
+        let attr_type = AttributeType::try_from(attribute.type_())?;
+        let val = attribute.value();
         match attr_type {
             AttributeType::AlwaysAuthenticate => {
                 Ok(Attribute::AlwaysAuthenticate(try_u8_into_bool(val)?))
