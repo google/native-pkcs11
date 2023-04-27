@@ -75,10 +75,6 @@ pub enum ErrorKind {
     #[error("{0}")]
     Spki(#[from] x509_cert::spki::Error),
 
-    // TODO: temporary workaround, remove when upgrading rsa crate.
-    #[error("{0}")]
-    Spki2(#[from] rsa::pkcs8::spki::Error),
-
     #[error("{0}")]
     P256(#[from] p256::elliptic_curve::Error),
 
