@@ -149,9 +149,9 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.7.5"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05e58dffcdcc8ee7b22f0c1f71a69243d7c2d9ad87b5a14361f2424a1565c219"
+checksum = "56acb310e15652100da43d130af8d97b509e95af61aab1c5a7939ef24337ee17"
 dependencies = [
  "const-oid",
  "der_derive",
@@ -1241,9 +1241,9 @@ checksum = "1a515f5799fe4961cb532f983ce2b23082366b898e52ffbce459c86f67c8378a"
 
 [[package]]
 name = "x509-cert"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0103e822c47e037cb45b34873a31e33181dc4db3a97123b2ecce49c6d4081bab"
+checksum = "5b1ecb24f870325e8cb64a097f78155bcce2f9c77750c7bfc9a931d664c4476a"
 dependencies = [
  "const-oid",
  "der",
