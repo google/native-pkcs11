@@ -23,6 +23,7 @@ use pkcs11_sys::{
     CKO_CERTIFICATE,
     CKO_PRIVATE_KEY,
     CKO_PUBLIC_KEY,
+    CKO_SECRET_KEY,
     CKP_BASELINE_PROVIDER,
     CK_OBJECT_HANDLE,
 };
@@ -117,6 +118,7 @@ impl ObjectStore {
                 CKO_CERTIFICATE => (),
                 // CKO_NSS_TRUST | CKO_NETSCAPE_BUILTIN_ROOT_LIST
                 3461563219 | 3461563220 => (),
+                CKO_SECRET_KEY => (),
                 CKO_PUBLIC_KEY | CKO_PRIVATE_KEY => {
                     let key_search_opts = if let Some(Attribute::Id(id)) =
                         template.get(AttributeType::Id)
