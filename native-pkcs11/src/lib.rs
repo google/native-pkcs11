@@ -814,6 +814,7 @@ cryptoki_fn!(
             session.sign_ctx = Some(SignContext {
                 algorithm: mechanism.into(),
                 private_key: private_key.clone(),
+                payload: None,
             });
             Ok(())
         })
@@ -841,36 +842,35 @@ cryptoki_fn!(
             };
 
             let data = unsafe { slice::from_raw_parts(pData, ulDataLen as usize) };
-            let signature = match sign_ctx.private_key.sign(&sign_ctx.algorithm, data) {
-                Ok(sig) => sig,
-                Err(e) => {
-                    tracing::error!("signature failed: {e:?}");
-                    return Err(Error::ArgumentsBad);
-                }
-            };
-            // TODO(bweeks): do we really need to sign twice for ECDSA?
-            if !pSignature.is_null() {
-                if (unsafe { *pulSignatureLen } as usize) < signature.len() {
-                    return Err(Error::BufferTooSmall);
-                }
-                unsafe { slice::from_raw_parts_mut(pSignature, signature.len()) }
-                    .copy_from_slice(&signature);
-            }
-            unsafe { *pulSignatureLen = signature.len().try_into().unwrap() };
+            unsafe { sign_ctx.sign(Some(data), pSignature, pulSignatureLen) }?;
+
+            session.sign_ctx = None;
             Ok(())
         })
     }
 );
 
-cryptoki_fn_not_supported!(
-    C_SignUpdate,
-    hSession: CK_SESSION_HANDLE,
-    pPart: CK_BYTE_PTR,
-    ulPartLen: CK_ULONG
+cryptoki_fn!(
+    unsafe fn C_SignUpdate(hSession: CK_SESSION_HANDLE, pPart: CK_BYTE_PTR, ulPartLen: CK_ULONG) {
+        initialized!();
+        valid_session!(hSession);
+        not_null!(pPart);
+        sessions::session(hSession, |session| -> Result {
+            let sign_ctx = match session.sign_ctx.as_mut() {
+                None => return Err(Error::OperationNotInitialized),
+                Some(sign_ctx) => sign_ctx,
+            };
+            sign_ctx
+                .payload
+                .get_or_insert(vec![])
+                .extend_from_slice(unsafe { slice::from_raw_parts(pPart, ulPartLen as usize) });
+            Ok(())
+        })
+    }
 );
 
 cryptoki_fn!(
-    fn C_SignFinal(
+    unsafe fn C_SignFinal(
         hSession: CK_SESSION_HANDLE,
         pSignature: CK_BYTE_PTR,
         pulSignatureLen: CK_ULONG_PTR,
@@ -880,9 +880,11 @@ cryptoki_fn!(
         not_null!(pSignature);
         not_null!(pulSignatureLen);
         sessions::session(hSession, |session| -> Result {
-            if session.sign_ctx.is_none() {
-                return Err(Error::OperationNotInitialized);
-            }
+            let sign_ctx = match session.sign_ctx.as_mut() {
+                None => return Err(Error::OperationNotInitialized),
+                Some(sign_ctx) => sign_ctx,
+            };
+            unsafe { sign_ctx.sign(None, pSignature, pulSignatureLen) }?;
             session.sign_ctx = None;
             Ok(())
         })
