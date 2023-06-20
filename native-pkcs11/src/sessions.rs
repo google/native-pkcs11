@@ -19,9 +19,9 @@ use std::{
 
 use native_pkcs11_traits::{PrivateKey, SignatureAlgorithm};
 use once_cell::sync::Lazy;
-use pkcs11_sys::{CK_FLAGS, CK_OBJECT_HANDLE, CK_SESSION_HANDLE};
+use pkcs11_sys::{CK_BYTE_PTR, CK_FLAGS, CK_OBJECT_HANDLE, CK_SESSION_HANDLE, CK_ULONG_PTR};
 
-use crate::object_store::ObjectStore;
+use crate::{object_store::ObjectStore, Error, Result};
 
 // "Valid session handles in Cryptoki always have nonzero values."
 #[cfg(not(target_os = "windows"))]
@@ -43,6 +43,42 @@ pub struct FindContext {
 pub struct SignContext {
     pub algorithm: SignatureAlgorithm,
     pub private_key: Arc<dyn PrivateKey>,
+    /// Payload stored for multipart C_SignUpdate operations.
+    pub payload: Option<Vec<u8>>,
+}
+
+impl SignContext {
+    /// Sign the provided data, or stored payload if data is not provided.
+    pub unsafe fn sign(
+        &self,
+        data: Option<&[u8]>,
+        pSignature: CK_BYTE_PTR,
+        pulSignatureLen: CK_ULONG_PTR,
+    ) -> Result {
+        let data = data
+            .or(self.payload.as_deref())
+            .ok_or(Error::OperationNotInitialized)?;
+        let signature = match self.private_key.sign(&self.algorithm, data) {
+            Ok(sig) => sig,
+            Err(e) => {
+                tracing::error!("signature failed: {e:?}");
+                return Err(Error::ArgumentsBad);
+            }
+        };
+        if !pSignature.is_null() {
+            // TODO(bweeks): This will cause a second sign call when this function is
+            // called again with an appropriately-sized buffer. Do we really need to
+            // sign twice for ECDSA? Consider storing the signature in the ctx for the next
+            // call.
+            if (unsafe { *pulSignatureLen } as usize) < signature.len() {
+                return Err(Error::BufferTooSmall);
+            }
+            unsafe { std::slice::from_raw_parts_mut(pSignature, signature.len()) }
+                .copy_from_slice(&signature);
+        }
+        unsafe { *pulSignatureLen = signature.len().try_into().unwrap() };
+        Ok(())
+    }
 }
 
 #[derive(Default)]
