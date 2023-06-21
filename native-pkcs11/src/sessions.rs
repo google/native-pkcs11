@@ -47,18 +47,22 @@ pub struct SignContext {
     pub payload: Option<Vec<u8>>,
 }
 
-impl SignContext {
+impl Session {
     /// Sign the provided data, or stored payload if data is not provided.
     pub unsafe fn sign(
-        &self,
+        &mut self,
         data: Option<&[u8]>,
         pSignature: CK_BYTE_PTR,
         pulSignatureLen: CK_ULONG_PTR,
     ) -> Result {
+        let sign_ctx = match self.sign_ctx.as_mut() {
+            Some(sign_ctx) => sign_ctx,
+            None => return Err(Error::OperationNotInitialized),
+        };
         let data = data
-            .or(self.payload.as_deref())
+            .or(sign_ctx.payload.as_deref())
             .ok_or(Error::OperationNotInitialized)?;
-        let signature = match self.private_key.sign(&self.algorithm, data) {
+        let signature = match sign_ctx.private_key.sign(&sign_ctx.algorithm, data) {
             Ok(sig) => sig,
             Err(e) => {
                 tracing::error!("signature failed: {e:?}");
@@ -75,6 +79,7 @@ impl SignContext {
             }
             unsafe { std::slice::from_raw_parts_mut(pSignature, signature.len()) }
                 .copy_from_slice(&signature);
+            self.sign_ctx = None;
         }
         unsafe { *pulSignatureLen = signature.len().try_into().unwrap() };
         Ok(())
