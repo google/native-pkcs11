@@ -834,17 +834,8 @@ cryptoki_fn!(
         not_null!(pData);
         not_null!(pulSignatureLen);
         sessions::session(hSession, |session| -> Result {
-            let sign_ctx = match &session.sign_ctx {
-                Some(sign_ctx) => sign_ctx,
-                None => {
-                    return Err(Error::OperationNotInitialized);
-                }
-            };
-
             let data = unsafe { slice::from_raw_parts(pData, ulDataLen as usize) };
-            unsafe { sign_ctx.sign(Some(data), pSignature, pulSignatureLen) }?;
-
-            session.sign_ctx = None;
+            unsafe { session.sign(Some(data), pSignature, pulSignatureLen) }?;
             Ok(())
         })
     }
@@ -880,12 +871,7 @@ cryptoki_fn!(
         not_null!(pSignature);
         not_null!(pulSignatureLen);
         sessions::session(hSession, |session| -> Result {
-            let sign_ctx = match session.sign_ctx.as_mut() {
-                None => return Err(Error::OperationNotInitialized),
-                Some(sign_ctx) => sign_ctx,
-            };
-            unsafe { sign_ctx.sign(None, pSignature, pulSignatureLen) }?;
-            session.sign_ctx = None;
+            unsafe { session.sign(None, pSignature, pulSignatureLen) }?;
             Ok(())
         })
     }
