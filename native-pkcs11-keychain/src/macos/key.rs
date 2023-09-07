@@ -14,19 +14,19 @@
 
 use std::fmt::Debug;
 
-use core_foundation::base::ToVoid;
-use native_pkcs11_traits::{KeyAlgorithm, PrivateKey, PublicKey, SignatureAlgorithm};
-use security_framework::{
+use apple_security_framework::{
     item::{ItemClass, ItemSearchOptions, KeyClass, Limit, Reference},
     key::{GenerateKeyOptions, KeyType, SecKey},
 };
 // TODO(bweeks,kcking): remove dependency on security-framework-sys crate.
-use security_framework_sys::item::{
+use apple_security_framework_sys::item::{
     kSecAttrKeyType,
     kSecAttrKeyTypeEC,
     kSecAttrKeyTypeRSA,
     kSecAttrTokenID,
 };
+use core_foundation::base::ToVoid;
+use native_pkcs11_traits::{KeyAlgorithm, PrivateKey, PublicKey, SignatureAlgorithm};
 use tracing::instrument;
 
 use crate::Result;
@@ -39,8 +39,8 @@ pub enum Algorithm {
 
 fn sigalg_to_seckeyalg(
     signature_algorithm: &SignatureAlgorithm,
-) -> Result<security_framework_sys::key::Algorithm> {
-    use security_framework_sys::key::Algorithm::*;
+) -> Result<apple_security_framework_sys::key::Algorithm> {
+    use apple_security_framework_sys::key::Algorithm::*;
     let alg = match signature_algorithm {
         native_pkcs11_traits::SignatureAlgorithm::Ecdsa => ECDSASignatureRFC4754,
         native_pkcs11_traits::SignatureAlgorithm::RsaRaw => RSASignatureRaw,
@@ -259,8 +259,8 @@ pub fn generate_key(algorithm: Algorithm, label: &str) -> Result<SecKey> {
         key_type: Some(ty),
         size_in_bits: Some(size),
         label: Some(label.into()),
-        token: Some(security_framework::key::Token::Software),
-        location: Some(security_framework::item::Location::DefaultFileKeychain),
+        token: Some(apple_security_framework::key::Token::Software),
+        location: Some(apple_security_framework::item::Location::DefaultFileKeychain),
     }
     .to_dictionary();
 
@@ -277,7 +277,7 @@ pub fn find_key(class: KeyClass, label: &str) -> Result<SecKey> {
         .search();
 
     let loaded_key = match results?.into_iter().next().ok_or("key not found")? {
-        security_framework::item::SearchResult::Ref(Reference::Key(key)) => key,
+        apple_security_framework::item::SearchResult::Ref(Reference::Key(key)) => key,
         _ => return Err("no key ref")?,
     };
 
@@ -304,7 +304,9 @@ pub fn find_key2(class: KeyClass, label: &[u8]) -> Result<Option<SecKey>> {
         .into_iter()
         .next()
         .map(|key| match key {
-            security_framework::item::SearchResult::Ref(Reference::Key(key)) => Ok::<_, &str>(key),
+            apple_security_framework::item::SearchResult::Ref(Reference::Key(key)) => {
+                Ok::<_, &str>(key)
+            }
             _ => Err("no key ref")?,
         })
         .transpose()?;
@@ -330,7 +332,7 @@ pub fn find_all_keys(key_class: KeyClass) -> Result<Vec<SecKey>> {
     let keys = results
         .into_iter()
         .filter_map(|res| match res {
-            security_framework::item::SearchResult::Ref(Reference::Key(key)) => Some(key),
+            apple_security_framework::item::SearchResult::Ref(Reference::Key(key)) => Some(key),
             _ => None,
         })
         .collect();
@@ -340,10 +342,10 @@ pub fn find_all_keys(key_class: KeyClass) -> Result<Vec<SecKey>> {
 
 #[cfg(test)]
 mod test {
+    use apple_security_framework::item::{add_item, AddRef, ItemAddOptions, Limit};
+    use apple_security_framework_sys::item::{kSecAttrLabel, kSecValueRef};
     use core_foundation::base::{TCFType, ToVoid};
     use native_pkcs11_traits::{random_label, Backend};
-    use security_framework::item::{add_item, AddRef, ItemAddOptions, Limit};
-    use security_framework_sys::item::{kSecAttrLabel, kSecValueRef};
     use serial_test::serial;
 
     use super::*;
@@ -365,8 +367,8 @@ mod test {
         {
             found = true;
             let (found_key, found_label) = match res {
-                security_framework::item::SearchResult::Ref(_) => panic!(),
-                security_framework::item::SearchResult::Dict(d) => {
+                apple_security_framework::item::SearchResult::Ref(_) => panic!(),
+                apple_security_framework::item::SearchResult::Dict(d) => {
                     let key = unsafe {
                         SecKey::wrap_under_get_rule(d.get(kSecValueRef.to_void()).cast_mut().cast())
                     };
@@ -377,8 +379,8 @@ mod test {
                     };
                     (key, label.to_string())
                 }
-                security_framework::item::SearchResult::Data(_) => panic!(),
-                security_framework::item::SearchResult::Other => panic!(),
+                apple_security_framework::item::SearchResult::Data(_) => panic!(),
+                apple_security_framework::item::SearchResult::Other => panic!(),
             };
 
             assert_eq!(
@@ -400,11 +402,11 @@ mod test {
         for (key_alg, sig_alg) in [
             (
                 Algorithm::ECC,
-                security_framework_sys::key::Algorithm::ECDSASignatureDigestX962,
+                apple_security_framework_sys::key::Algorithm::ECDSASignatureDigestX962,
             ),
             (
                 Algorithm::RSA,
-                security_framework_sys::key::Algorithm::RSASignatureDigestPKCS1v15Raw,
+                apple_security_framework_sys::key::Algorithm::RSASignatureDigestPKCS1v15Raw,
             ),
         ] {
             let label = &random_label();
@@ -520,9 +522,9 @@ mod test {
         let pubkey_hash = key1.public_key().unwrap().application_label().unwrap();
 
         add_item(
-            ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(AddRef::Key(
-                key1,
-            )))
+            ItemAddOptions::new(apple_security_framework::item::ItemAddValue::Ref(
+                AddRef::Key(key1),
+            ))
             .set_label(&label)
             .to_dictionary(),
         )?;
