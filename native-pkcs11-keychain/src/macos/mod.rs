@@ -70,7 +70,7 @@ pub enum ErrorKind {
     Der(#[from] x509_cert::der::Error),
 
     #[error("{0}")]
-    SecurityFramework(#[from] security_framework::base::Error),
+    SecurityFramework(#[from] apple_security_framework::base::Error),
 
     #[error("{0}")]
     Spki(#[from] x509_cert::spki::Error),
@@ -87,7 +87,9 @@ pub enum ErrorKind {
 
 impl From<CFError> for ErrorKind {
     fn from(e: CFError) -> Self {
-        ErrorKind::SecurityFramework(security_framework::base::Error::from_code(e.code() as i32))
+        ErrorKind::SecurityFramework(apple_security_framework::base::Error::from_code(
+            e.code() as i32
+        ))
     }
 }
 
