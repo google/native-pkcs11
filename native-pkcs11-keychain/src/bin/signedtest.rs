@@ -58,7 +58,7 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
         .ok_or("couldn't get external representation of public key")?
         .to_vec();
 
-    let results = ItemSearchOptions::new()
+    let results = native_pkcs11_keychain::keychain::item_search_options()?
         .class(ItemClass::key())
         .key_class(KeyClass::private())
         .label(label)

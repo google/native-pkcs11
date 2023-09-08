@@ -15,7 +15,7 @@
 use std::fmt::Debug;
 
 use apple_security_framework::{
-    item::{ItemClass, ItemSearchOptions, KeyClass, Limit, Reference},
+    item::{ItemClass, KeyClass, Limit, Location, Reference},
     key::{GenerateKeyOptions, KeyType, SecKey},
 };
 // TODO(bweeks,kcking): remove dependency on security-framework-sys crate.
@@ -248,8 +248,12 @@ impl PublicKey for KeychainPublicKey {
     }
 }
 
-#[instrument]
-pub fn generate_key(algorithm: Algorithm, label: &str) -> Result<SecKey> {
+#[instrument(skip(location))]
+pub fn generate_key(
+    algorithm: Algorithm,
+    label: &str,
+    location: Option<Location>,
+) -> Result<SecKey> {
     let (ty, size) = match algorithm {
         Algorithm::RSA => (KeyType::rsa(), 2048),
         Algorithm::ECC => (KeyType::ec(), 256),
@@ -260,7 +264,7 @@ pub fn generate_key(algorithm: Algorithm, label: &str) -> Result<SecKey> {
         size_in_bits: Some(size),
         label: Some(label.into()),
         token: Some(apple_security_framework::key::Token::Software),
-        location: Some(apple_security_framework::item::Location::DefaultFileKeychain),
+        location,
     }
     .to_dictionary();
 
@@ -268,7 +272,7 @@ pub fn generate_key(algorithm: Algorithm, label: &str) -> Result<SecKey> {
 }
 
 pub fn find_key(class: KeyClass, label: &str) -> Result<SecKey> {
-    let results = ItemSearchOptions::new()
+    let results = crate::keychain::item_search_options()?
         .load_refs(true)
         .label(label)
         .class(ItemClass::key())
@@ -286,7 +290,7 @@ pub fn find_key(class: KeyClass, label: &str) -> Result<SecKey> {
 
 #[instrument]
 pub fn find_key2(class: KeyClass, label: &[u8]) -> Result<Option<SecKey>> {
-    let results = ItemSearchOptions::new()
+    let results = crate::keychain::item_search_options()?
         .load_refs(true)
         .class(ItemClass::key())
         .key_class(class)
@@ -316,7 +320,7 @@ pub fn find_key2(class: KeyClass, label: &[u8]) -> Result<Option<SecKey>> {
 
 #[instrument]
 pub fn find_all_keys(key_class: KeyClass) -> Result<Vec<SecKey>> {
-    let results = ItemSearchOptions::new()
+    let results = crate::keychain::item_search_options()?
         .load_refs(true)
         .class(ItemClass::key())
         .key_class(key_class)
@@ -354,10 +358,10 @@ mod test {
     #[serial]
     fn key_label() -> crate::Result<()> {
         let label = random_label();
-        let key = generate_key(Algorithm::RSA, &label)?;
+        let key = generate_key(Algorithm::RSA, &label, Some(Location::DefaultFileKeychain))?;
 
         let mut found = false;
-        for res in ItemSearchOptions::new()
+        for res in crate::keychain::item_search_options()?
             .key_class(KeyClass::private())
             .limit(Limit::Max(1))
             .load_attributes(true)
@@ -411,7 +415,7 @@ mod test {
         ] {
             let label = &random_label();
 
-            let key = generate_key(key_alg, label)?;
+            let key = generate_key(key_alg, label, Some(Location::DefaultFileKeychain))?;
 
             let first_pubkey = key
                 .public_key()
@@ -448,7 +452,7 @@ mod test {
     fn stress_test_keygen() {
         let try_gen_key = || -> bool {
             let label = &random_label();
-            match generate_key(Algorithm::RSA, &label) {
+            match generate_key(Algorithm::RSA, &label, Some(Location::DefaultFileKeychain)) {
                 Ok(key) => {
                     let _ = key.delete();
                     true
@@ -475,8 +479,16 @@ mod test {
 
     #[test]
     fn keychain_pubkey_hash_find() -> Result<()> {
-        let key1 = generate_key(Algorithm::ECC, &random_label())?;
-        let key2 = generate_key(Algorithm::ECC, &random_label())?;
+        let key1 = generate_key(
+            Algorithm::ECC,
+            &random_label(),
+            Some(Location::DefaultFileKeychain),
+        )?;
+        let key2 = generate_key(
+            Algorithm::ECC,
+            &random_label(),
+            Some(Location::DefaultFileKeychain),
+        )?;
         assert_ne!(key1.application_label(), key2.application_label());
 
         for keyclass in [KeyClass::public(), KeyClass::private()] {
