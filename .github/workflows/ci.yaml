@@ -43,7 +43,8 @@ jobs:
       # Catch individual crates not enabling all features they need.
       - name: Build individual crates
         if: matrix.os != 'windows-latest'
-        run: for crate in native-pkcs11 native-pkcs11-core native-pkcs11-traits
+        run:
+          for crate in native-pkcs11 native-pkcs11-core native-pkcs11-traits
           pkcs11-sys native-pkcs11-keychain native-pkcs11-windows; do cargo
           build -p $crate || exit 1 ; done
 
@@ -63,3 +64,14 @@ jobs:
           toolchain: stable
           components: rustfmt, clippy
       - run: cargo clippy -- -D warnings
+
+  integration-macos-ssh:
+    name: macos ssh
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: dtolnay/rust-toolchain@b44cb146d03e8d870c57ab64b80f04586349ca5d
+        with:
+          toolchain: stable
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - run: ssh-testing/run.sh
