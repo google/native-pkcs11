@@ -186,6 +186,9 @@ impl Object {
                     let wrapped = OctetString::new(pk.to_der()).ok()?;
                     Some(Attribute::EcPoint(wrapped.to_der().ok()?))
                 }
+                AttributeType::EcParams => {
+                    Some(Attribute::EcParams(p256::NistP256::OID.to_der().ok()?))
+                }
                 _ => {
                     debug!("public_key: type_ unimplemented: {:?}", type_);
                     None

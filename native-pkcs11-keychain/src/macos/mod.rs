@@ -23,6 +23,7 @@ use tracing_error::SpanTrace;
 mod backend;
 pub mod certificate;
 pub mod key;
+pub mod keychain;
 
 //  NOTE(kcking): I think this just works because any non-System path defaults
 //  to the Login keychain

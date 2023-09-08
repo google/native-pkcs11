@@ -14,7 +14,10 @@
 
 use std::{collections::HashMap, sync::Arc};
 
-use apple_security_framework::{item::KeyClass, key::SecKey};
+use apple_security_framework::{
+    item::{KeyClass, Location},
+    key::SecKey,
+};
 use apple_security_framework_sys::item::kSecAttrLabel;
 use core_foundation::{
     base::{TCFType, ToVoid},
@@ -137,8 +140,10 @@ impl Backend for KeychainBackend {
             native_pkcs11_traits::KeyAlgorithm::Ecc => Algorithm::ECC,
         };
         let label = label.unwrap_or("");
-        Ok(generate_key(alg, label)
-            .map(|key| KeychainPrivateKey::new(key, label, None).map(Arc::new))??)
+        Ok(
+            generate_key(alg, label, Some(Location::DefaultFileKeychain))
+                .map(|key| KeychainPrivateKey::new(key, label, None).map(Arc::new))??,
+        )
     }
 
     fn find_all_private_keys(

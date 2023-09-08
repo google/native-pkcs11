@@ -20,7 +20,7 @@ use std::{
 use apple_security_framework::{
     certificate::SecCertificate,
     identity::SecIdentity,
-    item::{add_item, AddRef, ItemAddOptions, ItemClass, ItemSearchOptions, Reference},
+    item::{add_item, AddRef, ItemAddOptions, ItemClass, Reference},
     key::SecKey,
     os::macos::{identity::SecIdentityExt, keychain::SecKeychain},
 };
@@ -124,7 +124,7 @@ pub fn import_certificate(der: &[u8]) -> Result<SecCertificate> {
 }
 
 pub fn find_certificate(pub_key_hash: &[u8]) -> Result<Option<SecIdentity>> {
-    let results = ItemSearchOptions::new()
+    let results = crate::macos::keychain::item_search_options()?
         .load_refs(true)
         .class(ItemClass::certificate())
         .pub_key_hash(pub_key_hash)
@@ -145,7 +145,7 @@ pub fn find_certificate(pub_key_hash: &[u8]) -> Result<Option<SecIdentity>> {
 }
 
 pub fn find_all_certificates() -> Result<Vec<SecIdentity>> {
-    let results = ItemSearchOptions::new()
+    let results = crate::macos::keychain::item_search_options()?
         .load_refs(true)
         .class(ItemClass::identity())
         .limit(99)
@@ -214,6 +214,7 @@ pub fn import_identity(certificate: &SecCertificate) -> Result<SecIdentity> {
 
 #[cfg(test)]
 mod test {
+    use apple_security_framework::item::Location;
     use native_pkcs11_traits::random_label;
     use serial_test::serial;
 
@@ -222,14 +223,14 @@ mod test {
     #[serial]
     fn test_self_signed_certificate() -> Result<()> {
         use apple_security_framework::{
-            item::{ItemClass, ItemSearchOptions, Limit},
+            item::{ItemClass, Limit},
             os::macos::item::ItemSearchOptionsExt,
         };
 
         use crate::key::generate_key;
 
         let label = random_label();
-        let key = generate_key(Algorithm::RSA, &label)?;
+        let key = generate_key(Algorithm::RSA, &label, Some(Location::DefaultFileKeychain))?;
 
         let cert = self_signed_certificate(Algorithm::RSA, &key)?;
 
@@ -245,7 +246,7 @@ mod test {
         std::thread::sleep(std::time::Duration::from_secs(1));
 
         assert!(
-            ItemSearchOptions::new()
+            crate::macos::keychain::item_search_options()?
                 .keychains(&[SecKeychain::open(LOGIN_KEYCHAIN_PATH)?])
                 .class(ItemClass::identity())
                 .limit(Limit::All)

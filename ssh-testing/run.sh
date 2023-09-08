@@ -13,16 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+# MACOS ONLY
+
+set -ex
 
 # https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
 cd $(dirname -- "$( readlink -f -- "$0"; )")
 
+security delete-keychain nativepkcs11test || true
+security create-keychain -p "" nativepkcs11test
+export NATIVE_PKCS11_KEYCHAIN_PATH=$HOME/Library/Keychains/nativepkcs11test-db
+
+cargo run --bin create_selfsigned
+security set-key-partition-list -S apple-tool:,apple: -s -k "" $NATIVE_PKCS11_KEYCHAIN_PATH
+
 ../package-lipo.sh
 
 cat sshd_config.template | envsubst > sshd_config
+chmod 0600 ssh_host_ecdsa_key
 
-ssh-keygen -D ../target/libnative_pkcs11.dylib | grep -v pkcs11 > authorized_keys
+NATIVE_PKCS11_LOG_STDERR=1 RUST_LOG=debug /usr/bin/ssh-keygen -D $PWD/../target/libnative_pkcs11.dylib | grep -v pkcs11 > authorized_keys
 
 ($(which sshd) -D -e -f $PWD/sshd_config)&
 SSHD_JOB=$!
@@ -30,11 +40,13 @@ SSHD_JOB=$!
 sleep 1
 
 SUCCESS=0
-if ssh -F ssh_config test exit 0; then
+if NATIVE_PKCS11_LOG_STDERR=1 RUST_LOG=trace /usr/bin/ssh -vv -F ssh_config -o "PKCS11Provider=$PWD/../target/libnative_pkcs11.dylib" test exit 0; then
   SUCCESS=1
 fi
 
 kill $SSHD_JOB
+
+security delete-keychain nativepkcs11test || true
 
 if [ "$SUCCESS" != 1 ]; then
   exit 1
