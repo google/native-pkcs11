@@ -26,7 +26,7 @@ fn main() -> Result<(), native_pkcs11_keychain::Error> {
     let cert_der = self_signed_certificate(key::Algorithm::RSA, &key)?;
 
     let key_der = key.external_representation().unwrap().to_vec();
-    std::fs::write("/tmp/importkey.der", &key_der).unwrap();
+    std::fs::write("/tmp/importkey.der", key_der).unwrap();
 
     //  convert cert to PEM
     let mut child = std::process::Command::new("openssl")

@@ -86,7 +86,13 @@ impl Object {
                 )),
                 AttributeType::CertificateType => Some(Attribute::CertificateType(CKC_X_509)),
                 AttributeType::Class => Some(Attribute::Class(CKO_CERTIFICATE)),
-                AttributeType::Id => Some(Attribute::Id(cert.public_key().public_key_hash())),
+                AttributeType::Id => Some(Attribute::Id(
+                    crate::compoundid::encode(&crate::compoundid::Id {
+                        label: Some(cert.label()),
+                        public_key_hash: cert.public_key().public_key_hash(),
+                    })
+                    .ok()?,
+                )),
                 AttributeType::Issuer => Some(Attribute::Issuer(cert.issuer())),
                 AttributeType::Label => Some(Attribute::Label(cert.label())),
                 AttributeType::Token => Some(Attribute::Token(true)),
@@ -108,7 +114,13 @@ impl Object {
                     Some(Attribute::EcParams(p256::NistP256::OID.to_der().ok()?))
                 }
                 AttributeType::Extractable => Some(Attribute::Extractable(false)),
-                AttributeType::Id => Some(Attribute::Id(private_key.public_key_hash())),
+                AttributeType::Id => Some(Attribute::Id(
+                    crate::compoundid::encode(&crate::compoundid::Id {
+                        label: Some(private_key.label()),
+                        public_key_hash: private_key.public_key_hash(),
+                    })
+                    .ok()?,
+                )),
                 AttributeType::KeyType => Some(Attribute::KeyType(match private_key.algorithm() {
                     native_pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
                     native_pkcs11_traits::KeyAlgorithm::Ecc => CKK_EC,
@@ -178,7 +190,13 @@ impl Object {
                     native_pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
                     native_pkcs11_traits::KeyAlgorithm::Ecc => CKK_EC,
                 })),
-                AttributeType::Id => Some(Attribute::Id(pk.public_key_hash())),
+                AttributeType::Id => Some(Attribute::Id(
+                    crate::compoundid::encode(&crate::compoundid::Id {
+                        label: Some(pk.label()),
+                        public_key_hash: pk.public_key_hash(),
+                    })
+                    .ok()?,
+                )),
                 AttributeType::EcPoint => {
                     if pk.algorithm() != KeyAlgorithm::Ecc {
                         return None;
