@@ -455,7 +455,7 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "native-pkcs11"
-version = "0.2.13"
+version = "0.2.14"
 dependencies = [
  "native-pkcs11-core",
  "native-pkcs11-keychain",
@@ -473,7 +473,7 @@ dependencies = [
 
 [[package]]
 name = "native-pkcs11-core"
-version = "0.2.13"
+version = "0.2.14"
 dependencies = [
  "bincode",
  "native-pkcs11-keychain",
@@ -493,7 +493,7 @@ dependencies = [
 
 [[package]]
 name = "native-pkcs11-keychain"
-version = "0.2.13"
+version = "0.2.14"
 dependencies = [
  "apple-security-framework",
  "apple-security-framework-sys",
@@ -512,7 +512,7 @@ dependencies = [
 
 [[package]]
 name = "native-pkcs11-traits"
-version = "0.2.13"
+version = "0.2.14"
 dependencies = [
  "once_cell",
  "rand",
@@ -521,7 +521,7 @@ dependencies = [
 
 [[package]]
 name = "native-pkcs11-windows"
-version = "0.2.13"
+version = "0.2.14"
 dependencies = [
  "native-pkcs11-traits",
  "windows",
@@ -677,7 +677,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs11-sys"
-version = "0.2.13"
+version = "0.2.14"
 dependencies = [
  "bindgen",
 ]
