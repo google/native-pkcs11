@@ -23,7 +23,7 @@ serde = { version = "1.0.189", features = ["derive"] }
 strum = "0.25.0"
 strum_macros = "0.25.3"
 thiserror = "1.0.49"
-tracing = "0.1.39"
+tracing = "0.1.40"
 
 [dev-dependencies]
 serial_test = { version = "2.0.0", default-features = false }
