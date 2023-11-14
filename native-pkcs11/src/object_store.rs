@@ -41,7 +41,7 @@ pub struct ObjectStore {
 }
 
 impl ObjectStore {
-    #[instrument]
+    #[instrument(skip(self))]
     pub fn insert(&mut self, object: Object) -> CK_OBJECT_HANDLE {
         if let Some(existing_handle) = self.handles_by_object.get(&object) {
             return *existing_handle;
@@ -53,12 +53,12 @@ impl ObjectStore {
         handle
     }
 
-    #[instrument]
+    #[instrument(skip(self))]
     pub fn get(&self, handle: &CK_OBJECT_HANDLE) -> Option<&Object> {
         self.objects.get(handle)
     }
 
-    #[instrument]
+    #[instrument(skip(self))]
     pub fn find(&mut self, template: Attributes) -> Result<Vec<CK_OBJECT_HANDLE>> {
         let mut output = vec![];
         // Cache certificates.
