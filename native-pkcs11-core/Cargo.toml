@@ -1,6 +1,6 @@
 [package]
 name = "native-pkcs11-core"
-version = "0.2.14"
+version = "0.2.15"
 description = "Shared cross-platform PKCS#11 module logic for native-pkcs11."
 authors.workspace = true
 edition.workspace = true
