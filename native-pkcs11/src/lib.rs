@@ -20,7 +20,7 @@ pub use native_pkcs11_core::Error;
 use native_pkcs11_traits::backend;
 use tracing::metadata::LevelFilter;
 use tracing_error::ErrorLayer;
-use tracing_subscriber::{prelude::*, EnvFilter, Registry};
+use tracing_subscriber::{fmt::format::FmtSpan, prelude::*, EnvFilter, Registry};
 mod object_store;
 mod sessions;
 mod utils;
@@ -225,7 +225,11 @@ cryptoki_fn!(
                 }
             }
             _ = Registry::default()
-                .with(tracing_subscriber::fmt::layer().with_writer(std::io::stderr))
+                .with(
+                    tracing_subscriber::fmt::layer()
+                        .with_writer(std::io::stderr)
+                        .with_span_events(FmtSpan::ENTER),
+                )
                 .with(env_filter)
                 .with(ErrorLayer::default())
                 .try_init();
