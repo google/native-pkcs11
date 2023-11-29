@@ -55,15 +55,27 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@1e59595bed8fc55c969333d08d7817b36888f0c5 # v1.5.5
 
   clippy:
-    name: clippy
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v1.2.0
       - uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
         with:
           toolchain: stable
-          components: rustfmt, clippy
+          components: clippy
       - run: cargo clippy -- -D warnings
+
+  rustfmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v1.2.0
+      - uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
+        with:
+          toolchain: nightly
+          components: rustfmt
+      - run: cargo fmt -- --check
 
   integration-macos-ssh:
     name: macos ssh
