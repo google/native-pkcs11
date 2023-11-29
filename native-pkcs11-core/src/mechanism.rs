@@ -19,7 +19,6 @@ use crate::Error;
 
 pub const SUPPORTED_SIGNATURE_MECHANISMS: &[CK_MECHANISM_TYPE] = &[
     CKM_RSA_PKCS,
-    CKM_RSA_X_509,
     CKM_SHA1_RSA_PKCS,
     CKM_SHA256_RSA_PKCS,
     CKM_SHA384_RSA_PKCS,
@@ -35,7 +34,6 @@ pub enum Mechanism {
     RsaPkcsSha256,
     RsaPkcsSha384,
     RsaPkcsSha512,
-    RsaX509,
     RsaPss {
         digest_algorithm: native_pkcs11_traits::DigestType,
         mask_generation_function: native_pkcs11_traits::DigestType,
@@ -48,7 +46,6 @@ pub unsafe fn parse_mechanism(mechanism: CK_MECHANISM) -> Result<Mechanism, Erro
     match mechanism.mechanism {
         CKM_ECDSA => Ok(Mechanism::Ecdsa),
         CKM_RSA_PKCS => Ok(Mechanism::RsaPkcs),
-        CKM_RSA_X_509 => Ok(Mechanism::RsaX509),
         CKM_SHA1_RSA_PKCS => Ok(Mechanism::RsaPkcsSha1),
         CKM_SHA256_RSA_PKCS => Ok(Mechanism::RsaPkcsSha256),
         CKM_SHA384_RSA_PKCS => Ok(Mechanism::RsaPkcsSha384),
@@ -122,7 +119,6 @@ impl From<Mechanism> for CK_MECHANISM_TYPE {
             Mechanism::RsaPkcsSha256 => CKM_SHA256_RSA_PKCS,
             Mechanism::RsaPkcsSha384 => CKM_SHA384_RSA_PKCS,
             Mechanism::RsaPkcsSha512 => CKM_SHA512_RSA_PKCS,
-            Mechanism::RsaX509 => CKM_RSA_X_509,
             Mechanism::RsaPss { .. } => CKM_RSA_PKCS_PSS,
         }
     }
@@ -137,7 +133,6 @@ impl From<Mechanism> for SignatureAlgorithm {
             Mechanism::RsaPkcsSha256 => SignatureAlgorithm::RsaPkcs1v15Sha256,
             Mechanism::RsaPkcsSha384 => SignatureAlgorithm::RsaPkcs1v15Sha512,
             Mechanism::RsaPkcsSha512 => SignatureAlgorithm::RsaPkcs1v15Sha384,
-            Mechanism::RsaX509 => SignatureAlgorithm::RsaRaw,
             Mechanism::RsaPss {
                 digest_algorithm,
                 mask_generation_function,
