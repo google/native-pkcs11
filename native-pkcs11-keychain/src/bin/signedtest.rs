@@ -48,7 +48,7 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
     let generated_key = apple_security_framework::key::SecKey::generate(args)?;
 
     if generated_key.external_representation().is_some() {
-        return Err("expected enclave key to not be exportable")?;
+        Err("expected enclave key to not be exportable")?;
     }
 
     let generated_pubkey = generated_key
@@ -65,7 +65,7 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
         .load_refs(true)
         .search()?;
     if results.is_empty() {
-        return Err("expected to find key, but no keys found")?;
+        Err("expected to find key, but no keys found")?;
     }
 
     let found_key = match results.get(0).ok_or("no key found")? {
@@ -83,7 +83,7 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
         .to_vec();
 
     if generated_pubkey != found_pubkey {
-        return Err("pubkeys not equal")?;
+        Err("pubkeys not equal")?;
     }
 
     let test_payload = &random_label();
@@ -100,7 +100,7 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
             &signature,
         )?
     {
-        return Err("signature verification failed")?;
+        Err("signature verification failed")?;
     }
 
     let cert =
@@ -121,7 +121,7 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
         }
     }
     if !found {
-        return Err("didn't find matching cert")?;
+        Err("didn't find matching cert")?;
     }
 
     cert.delete()?;
