@@ -29,6 +29,6 @@ x509-cert = { version = "0.2.4", default-features = false }
 serial_test = { version = "2.0.0", default-features = false }
 
 [target.'cfg(target_os="macos")'.dependencies]
-core-foundation = { version = "0.9.3", features = ["mac_os_10_8_features"] }
+core-foundation = { version = "0.9.4", features = ["mac_os_10_8_features"] }
 apple-security-framework = { version = "2.9.2", features = ["OSX_10_15"] }
 apple-security-framework-sys = { version = "2.9.1", features = ["OSX_10_15"] }
