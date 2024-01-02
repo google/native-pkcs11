@@ -68,7 +68,7 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
         Err("expected to find key, but no keys found")?;
     }
 
-    let found_key = match results.get(0).ok_or("no key found")? {
+    let found_key = match results.first().ok_or("no key found")? {
         apple_security_framework::item::SearchResult::Ref(
             apple_security_framework::item::Reference::Key(key),
         ) => key,
