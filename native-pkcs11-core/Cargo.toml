@@ -22,7 +22,7 @@ pkcs11-sys = { version = "0.2.0", path = "../pkcs11-sys" }
 serde = { version = "1.0.193", features = ["derive"] }
 strum = "0.25.0"
 strum_macros = "0.25.3"
-thiserror = "1.0.51"
+thiserror = "1.0.56"
 tracing = "0.1.40"
 
 [dev-dependencies]
