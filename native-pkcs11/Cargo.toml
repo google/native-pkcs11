@@ -26,7 +26,7 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 crate-type = ["lib", "cdylib"]
 
 [dev-dependencies]
-serial_test = { version = "2.0.0", default-features = false }
+serial_test = { version = "3.0.0", default-features = false }
 tracing = { version = "0.1.40", default-features = false }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = [
     "env-filter",
