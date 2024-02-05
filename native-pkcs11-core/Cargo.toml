@@ -20,7 +20,7 @@ p256 = { version = "0.13.2", default-features = false, features = [
 pkcs1 = { version = "0.7.5", default-features = false }
 pkcs11-sys = { version = "0.2.0", path = "../pkcs11-sys" }
 serde = { version = "1.0.196", features = ["derive"] }
-strum = "0.25.0"
+strum = "0.26.1"
 strum_macros = "0.26.1"
 thiserror = "1.0.56"
 tracing = "0.1.40"
