@@ -37,3 +37,6 @@ native-pkcs11-keychain = { version = "0.2.0", path = "../native-pkcs11-keychain"
 
 [target.'cfg(target_os="windows")'.dependencies]
 native-pkcs11-windows = { version = "0.2.0", path = "../native-pkcs11-windows" }
+
+[target.'cfg(target_os="linux")'.dependencies]
+native-pkcs11-linux = { version = "0.2.0", path = "../native-pkcs11-linux" }

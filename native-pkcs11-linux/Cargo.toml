@@ -1,0 +1,20 @@
+[package]
+name = "native-pkcs11-linux"
+version = "0.2.0"
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tss-esapi = "7.4.0"
+native-pkcs11-traits = { path = "../native-pkcs11-traits" }
+tracing = "0.1.40"
+tracing-error = { version = "0.2.0", default-features = false }
+pem-rfc7468 = { version = "0.7.0", features = ["std"] }
+
+[dev-dependencies]
+base64 = "0.21.7"
