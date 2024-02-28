@@ -15,6 +15,8 @@ native-pkcs11-traits = { path = "../native-pkcs11-traits" }
 tracing = "0.1.40"
 tracing-error = { version = "0.2.0", default-features = false }
 pem-rfc7468 = { version = "0.7.0", features = ["std"] }
+sha1 = "0.10.6"
+x509-cert = "0.2.5"
 
 [dev-dependencies]
 base64 = "0.21.7"
