@@ -153,7 +153,7 @@ fn collect_credentials() -> Result<Vec<LinuxCredential>> {
 
 impl native_pkcs11_traits::Backend for LinuxBackend {
     fn name(&self) -> String {
-        "native-pkcs11-linux".into()
+        "CredentialKit".into()
     }
 
     fn find_all_certificates(&self) -> native_pkcs11_traits::Result<Vec<Box<dyn Certificate>>> {
@@ -302,6 +302,7 @@ impl PrivateKey for LinuxCredential {
                         return Err("bad alg".into());
                     }
                 };
+                let data = &data[0..(256 / 8)];
                 let sig = ctx.execute_with_nullauth_session(|ctx| {
                     ctx.sign(key, Digest::try_from(data)?, scheme, null_hash_ticket())
                 })?;
