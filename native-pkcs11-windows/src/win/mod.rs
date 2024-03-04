@@ -17,7 +17,7 @@ use std::{ffi::OsString, ops::Deref, str::FromStr, sync::Arc};
 
 use native_pkcs11_traits::Backend;
 use windows::{
-    core::ComInterface,
+    core::Interface,
     Security::Cryptography::Certificates::CertificateStores,
     Storage::Streams::{Buffer, IBuffer},
     Win32::System::WinRT::IBufferByteAccess,
