@@ -27,7 +27,7 @@ mod utils;
 
 use std::{
     cmp,
-    convert::TryInto,
+    ptr::addr_of_mut,
     slice,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -281,7 +281,7 @@ cryptoki_fn!(
 cryptoki_fn!(
     unsafe fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) {
         not_null!(ppFunctionList);
-        unsafe { *ppFunctionList = &mut FUNC_LIST };
+        unsafe { *ppFunctionList = addr_of_mut!(FUNC_LIST) };
 
         #[cfg(target_os = "macos")]
         native_pkcs11_traits::register_backend(Box::new(
