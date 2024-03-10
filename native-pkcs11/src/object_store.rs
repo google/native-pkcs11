@@ -119,13 +119,14 @@ impl ObjectStore {
                 CKO_CERTIFICATE => (),
                 // CKO_NSS_TRUST | CKO_NETSCAPE_BUILTIN_ROOT_LIST
                 3461563219 | 3461563220 => (),
-                CKO_SECRET_KEY => (),
+                // 0 if for CKO_DATA
+                CKO_SECRET_KEY | 0  => (), 
                 CKO_PUBLIC_KEY | CKO_PRIVATE_KEY => {
                     let key_search_opts = if let Some(Attribute::Id(id)) =
                         template.get(AttributeType::Id)
                     {
                         let id = compoundid::decode(id)?;
-                        KeySearchOptions::PublicKeyHash(id.public_key_hash.as_slice().try_into()?)
+                        KeySearchOptions::PublicKeyHash(id.hash.as_slice().try_into()?)
                     } else if let Some(Attribute::Label(label)) = template.get(AttributeType::Label)
                     {
                         KeySearchOptions::Label(label.into())
@@ -162,8 +163,14 @@ impl ObjectStore {
                         }
                     };
                 }
+                0 => {
+                    warn!("class is 0");
+                    return Err(Error::AttributeTypeInvalid(0));
+                }
                 _ => {
-                    return Err(Error::AttributeTypeInvalid(*class));
+                    warn!("unsupported class: {}", class);
+                    ()
+                    // return Err(Error::AttributeTypeInvalid(*class));
                 }
             }
         }

@@ -21,23 +21,14 @@ use native_pkcs11_traits::{
     KeyAlgorithm,
     PrivateKey,
     PublicKey,
+    DataObject as Data,
 };
 use p256::pkcs8::{
     der::{asn1::OctetString, Encode},
     AssociatedOid,
 };
 use pkcs1::{der::Decode, RsaPublicKey};
-use pkcs11_sys::{
-    CKC_X_509,
-    CKK_EC,
-    CKK_RSA,
-    CKO_CERTIFICATE,
-    CKO_PRIVATE_KEY,
-    CKO_PROFILE,
-    CKO_PUBLIC_KEY,
-    CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
-    CK_PROFILE_ID,
-};
+use pkcs11_sys::{CKC_X_509, CKK_EC, CKK_RSA, CKO_CERTIFICATE, CKO_PRIVATE_KEY, CKO_PROFILE, CKO_PUBLIC_KEY, CK_CERTIFICATE_CATEGORY_UNSPECIFIED, CK_PROFILE_ID, CKO_DATA};
 use tracing::debug;
 
 use crate::attribute::{Attribute, AttributeType, Attributes};
@@ -57,6 +48,7 @@ pub enum Object {
     PrivateKey(Arc<dyn PrivateKey>),
     Profile(CK_PROFILE_ID),
     PublicKey(Arc<dyn PublicKey>),
+    DataObject(Arc<dyn Data>),
 }
 
 //  #[derive(PartialEq)] fails to compile because it tries to move the Box<_>ed
@@ -69,8 +61,9 @@ impl PartialEq for Object {
             (Self::PrivateKey(l0), Self::PrivateKey(r0)) => l0 == r0,
             (Self::Profile(l0), Self::Profile(r0)) => l0 == r0,
             (Self::PublicKey(l0), Self::PublicKey(r0)) => l0 == r0,
+            (Self::DataObject(l0), Self::DataObject(r0)) => l0 == r0,
             (
-                Self::Certificate(_) | Self::PrivateKey(_) | Self::Profile(_) | Self::PublicKey(_),
+                Self::Certificate(_) | Self::PrivateKey(_) | Self::Profile(_) | Self::PublicKey(_) | Self::DataObject(_),
                 _,
             ) => false,
         }
@@ -89,9 +82,9 @@ impl Object {
                 AttributeType::Id => Some(Attribute::Id(
                     crate::compoundid::encode(&crate::compoundid::Id {
                         label: Some(cert.label()),
-                        public_key_hash: cert.public_key().public_key_hash(),
+                        hash: cert.public_key().public_key_hash(),
                     })
-                    .ok()?,
+                        .ok()?,
                 )),
                 AttributeType::Issuer => Some(Attribute::Issuer(cert.issuer())),
                 AttributeType::Label => Some(Attribute::Label(cert.label())),
@@ -117,9 +110,9 @@ impl Object {
                 AttributeType::Id => Some(Attribute::Id(
                     crate::compoundid::encode(&crate::compoundid::Id {
                         label: Some(private_key.label()),
-                        public_key_hash: private_key.public_key_hash(),
+                        hash: private_key.public_key_hash(),
                     })
-                    .ok()?,
+                        .ok()?,
                 )),
                 AttributeType::KeyType => Some(Attribute::KeyType(match private_key.algorithm() {
                     native_pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
@@ -193,9 +186,9 @@ impl Object {
                 AttributeType::Id => Some(Attribute::Id(
                     crate::compoundid::encode(&crate::compoundid::Id {
                         label: Some(pk.label()),
-                        public_key_hash: pk.public_key_hash(),
+                        hash: pk.public_key_hash(),
                     })
-                    .ok()?,
+                        .ok()?,
                 )),
                 AttributeType::EcPoint => {
                     if pk.algorithm() != KeyAlgorithm::Ecc {
@@ -211,6 +204,22 @@ impl Object {
                     debug!("public_key: type_ unimplemented: {:?}", type_);
                     None
                 }
+            },
+            Object::DataObject(data) => match type_ {
+                AttributeType::Class => Some(Attribute::Class(CKO_DATA)),
+                AttributeType::Id => Some(Attribute::Id(
+                    crate::compoundid::encode(&crate::compoundid::Id {
+                        label: Some(data.label()),
+                        hash: data.data_hash(),
+                    })
+                        .ok()?,
+                )),
+                AttributeType::Value => Some(Attribute::Value(data.value())),
+                _ => {
+                    debug!("Data object: type_ unimplemented: {:?}", type_);
+                    None
+                }
+                Attribute::Application(_) => Some(Attribute::Application(data.application())),
             },
         }
     }

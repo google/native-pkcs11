@@ -24,6 +24,7 @@ strum = "0.26.1"
 strum_macros = "0.26.1"
 thiserror = "1.0.57"
 tracing = "0.1.40"
+log = "0.4.21"
 
 [dev-dependencies]
 serial_test = { version = "3.0.0", default-features = false }

@@ -23,7 +23,7 @@ use core_foundation::{
     base::{TCFType, ToVoid},
     string::CFString,
 };
-use native_pkcs11_traits::Backend;
+use native_pkcs11_traits::{Backend, DataObject};
 use tracing::instrument;
 
 use crate::{
@@ -189,5 +189,9 @@ impl Backend for KeychainBackend {
             .map(|k| Arc::new(k) as _);
 
         Ok(keys.collect())
+    }
+
+    fn find_all_data_objects(&self) -> native_pkcs11_traits::Result<Vec<Arc<dyn DataObject>>> {
+        Err("Finding all data objects is not not implemented for the Keychain Backend".into())
     }
 }

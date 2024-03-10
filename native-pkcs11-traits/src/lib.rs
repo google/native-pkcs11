@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod data_object;
+
 use std::{
     any::Any,
     hash::Hash,
@@ -182,6 +184,9 @@ pub trait CertificateExt: Certificate {
 
 impl<T: Certificate + ?Sized> CertificateExt for T {}
 
+// The Data object Trait
+pub use data_object::DataObject;
+
 #[derive(Debug)]
 pub enum KeySearchOptions {
     //  TODO(kcking): search keys by _both_ label and public key hash as that is how
@@ -203,6 +208,7 @@ pub trait Backend: Send + Sync {
     fn find_public_key(&self, query: KeySearchOptions) -> Result<Option<Box<dyn PublicKey>>>;
     fn find_all_private_keys(&self) -> Result<Vec<Arc<dyn PrivateKey>>>;
     fn find_all_public_keys(&self) -> Result<Vec<Arc<dyn PublicKey>>>;
+    fn find_all_data_objects(&self) -> Result<Vec<Arc<dyn DataObject>>>;
     fn generate_key(
         &self,
         algorithm: KeyAlgorithm,
