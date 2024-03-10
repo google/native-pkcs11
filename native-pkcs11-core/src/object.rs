@@ -215,11 +215,11 @@ impl Object {
                         .ok()?,
                 )),
                 AttributeType::Value => Some(Attribute::Value(data.value())),
+                AttributeType::Application => Some(Attribute::Application(data.application())),
                 _ => {
                     debug!("Data object: type_ unimplemented: {:?}", type_);
                     None
                 }
-                Attribute::Application(_) => Some(Attribute::Application(data.application())),
             },
         }
     }

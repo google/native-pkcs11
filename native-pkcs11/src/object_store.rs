@@ -163,10 +163,6 @@ impl ObjectStore {
                         }
                     };
                 }
-                0 => {
-                    warn!("class is 0");
-                    return Err(Error::AttributeTypeInvalid(0));
-                }
                 _ => {
                     warn!("unsupported class: {}", class);
                     ()
