@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::Debug;
-use std::sync::Arc;
+use std::{fmt::Debug, sync::Arc};
 
-use apple_security_framework::certificate::SecCertificate;
 use apple_security_framework::{
+    certificate::SecCertificate,
     item::{ItemClass, KeyClass, Limit, Location, Reference},
     key::{GenerateKeyOptions, KeyType, SecKey},
 };
 // TODO(bweeks,kcking): remove dependency on security-framework-sys crate.
 use apple_security_framework_sys::item::{
-    kSecAttrKeyType, kSecAttrKeyTypeEC, kSecAttrKeyTypeRSA, kSecAttrTokenID,
+    kSecAttrKeyType,
+    kSecAttrKeyTypeEC,
+    kSecAttrKeyTypeRSA,
+    kSecAttrTokenID,
 };
 use core_foundation::base::ToVoid;
 use native_pkcs11_traits::{KeyAlgorithm, PrivateKey, PublicKey, SignatureAlgorithm};
@@ -513,11 +515,13 @@ mod test {
         for _ in 0..20 {
             handles.push(std::thread::spawn(try_gen_key));
         }
-        assert!(handles
-            .into_iter()
-            .map(|h| h.join().unwrap())
-            //  fold so we don't early exit other threads
-            .fold(true, |acc, b| acc && b));
+        assert!(
+            handles
+                .into_iter()
+                .map(|h| h.join().unwrap())
+                //  fold so we don't early exit other threads
+                .fold(true, |acc, b| acc && b)
+        );
     }
 
     #[test]

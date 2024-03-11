@@ -15,10 +15,9 @@
 use core::ops::Deref;
 use std::ffi::CString;
 
+use pkcs11_sys::*;
 use strum_macros::Display;
 use tracing::{debug, trace};
-
-use pkcs11_sys::*;
 
 use crate::{Error, Result};
 

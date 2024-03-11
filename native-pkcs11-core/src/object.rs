@@ -15,7 +15,13 @@
 use std::{ffi::CString, fmt::Debug, sync::Arc};
 
 use native_pkcs11_traits::{
-    backend, Certificate, CertificateExt, DataObject as Data, KeyAlgorithm, PrivateKey, PublicKey,
+    backend,
+    Certificate,
+    CertificateExt,
+    DataObject as Data,
+    KeyAlgorithm,
+    PrivateKey,
+    PublicKey,
 };
 use p256::pkcs8::{
     der::{asn1::OctetString, Encode},
@@ -23,8 +29,16 @@ use p256::pkcs8::{
 };
 use pkcs1::{der::Decode, RsaPublicKey};
 use pkcs11_sys::{
-    CKC_X_509, CKK_EC, CKK_RSA, CKO_CERTIFICATE, CKO_DATA, CKO_PRIVATE_KEY, CKO_PROFILE,
-    CKO_PUBLIC_KEY, CK_CERTIFICATE_CATEGORY_UNSPECIFIED, CK_PROFILE_ID,
+    CKC_X_509,
+    CKK_EC,
+    CKK_RSA,
+    CKO_CERTIFICATE,
+    CKO_DATA,
+    CKO_PRIVATE_KEY,
+    CKO_PROFILE,
+    CKO_PUBLIC_KEY,
+    CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
+    CK_PROFILE_ID,
 };
 use tracing::debug;
 

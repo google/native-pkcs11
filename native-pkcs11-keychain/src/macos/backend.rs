@@ -26,13 +26,18 @@ use core_foundation::{
 use native_pkcs11_traits::{Backend, Certificate, DataObject, SearchOptions};
 use tracing::instrument;
 
-use crate::certificate::import_identity;
-use crate::key::{find_certificate_using_application, find_certificate_using_label};
 use crate::{
-    certificate::{find_all_certificates, KeychainCertificate},
+    certificate::{find_all_certificates, import_identity, KeychainCertificate},
     key::{
-        find_all_keys, find_key_using_application, find_key_using_label, generate_key, Algorithm,
-        KeychainPrivateKey, KeychainPublicKey,
+        find_all_keys,
+        find_certificate_using_application,
+        find_certificate_using_label,
+        find_key_using_application,
+        find_key_using_label,
+        generate_key,
+        Algorithm,
+        KeychainPrivateKey,
+        KeychainPublicKey,
     },
 };
 

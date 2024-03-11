@@ -16,11 +16,17 @@ use std::collections::HashMap;
 
 use native_pkcs11_core::{
     attribute::{Attribute, AttributeType, Attributes},
-    compoundid, Result,
+    compoundid,
+    Result,
 };
 use native_pkcs11_traits::{backend, SearchOptions};
 use pkcs11_sys::{
-    CKO_CERTIFICATE, CKO_PRIVATE_KEY, CKO_PUBLIC_KEY, CKO_SECRET_KEY, CKP_BASELINE_PROVIDER, CK_OBJECT_HANDLE,
+    CKO_CERTIFICATE,
+    CKO_PRIVATE_KEY,
+    CKO_PUBLIC_KEY,
+    CKO_SECRET_KEY,
+    CKP_BASELINE_PROVIDER,
+    CK_OBJECT_HANDLE,
 };
 use tracing::{debug, instrument, trace, warn};
 
@@ -55,7 +61,8 @@ impl ObjectStore {
     /// Refresh the cache of certificates.
     /// Firefox + NSS query certificates for every TLS connection in order to
     ///  evaluate server trust.
-    /// The cache is refreshed if it has been more than 3 seconds since the last refresh.
+    /// The cache is refreshed if it has been more than 3 seconds since the last
+    /// refresh.
     fn refresh_cache(&mut self) -> Result<()> {
         let should_reload = match self.last_loaded_certs {
             Some(last) => last.elapsed() >= std::time::Duration::from_secs(3),
@@ -118,7 +125,7 @@ impl ObjectStore {
             // find all objects
             None => {
                 return match *class {
-                    CKO_CERTIFICATE | CKO_PUBLIC_KEY | CKO_PRIVATE_KEY  => {
+                    CKO_CERTIFICATE | CKO_PUBLIC_KEY | CKO_PRIVATE_KEY => {
                         self.refresh_cache()?;
                         for handle in self.objects.keys() {
                             output.push(*handle);

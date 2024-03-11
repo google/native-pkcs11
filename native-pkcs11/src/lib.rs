@@ -16,38 +16,33 @@
 #![allow(clippy::missing_safety_doc)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
-pub use native_pkcs11_core::Error;
-use native_pkcs11_traits::backend;
-use tracing::metadata::LevelFilter;
-use tracing_error::ErrorLayer;
-use tracing_subscriber::{fmt::format::FmtSpan, prelude::*, EnvFilter, Registry};
-
-mod object_store;
-mod sessions;
-mod utils;
-
-use std::fs::File;
 use std::{
     cmp,
     convert::TryInto,
     slice,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Once,
-    },
+    sync::atomic::{AtomicBool, Ordering},
 };
 
+pub use native_pkcs11_core::Error;
 use native_pkcs11_core::{
     attribute::{Attribute, Attributes},
     mechanism::{parse_mechanism, SUPPORTED_SIGNATURE_MECHANISMS},
     object::{self, Object},
 };
+use native_pkcs11_traits::backend;
 use pkcs11_sys::*;
+pub use pkcs11_sys::{CKR_OK, CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV};
 
+pub use crate::logging::inititalize_logging;
 use crate::{
     sessions::{FindContext, SignContext},
     utils::right_pad_string_to_array,
 };
+
+mod logging;
+mod object_store;
+mod sessions;
+mod utils;
 
 const LIBRARY_DESCRIPTION: &[u8; 32] = b"                                ";
 const MANUFACTURER_ID: &[u8; 32] = b"google                          ";
@@ -131,9 +126,6 @@ macro_rules! valid_slot {
     };
 }
 
-//  Export necessary items for registering a custom Backend.
-pub use pkcs11_sys::{CKR_OK, CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV};
-
 pub static mut FUNC_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
     // In this structure ‘version’ is the cryptoki specification version number. The major and minor
     // versions must be set to 0x02 and 0x28 indicating a version 2.40 compatible structure.
@@ -208,55 +200,10 @@ pub static mut FUNC_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
     C_WaitForSlotEvent: Some(C_WaitForSlotEvent),
 };
 
-static TRACING_INIT: Once = Once::new();
-
 cryptoki_fn!(
     fn C_Initialize(pInitArgs: CK_VOID_PTR) {
-        TRACING_INIT.call_once(|| {
-            #[cfg(not(target_os = "linux"))]
-            {
-                let env_filter = EnvFilter::builder()
-                    .with_default_directive(LevelFilter::TRACE.into())
-                    .from_env_lossy();
-                let file: File = File::create("/tmp/native-pkcs11.log").unwrap();
-                _ = Registry::default()
-                    .with(
-                        tracing_subscriber::fmt::layer()
-                            .with_writer(std::sync::Mutex::new(file))
-                            .with_span_events(FmtSpan::ENTER),
-                    )
-                    .with(env_filter)
-                    .with(ErrorLayer::default())
-                    .try_init();
-            }
-            #[cfg(target_os = "linux")]
-            {
-                let env_filter = EnvFilter::builder()
-                    .with_default_directive(LevelFilter::WARN.into())
-                    .from_env_lossy();
-
-                let force_stderr = std::env::var("NATIVE_PKCS11_LOG_STDERR").is_ok();
-                if !force_stderr {
-                    if let Ok(journald_layer) = tracing_journald::layer() {
-                        _ = Registry::default()
-                            .with(journald_layer.with_syslog_identifier("native-pkcs11".into()))
-                            .with(env_filter)
-                            .with(ErrorLayer::default())
-                            .try_init();
-                        return;
-                    }
-                }
-                _ = Registry::default()
-                    .with(
-                        tracing_subscriber::fmt::layer()
-                            .with_writer(std::io::stderr)
-                            .with_span_events(FmtSpan::ENTER),
-                    )
-                    .with(env_filter)
-                    .with(ErrorLayer::default())
-                    .try_init();
-            }
-        });
+        // In cased the caller did not initialize logging, we do it here.
+        inititalize_logging("native-pkcs11.log", None, None);
         if !pInitArgs.is_null() {
             let args = unsafe { *(pInitArgs as CK_C_INITIALIZE_ARGS_PTR) };
             if !args.pReserved.is_null() {

@@ -1,9 +1,7 @@
 //! CKO_DATA object as defined in PKCS#11 2.40 4.5
 //! [PKCS#11 2.40 ~ 4.5](http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html#_Toc416959706)
 
-use std::any::Any;
-use std::ffi::CString;
-use std::hash::Hash;
+use std::{any::Any, ffi::CString, hash::Hash};
 
 pub trait DataObject: Send + Sync {
     /// The value of the object

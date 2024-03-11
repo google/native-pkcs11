@@ -14,13 +14,14 @@
 
 mod data_object;
 
-pub use once_cell;
-use once_cell::sync::Lazy;
 use std::{
     any::Any,
     hash::Hash,
     sync::{Arc, RwLock},
 };
+
+pub use once_cell;
+use once_cell::sync::Lazy;
 use x509_cert::der::Decode;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
