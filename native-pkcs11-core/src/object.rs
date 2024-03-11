@@ -161,6 +161,7 @@ impl Object {
                 AttributeType::Class => Some(Attribute::Class(CKO_PROFILE)),
                 AttributeType::ProfileId => Some(Attribute::ProfileId(*id)),
                 AttributeType::Token => Some(Attribute::Token(true)),
+                AttributeType::Private => Some(Attribute::Private(true)),
                 _ => {
                     debug!("profile: type_ unimplemented: {:?}", type_);
                     None

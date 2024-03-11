@@ -19,7 +19,7 @@ use native_pkcs11_core::{
     compoundid,
     Result,
 };
-use native_pkcs11_traits::{backend, KeySearchOptions};
+use native_pkcs11_traits::{backend, SearchOptions};
 use pkcs11_sys::{
     CKO_CERTIFICATE,
     CKO_PRIVATE_KEY,
@@ -28,7 +28,7 @@ use pkcs11_sys::{
     CKP_BASELINE_PROVIDER,
     CK_OBJECT_HANDLE,
 };
-use tracing::{instrument, warn};
+use tracing::{debug, instrument, trace, warn};
 
 use crate::{object::Object, Error};
 
@@ -58,20 +58,16 @@ impl ObjectStore {
         self.objects.get(handle)
     }
 
-    #[instrument(skip(self))]
-    pub fn find(&mut self, template: Attributes) -> Result<Vec<CK_OBJECT_HANDLE>> {
-        let mut output = vec![];
-        // Cache certificates.
-        //
-        // Firefox + NSS query certificates for every TLS connection in order to
-        // evaluate server trust. Cache the results for 3 seconds.
+    /// Refresh the cache of certificates.
+    /// The cache is refreshed if it has been more than 3 seconds since the last refresh.
+    fn refresh_cache(&mut self) -> Result<()> {
         let should_reload = match self.last_loaded_certs {
             Some(last) => last.elapsed() >= std::time::Duration::from_secs(3),
             None => true,
         };
         if should_reload {
             for cert in backend().find_all_certificates()? {
-                let private_key = backend().find_private_key(KeySearchOptions::PublicKeyHash(
+                let private_key = backend().find_private_key(SearchOptions::Hash(
                     cert.public_key().public_key_hash().as_slice().try_into()?,
                 ))?;
                 //  Check if certificate has an associated PrivateKey.
@@ -83,6 +79,10 @@ impl ObjectStore {
             }
             //  Add all keys, regardless of label.
             for private_key in backend().find_all_private_keys()? {
+                // Add the associated PublicKey if it exists.
+                if let Some(public_key) = private_key.find_public_key(backend())? {
+                    self.insert(Object::PublicKey(public_key.into()));
+                };
                 self.insert(Object::PrivateKey(private_key));
             }
             for public_key in backend().find_all_public_keys()? {
@@ -90,78 +90,85 @@ impl ObjectStore {
             }
             self.last_loaded_certs = Some(std::time::Instant::now());
         }
-        // All objects.
-        // TODO(bweeks): search the keychain as well.
-        if template.is_empty() {
-            for handle in self.objects.keys() {
-                output.push(*handle);
+        Ok(())
+    }
+
+    #[instrument(skip(self))]
+    pub fn find(&mut self, template: Attributes) -> Result<Vec<CK_OBJECT_HANDLE>> {
+        trace!("find: searching for {:?}", template);
+        let class = match template.get(AttributeType::Class) {
+            Some(Attribute::Class(class)) => class,
+            None => {
+                return Err(Error::Todo("no class attribute".to_string()));
             }
-            return Ok(output);
+            class => {
+                todo!("class not implemented: {:?}", class);
+            }
+        };
+        trace!("find: searc for class: {}", class);
+
+        let search_options = search_options_from_attributes(&template)?;
+        trace!("find: search options: {:?}", search_options);
+        
+        match  search_options{
+            None => {
+                match  *class{
+                    
+                }
+            }
         }
-        // Search the object store.
+        
+        // Cache certificates.
+        //
+        // Firefox + NSS query certificates for every TLS connection in order to
+        // evaluate server trust. Cache the results for 3 seconds.
+        self.refresh_cache()?;
+
+        let mut output = vec![];
+        let search_options = match search_options_from_attributes(&template)? {
+            Some(search_options) => search_options,
+            None => {
+                // If the template is empty, return all objects in the cache.
+                // TODO(bweeks): search the rest of the store as well.
+                for handle in self.objects.keys() {
+                    output.push(*handle);
+                }
+                return Ok(output);
+            }
+        };
+        trace!("find: search options: {:?}", search_options);
+
+        // The template is not empty. First add all matching objects from the cache.
         for (handle, object) in self.objects.iter() {
             if object.matches(&template) {
                 output.push(*handle);
             }
         }
-        // Search keychain.
+
+        // We did not find any objects in the cache that match the template.
+        // Add objects from the backend.
         if output.is_empty() {
-            let class = match template.get(AttributeType::Class) {
-                Some(Attribute::Class(class)) => class,
-                None => {
-                    return Err(Error::Todo("no class attribute".to_string()));
-                }
-                class => {
-                    todo!("class not implemented: {:?}", class);
-                }
-            };
+
             match *class {
                 CKO_CERTIFICATE => (),
                 // CKO_NSS_TRUST | CKO_NETSCAPE_BUILTIN_ROOT_LIST
                 3461563219 | 3461563220 => (),
                 // 0 if for CKO_DATA
-                CKO_SECRET_KEY | 0  => (), 
-                CKO_PUBLIC_KEY | CKO_PRIVATE_KEY => {
-                    let key_search_opts = if let Some(Attribute::Id(id)) =
-                        template.get(AttributeType::Id)
-                    {
-                        let id = compoundid::decode(id)?;
-                        KeySearchOptions::PublicKeyHash(id.hash.as_slice().try_into()?)
-                    } else if let Some(Attribute::Label(label)) = template.get(AttributeType::Label)
-                    {
-                        KeySearchOptions::Label(label.into())
-                    } else {
-                        for private_key in backend().find_all_private_keys()? {
-                            //  Only consider keys that have both private and public parts present.
-                            let public_key = match private_key.find_public_key(backend()) {
-                                Ok(Some(public_key)) => public_key,
-                                _ => continue,
-                            };
-                            match *class {
-                                CKO_PRIVATE_KEY => {
-                                    output.push(self.insert(Object::PrivateKey(private_key)));
-                                }
-                                CKO_PUBLIC_KEY => {
-                                    output.push(self.insert(Object::PublicKey(public_key.into())));
-                                }
-                                _ => {}
-                            };
-                        }
-                        return Ok(output);
-                    };
-                    match *class {
-                        CKO_PRIVATE_KEY => {
-                            backend().find_private_key(key_search_opts)?.map(|key| {
-                                output.push(self.insert(Object::PrivateKey(key)));
-                            })
-                        }
-                        CKO_PUBLIC_KEY => backend().find_public_key(key_search_opts)?.map(|key| {
-                            output.push(self.insert(Object::PublicKey(key.into())));
-                        }),
-                        _ => {
-                            todo!();
-                        }
-                    };
+                0 => {
+                    backend().find_data_object(search_options)?.map(|data| {
+                        output.push(self.insert(Object::DataObject(data)));
+                    });
+                }
+                CKO_SECRET_KEY => (),
+                CKO_PRIVATE_KEY => {
+                    backend().find_private_key(search_options)?.map(|key| {
+                        output.push(self.insert(Object::PrivateKey(key)));
+                    });
+                }
+                CKO_PUBLIC_KEY => {
+                    backend().find_public_key(search_options)?.map(|key| {
+                        output.push(self.insert(Object::PublicKey(key.into())));
+                    });
                 }
                 _ => {
                     warn!("unsupported class: {}", class);
@@ -183,6 +190,21 @@ impl Default for ObjectStore {
             last_loaded_certs: None,
         }
     }
+}
+
+/// Convert an Attributes object into a SearchOptions object.
+// TODO(BGR) this should probable by a TryFrom implementation 
+fn search_options_from_attributes(template: &Attributes) -> Result<Option<SearchOptions>> {
+    if template.is_empty() {
+        return Ok(None);
+    }
+    let search_options = if let Some(Attribute::Id(id)) = template.get(AttributeType::Id) {
+        let id = compoundid::decode(id)?;
+        Some(SearchOptions::Hash(id.hash.as_slice().try_into()?))
+    } else if let Some(Attribute::Label(label)) = template.get(AttributeType::Label) {
+        Some(SearchOptions::Label(label.into()))
+    } else { None };
+    Ok(search_options)
 }
 
 #[cfg(test)]

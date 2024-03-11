@@ -559,7 +559,7 @@ mod test {
         //     .unwrap();
 
         let found_key = KeychainBackend
-            .find_private_key(native_pkcs11_traits::KeySearchOptions::Label(label))
+            .find_private_key(native_pkcs11_traits::SearchOptions::Label(label))
             .map_err(|e| {
                 dbg!(e);
                 "find"

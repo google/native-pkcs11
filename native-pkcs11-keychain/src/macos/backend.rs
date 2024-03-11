@@ -23,7 +23,7 @@ use core_foundation::{
     base::{TCFType, ToVoid},
     string::CFString,
 };
-use native_pkcs11_traits::{Backend, DataObject};
+use native_pkcs11_traits::{Backend, DataObject, SearchOptions};
 use tracing::instrument;
 
 use crate::{
@@ -69,7 +69,7 @@ impl Backend for KeychainBackend {
     #[instrument]
     fn find_private_key(
         &self,
-        query: native_pkcs11_traits::KeySearchOptions,
+        query: native_pkcs11_traits::SearchOptions,
     ) -> native_pkcs11_traits::Result<Option<Arc<dyn native_pkcs11_traits::PrivateKey>>> {
         let mut pubkeys_by_pubkey_hash: HashMap<Vec<u8>, SecKey> =
             HashMap::from_iter(find_all_certificates()?.into_iter().filter_map(|c| {
@@ -87,7 +87,7 @@ impl Backend for KeychainBackend {
                 .and_then(|sec_key| KeychainPublicKey::new(sec_key, "").ok())
         };
         let opt_key = match query {
-            native_pkcs11_traits::KeySearchOptions::Label(label) => {
+            native_pkcs11_traits::SearchOptions::Label(label) => {
                 find_key(KeyClass::private(), &label)
                     .ok()
                     .map(|sec_key| {
@@ -96,7 +96,7 @@ impl Backend for KeychainBackend {
                     })
                     .transpose()?
             }
-            native_pkcs11_traits::KeySearchOptions::PublicKeyHash(public_key_hash) => {
+            native_pkcs11_traits::SearchOptions::Hash(public_key_hash) => {
                 find_key2(KeyClass::private(), &public_key_hash)?
                     .map(|sec_key| {
                         let cert = find_pubkey_for_seckey(&sec_key);
@@ -111,16 +111,16 @@ impl Backend for KeychainBackend {
     #[instrument]
     fn find_public_key(
         &self,
-        query: native_pkcs11_traits::KeySearchOptions,
+        query: native_pkcs11_traits::SearchOptions,
     ) -> native_pkcs11_traits::Result<Option<Box<dyn native_pkcs11_traits::PublicKey>>> {
         let opt_key = match query {
-            native_pkcs11_traits::KeySearchOptions::Label(label) => {
+            native_pkcs11_traits::SearchOptions::Label(label) => {
                 find_key(KeyClass::public(), &label)
                     .ok()
                     .map(|sec_key| KeychainPublicKey::new(sec_key, label))
                     .transpose()?
             }
-            native_pkcs11_traits::KeySearchOptions::PublicKeyHash(public_key_hash) => {
+            native_pkcs11_traits::SearchOptions::Hash(public_key_hash) => {
                 find_key2(KeyClass::public(), &public_key_hash)?
                     .map(|sec_key| KeychainPublicKey::new(sec_key, ""))
                     .transpose()?
@@ -191,7 +191,8 @@ impl Backend for KeychainBackend {
         Ok(keys.collect())
     }
 
-    fn find_all_data_objects(&self) -> native_pkcs11_traits::Result<Vec<Arc<dyn DataObject>>> {
-        Err("Finding all data objects is not not implemented for the Keychain Backend".into())
+    
+    fn find_data_object(&self, _query: SearchOptions) -> native_pkcs11_traits::Result<Option<Arc<dyn DataObject>>> {
+        Err("Finding data object is not not implemented for the Keychain Backend".into())
     }
 }

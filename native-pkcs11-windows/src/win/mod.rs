@@ -73,14 +73,14 @@ impl Backend for WindowsBackend {
 
     fn find_private_key(
         &self,
-        _query: native_pkcs11_traits::KeySearchOptions,
+        _query: native_pkcs11_traits::SearchOptions,
     ) -> native_pkcs11_traits::Result<Option<Arc<dyn native_pkcs11_traits::PrivateKey>>> {
         Ok(None)
     }
 
     fn find_public_key(
         &self,
-        _query: native_pkcs11_traits::KeySearchOptions,
+        _query: native_pkcs11_traits::SearchOptions,
     ) -> native_pkcs11_traits::Result<Option<Box<dyn native_pkcs11_traits::PublicKey>>> {
         Ok(None)
     }
