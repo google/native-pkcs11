@@ -8,7 +8,7 @@ use std::hash::Hash;
 pub trait DataObject: Send + Sync {
     /// The value of the object
     fn value(&self) -> Vec<u8>;
-    
+
     /// The application that manages the object
     fn application(&self) -> CString;
     fn data_hash(&self) -> Vec<u8>;

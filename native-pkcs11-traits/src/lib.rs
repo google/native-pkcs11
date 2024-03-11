@@ -14,13 +14,13 @@
 
 mod data_object;
 
+pub use once_cell;
+use once_cell::sync::Lazy;
 use std::{
     any::Any,
     hash::Hash,
     sync::{Arc, RwLock},
 };
-pub use once_cell;
-use once_cell::sync::Lazy;
 use x509_cert::der::Decode;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -84,7 +84,7 @@ pub trait PrivateKey: Send + Sync {
     fn sign(&self, algorithm: &SignatureAlgorithm, data: &[u8]) -> Result<Vec<u8>>;
     fn delete(&self);
     fn algorithm(&self) -> KeyAlgorithm;
-    fn find_public_key(&self, backend: &dyn Backend) -> Result<Option<Box<dyn PublicKey>>> {
+    fn find_public_key(&self, backend: &dyn Backend) -> Result<Option<Arc<dyn PublicKey>>> {
         let pubkey_hash: Digest = self.public_key_hash().as_slice().try_into()?;
         backend.find_public_key(SearchOptions::Hash(pubkey_hash))
     }
@@ -119,7 +119,7 @@ pub trait PublicKey: Send + Sync + std::fmt::Debug {
     fn label(&self) -> String;
     fn to_der(&self) -> Vec<u8>;
     fn verify(&self, algorithm: &SignatureAlgorithm, data: &[u8], signature: &[u8]) -> Result<()>;
-    fn delete(self: Box<Self>);
+    fn delete(self: Arc<Self>);
     fn algorithm(&self) -> KeyAlgorithm;
 }
 
@@ -198,7 +198,6 @@ pub enum SearchOptions {
     Hash(Digest),
 }
 
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KeyAlgorithm {
     Rsa,
@@ -207,12 +206,14 @@ pub enum KeyAlgorithm {
 
 pub trait Backend: Send + Sync {
     fn name(&self) -> String;
+    fn find_certificate(&self, query: SearchOptions) -> Result<Option<Arc<dyn Certificate>>>;
     fn find_all_certificates(&self) -> Result<Vec<Box<dyn Certificate>>>;
     fn find_private_key(&self, query: SearchOptions) -> Result<Option<Arc<dyn PrivateKey>>>;
-    fn find_public_key(&self, query: SearchOptions) -> Result<Option<Box<dyn PublicKey>>>;
-    fn find_data_object(&self, query: SearchOptions) -> Result<Option<Arc<dyn DataObject>>>;
+    fn find_public_key(&self, query: SearchOptions) -> Result<Option<Arc<dyn PublicKey>>>;
     fn find_all_private_keys(&self) -> Result<Vec<Arc<dyn PrivateKey>>>;
     fn find_all_public_keys(&self) -> Result<Vec<Arc<dyn PublicKey>>>;
+    fn find_data_object(&self, query: SearchOptions) -> Result<Option<Arc<dyn DataObject>>>;
+    fn find_all_data_objects(&self) -> Result<Vec<Arc<dyn DataObject>>>;
     fn generate_key(
         &self,
         algorithm: KeyAlgorithm,
@@ -224,8 +225,8 @@ pub fn random_label() -> String {
     use rand::{distributions::Alphanumeric, Rng};
     String::from("bumpkey ")
         + &rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(32)
-        .map(char::from)
-        .collect::<String>()
+            .sample_iter(&Alphanumeric)
+            .take(32)
+            .map(char::from)
+            .collect::<String>()
 }

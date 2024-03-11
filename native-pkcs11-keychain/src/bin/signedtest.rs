@@ -22,9 +22,7 @@ mod macos {
         key::{GenerateKeyOptions, KeyType},
     };
     pub use native_pkcs11_keychain::certificate::{
-        find_all_certificates,
-        import_certificate,
-        self_signed_certificate,
+        find_all_certificates, import_certificate, self_signed_certificate,
     };
     pub use native_pkcs11_traits::random_label;
 }

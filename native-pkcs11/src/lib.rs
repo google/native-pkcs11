@@ -26,6 +26,7 @@ mod object_store;
 mod sessions;
 mod utils;
 
+use std::fs::File;
 use std::{
     cmp,
     convert::TryInto,
@@ -35,8 +36,6 @@ use std::{
         Once,
     },
 };
-use std::fs::File;
-use tracing::info;
 
 use native_pkcs11_core::{
     attribute::{Attribute, Attributes},
@@ -63,8 +62,8 @@ static INITIALIZED: AtomicBool = AtomicBool::new(false);
 type Result = std::result::Result<(), Error>;
 
 fn result_to_rv<F>(f: F) -> CK_RV
-    where
-        F: FnOnce() -> Result,
+where
+    F: FnOnce() -> Result,
 {
     match f() {
         Ok(()) => CKR_OK,
@@ -219,7 +218,7 @@ cryptoki_fn!(
                 let env_filter = EnvFilter::builder()
                     .with_default_directive(LevelFilter::TRACE.into())
                     .from_env_lossy();
-                let file: File  = File::create("/tmp/native-pkcs11.log").unwrap(); 
+                let file: File = File::create("/tmp/native-pkcs11.log").unwrap();
                 _ = Registry::default()
                     .with(
                         tracing_subscriber::fmt::layer()
@@ -235,7 +234,7 @@ cryptoki_fn!(
                 let env_filter = EnvFilter::builder()
                     .with_default_directive(LevelFilter::WARN.into())
                     .from_env_lossy();
-                
+
                 let force_stderr = std::env::var("NATIVE_PKCS11_LOG_STDERR").is_ok();
                 if !force_stderr {
                     if let Ok(journald_layer) = tracing_journald::layer() {
@@ -664,9 +663,7 @@ cryptoki_fn!(
             .map(|attr| (*attr).try_into())
             .collect::<native_pkcs11_core::Result<Vec<Attribute>>>()?
             .into();
-        
-        info!("XXXX C_FindObjectsInit: {:?}", template);
-        
+
         sessions::session(hSession, |session| -> Result {
             session.find_ctx = Some(FindContext {
                 objects: sessions::OBJECT_STORE.lock().unwrap().find(template)?,

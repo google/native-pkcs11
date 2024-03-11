@@ -16,17 +16,11 @@ use std::collections::HashMap;
 
 use native_pkcs11_core::{
     attribute::{Attribute, AttributeType, Attributes},
-    compoundid,
-    Result,
+    compoundid, Result,
 };
 use native_pkcs11_traits::{backend, SearchOptions};
 use pkcs11_sys::{
-    CKO_CERTIFICATE,
-    CKO_PRIVATE_KEY,
-    CKO_PUBLIC_KEY,
-    CKO_SECRET_KEY,
-    CKP_BASELINE_PROVIDER,
-    CK_OBJECT_HANDLE,
+    CKO_CERTIFICATE, CKO_PRIVATE_KEY, CKO_PUBLIC_KEY, CKO_SECRET_KEY, CKP_BASELINE_PROVIDER, CK_OBJECT_HANDLE,
 };
 use tracing::{debug, instrument, trace, warn};
 
@@ -59,86 +53,96 @@ impl ObjectStore {
     }
 
     /// Refresh the cache of certificates.
+    /// Firefox + NSS query certificates for every TLS connection in order to
+    ///  evaluate server trust.
     /// The cache is refreshed if it has been more than 3 seconds since the last refresh.
     fn refresh_cache(&mut self) -> Result<()> {
         let should_reload = match self.last_loaded_certs {
             Some(last) => last.elapsed() >= std::time::Duration::from_secs(3),
             None => true,
         };
-        if should_reload {
-            for cert in backend().find_all_certificates()? {
-                let private_key = backend().find_private_key(SearchOptions::Hash(
-                    cert.public_key().public_key_hash().as_slice().try_into()?,
-                ))?;
-                //  Check if certificate has an associated PrivateKey.
-                match private_key {
-                    Some(key) => key,
-                    None => continue,
-                };
-                self.insert(Object::Certificate(cert.into()));
-            }
-            //  Add all keys, regardless of label.
-            for private_key in backend().find_all_private_keys()? {
-                // Add the associated PublicKey if it exists.
-                if let Some(public_key) = private_key.find_public_key(backend())? {
-                    self.insert(Object::PublicKey(public_key.into()));
-                };
-                self.insert(Object::PrivateKey(private_key));
-            }
-            for public_key in backend().find_all_public_keys()? {
-                self.insert(Object::PublicKey(public_key));
-            }
-            self.last_loaded_certs = Some(std::time::Instant::now());
+        if !should_reload {
+            return Ok(());
         }
+        for cert in backend().find_all_certificates()? {
+            let private_key = backend().find_private_key(SearchOptions::Hash(
+                cert.public_key().public_key_hash().as_slice().try_into()?,
+            ))?;
+            //  Check if certificate has an associated PrivateKey.
+            match private_key {
+                Some(key) => key,
+                None => continue,
+            };
+            self.insert(Object::Certificate(cert.into()));
+        }
+        //  Add all keys, regardless of label.
+        for private_key in backend().find_all_private_keys()? {
+            // Add the associated PublicKey if it exists.
+            if let Some(public_key) = private_key.find_public_key(backend())? {
+                self.insert(Object::PublicKey(public_key));
+            };
+            self.insert(Object::PrivateKey(private_key));
+        }
+        for public_key in backend().find_all_public_keys()? {
+            self.insert(Object::PublicKey(public_key));
+        }
+        self.last_loaded_certs = Some(std::time::Instant::now());
         Ok(())
     }
 
     #[instrument(skip(self))]
     pub fn find(&mut self, template: Attributes) -> Result<Vec<CK_OBJECT_HANDLE>> {
-        trace!("find: searching for {:?}", template);
+        trace!("find: searching for template {:?}", template);
         let class = match template.get(AttributeType::Class) {
             Some(Attribute::Class(class)) => class,
             None => {
-                return Err(Error::Todo("no class attribute".to_string()));
+                return Err(Error::Todo("find: no class attribute".to_string()));
             }
-            class => {
-                todo!("class not implemented: {:?}", class);
+            other => {
+                return Err(Error::Todo(format!(
+                    "find: unexpected attribute value: {:?}, on class attribute type",
+                    other
+                )));
             }
         };
-        trace!("find: searc for class: {}", class);
+        trace!("find: searching for class: {}", class);
 
         let search_options = search_options_from_attributes(&template)?;
-        trace!("find: search options: {:?}", search_options);
-        
-        match  search_options{
-            None => {
-                match  *class{
-                    
-                }
-            }
-        }
-        
-        // Cache certificates.
-        //
-        // Firefox + NSS query certificates for every TLS connection in order to
-        // evaluate server trust. Cache the results for 3 seconds.
-        self.refresh_cache()?;
+        debug!(
+            "find: searching with class: {:?} and options: {:?}",
+            class, search_options
+        );
 
         let mut output = vec![];
-        let search_options = match search_options_from_attributes(&template)? {
-            Some(search_options) => search_options,
+        let search_options = match search_options {
+            // find all objects
             None => {
-                // If the template is empty, return all objects in the cache.
-                // TODO(bweeks): search the rest of the store as well.
-                for handle in self.objects.keys() {
-                    output.push(*handle);
-                }
-                return Ok(output);
+                return match *class {
+                    CKO_CERTIFICATE | CKO_PUBLIC_KEY | CKO_PRIVATE_KEY  => {
+                        self.refresh_cache()?;
+                        for handle in self.objects.keys() {
+                            output.push(*handle);
+                        }
+                        Ok(output)
+                    }
+                    // CKO_DATA
+                    0 => {
+                        for data_object in backend().find_all_data_objects()? {
+                            output.push(self.insert(Object::DataObject(data_object)));
+                        }
+                        Ok(output)
+                    }
+                    class => Err(Error::Todo(format!(
+                        "find: find all objects not yet implemented for class: {}",
+                        class
+                    ))),
+                };
             }
+            // find specific objects
+            Some(search_options) => search_options,
         };
-        trace!("find: search options: {:?}", search_options);
 
-        // The template is not empty. First add all matching objects from the cache.
+        // See if the object is already in the cache.
         for (handle, object) in self.objects.iter() {
             if object.matches(&template) {
                 output.push(*handle);
@@ -146,34 +150,35 @@ impl ObjectStore {
         }
 
         // We did not find any objects in the cache that match the template.
-        // Add objects from the backend.
+        // Query objects from the backend.
         if output.is_empty() {
-
             match *class {
-                CKO_CERTIFICATE => (),
+                CKO_CERTIFICATE => {
+                    if let Some(certificate) = backend().find_certificate(search_options)? {
+                        output.push(self.insert(Object::Certificate(certificate)));
+                    }
+                }
                 // CKO_NSS_TRUST | CKO_NETSCAPE_BUILTIN_ROOT_LIST
                 3461563219 | 3461563220 => (),
                 // 0 if for CKO_DATA
                 0 => {
-                    backend().find_data_object(search_options)?.map(|data| {
+                    if let Some(data) = backend().find_data_object(search_options)? {
                         output.push(self.insert(Object::DataObject(data)));
-                    });
+                    }
                 }
                 CKO_SECRET_KEY => (),
                 CKO_PRIVATE_KEY => {
-                    backend().find_private_key(search_options)?.map(|key| {
+                    if let Some(key) = backend().find_private_key(search_options)? {
                         output.push(self.insert(Object::PrivateKey(key)));
-                    });
+                    }
                 }
                 CKO_PUBLIC_KEY => {
-                    backend().find_public_key(search_options)?.map(|key| {
-                        output.push(self.insert(Object::PublicKey(key.into())));
-                    });
+                    if let Some(key) = backend().find_public_key(search_options)? {
+                        output.push(self.insert(Object::PublicKey(key)));
+                    }
                 }
                 _ => {
                     warn!("unsupported class: {}", class);
-                    ()
-                    // return Err(Error::AttributeTypeInvalid(*class));
                 }
             }
         }
@@ -193,7 +198,7 @@ impl Default for ObjectStore {
 }
 
 /// Convert an Attributes object into a SearchOptions object.
-// TODO(BGR) this should probable by a TryFrom implementation 
+// TODO(BGR) this should probable by a TryFrom implementation
 fn search_options_from_attributes(template: &Attributes) -> Result<Option<SearchOptions>> {
     if template.is_empty() {
         return Ok(None);
@@ -203,7 +208,9 @@ fn search_options_from_attributes(template: &Attributes) -> Result<Option<Search
         Some(SearchOptions::Hash(id.hash.as_slice().try_into()?))
     } else if let Some(Attribute::Label(label)) = template.get(AttributeType::Label) {
         Some(SearchOptions::Label(label.into()))
-    } else { None };
+    } else {
+        None
+    };
     Ok(search_options)
 }
 
@@ -226,7 +233,7 @@ mod tests {
         let label = &format!("objectstore test {}", random_label());
 
         let key = backend()
-            .generate_key(native_pkcs11_traits::KeyAlgorithm::Rsa, Some(label))
+            .generate_key(KeyAlgorithm::Rsa, Some(label))
             .unwrap();
 
         let mut store = ObjectStore::default();

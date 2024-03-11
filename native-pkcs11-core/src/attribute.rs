@@ -258,7 +258,6 @@ impl TryFrom<CK_ATTRIBUTE> for Attribute {
     type Error = Error;
 
     fn try_from(attribute: CK_ATTRIBUTE) -> Result<Self> {
-        
         trace!("Parsing attribute: {:?}", attribute);
         let attr_type = AttributeType::try_from(attribute.type_)?;
         let val = if attribute.ulValueLen > 0 {
@@ -274,7 +273,7 @@ impl TryFrom<CK_ATTRIBUTE> for Attribute {
         } else {
             &[]
         };
-        
+
         let attribute = match attr_type {
             AttributeType::AlwaysAuthenticate => {
                 Ok(Attribute::AlwaysAuthenticate(try_u8_into_bool(val)?))
@@ -339,7 +338,7 @@ impl TryFrom<CK_ATTRIBUTE> for Attribute {
             AttributeType::VerifyRecover => Ok(Attribute::VerifyRecover(try_u8_into_bool(val)?)),
             AttributeType::Wrap => Ok(Attribute::Wrap(try_u8_into_bool(val)?)),
         };
-        
+
         debug!("Parsed attribute as: {:?}", attribute);
         attribute
     }

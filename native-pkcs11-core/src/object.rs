@@ -15,20 +15,17 @@
 use std::{ffi::CString, fmt::Debug, sync::Arc};
 
 use native_pkcs11_traits::{
-    backend,
-    Certificate,
-    CertificateExt,
-    KeyAlgorithm,
-    PrivateKey,
-    PublicKey,
-    DataObject as Data,
+    backend, Certificate, CertificateExt, DataObject as Data, KeyAlgorithm, PrivateKey, PublicKey,
 };
 use p256::pkcs8::{
     der::{asn1::OctetString, Encode},
     AssociatedOid,
 };
 use pkcs1::{der::Decode, RsaPublicKey};
-use pkcs11_sys::{CKC_X_509, CKK_EC, CKK_RSA, CKO_CERTIFICATE, CKO_PRIVATE_KEY, CKO_PROFILE, CKO_PUBLIC_KEY, CK_CERTIFICATE_CATEGORY_UNSPECIFIED, CK_PROFILE_ID, CKO_DATA};
+use pkcs11_sys::{
+    CKC_X_509, CKK_EC, CKK_RSA, CKO_CERTIFICATE, CKO_DATA, CKO_PRIVATE_KEY, CKO_PROFILE,
+    CKO_PUBLIC_KEY, CK_CERTIFICATE_CATEGORY_UNSPECIFIED, CK_PROFILE_ID,
+};
 use tracing::debug;
 
 use crate::attribute::{Attribute, AttributeType, Attributes};
@@ -63,7 +60,11 @@ impl PartialEq for Object {
             (Self::PublicKey(l0), Self::PublicKey(r0)) => l0 == r0,
             (Self::DataObject(l0), Self::DataObject(r0)) => l0 == r0,
             (
-                Self::Certificate(_) | Self::PrivateKey(_) | Self::Profile(_) | Self::PublicKey(_) | Self::DataObject(_),
+                Self::Certificate(_)
+                | Self::PrivateKey(_)
+                | Self::Profile(_)
+                | Self::PublicKey(_)
+                | Self::DataObject(_),
                 _,
             ) => false,
         }
@@ -84,7 +85,7 @@ impl Object {
                         label: Some(cert.label()),
                         hash: cert.public_key().public_key_hash(),
                     })
-                        .ok()?,
+                    .ok()?,
                 )),
                 AttributeType::Issuer => Some(Attribute::Issuer(cert.issuer())),
                 AttributeType::Label => Some(Attribute::Label(cert.label())),
@@ -112,7 +113,7 @@ impl Object {
                         label: Some(private_key.label()),
                         hash: private_key.public_key_hash(),
                     })
-                        .ok()?,
+                    .ok()?,
                 )),
                 AttributeType::KeyType => Some(Attribute::KeyType(match private_key.algorithm() {
                     native_pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
@@ -189,7 +190,7 @@ impl Object {
                         label: Some(pk.label()),
                         hash: pk.public_key_hash(),
                     })
-                        .ok()?,
+                    .ok()?,
                 )),
                 AttributeType::EcPoint => {
                     if pk.algorithm() != KeyAlgorithm::Ecc {
@@ -213,7 +214,7 @@ impl Object {
                         label: Some(data.label()),
                         hash: data.data_hash(),
                     })
-                        .ok()?,
+                    .ok()?,
                 )),
                 AttributeType::Value => Some(Attribute::Value(data.value())),
                 AttributeType::Application => Some(Attribute::Application(data.application())),
