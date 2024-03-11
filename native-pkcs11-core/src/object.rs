@@ -12,16 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{ffi::CString, fmt::Debug, sync::Arc};
-
 use native_pkcs11_traits::{
-    backend,
-    Certificate,
-    CertificateExt,
-    DataObject as Data,
-    KeyAlgorithm,
-    PrivateKey,
-    PublicKey,
+    backend, Certificate, CertificateExt, DataObject, KeyAlgorithm, PrivateKey, PublicKey,
 };
 use p256::pkcs8::{
     der::{asn1::OctetString, Encode},
@@ -29,27 +21,13 @@ use p256::pkcs8::{
 };
 use pkcs1::{der::Decode, RsaPublicKey};
 use pkcs11_sys::{
-    CKC_X_509,
-    CKK_EC,
-    CKK_RSA,
-    CKO_CERTIFICATE,
-    CKO_DATA,
-    CKO_PRIVATE_KEY,
-    CKO_PROFILE,
-    CKO_PUBLIC_KEY,
-    CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
-    CK_PROFILE_ID,
+    CKC_X_509, CKK_EC, CKK_RSA, CKO_CERTIFICATE, CKO_DATA, CKO_PRIVATE_KEY, CKO_PROFILE,
+    CKO_PUBLIC_KEY, CK_CERTIFICATE_CATEGORY_UNSPECIFIED, CK_PROFILE_ID,
 };
+use std::{fmt::Debug, sync::Arc};
 use tracing::debug;
 
 use crate::attribute::{Attribute, AttributeType, Attributes};
-
-#[derive(Debug)]
-pub struct DataObject {
-    pub application: CString,
-    pub label: String,
-    pub value: Vec<u8>,
-}
 
 // TODO(bweeks): resolve by improving the ObjectStore implementation.
 #[allow(clippy::derived_hash_with_manual_eq)]
@@ -59,7 +37,7 @@ pub enum Object {
     PrivateKey(Arc<dyn PrivateKey>),
     Profile(CK_PROFILE_ID),
     PublicKey(Arc<dyn PublicKey>),
-    DataObject(Arc<dyn Data>),
+    DataObject(Arc<dyn DataObject>),
 }
 
 //  #[derive(PartialEq)] fails to compile because it tries to move the Box<_>ed
