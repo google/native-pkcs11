@@ -292,7 +292,9 @@ cryptoki_fn!(
         native_pkcs11_traits::register_backend(Box::new(native_pkcs11_windows::WindowsBackend {}));
 
         #[cfg(target_os = "linux")]
-        native_pkcs11_traits::register_backend(Box::new(native_pkcs11_linux::LinuxBackend {}));
+        if let Ok(backend) = native_pkcs11_linux::LinuxBackend::new() {
+            native_pkcs11_traits::register_backend(Box::new(backend));
+        }
 
         Ok(())
     }

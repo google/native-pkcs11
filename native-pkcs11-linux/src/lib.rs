@@ -4,7 +4,7 @@ use std::{
     io::{Read, Write},
     num::NonZeroIsize,
     str::FromStr,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 
 use native_pkcs11_traits::{Backend, Certificate, PrivateKey, PublicKey, Result};
@@ -77,9 +77,19 @@ fn null_hash_ticket() -> HashcheckTicket {
     .unwrap()
 }
 
-pub struct LinuxBackend {}
+pub struct LinuxBackend {
+    ctx: Arc<Mutex<Context>>,
+}
 
-fn collect_credentials() -> Result<Vec<LinuxCredential>> {
+impl LinuxBackend {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            ctx: Arc::new(Mutex::new(tpm_context()?)),
+        })
+    }
+}
+
+fn collect_credentials(ctx: Arc<Mutex<Context>>) -> Result<Vec<LinuxCredential>> {
     #[derive(Default)]
     struct KeyEntry {
         cert_pem: Option<Vec<u8>>,
@@ -136,7 +146,7 @@ fn collect_credentials() -> Result<Vec<LinuxCredential>> {
                     let cred = LinuxCredential {
                         label: label.clone(),
                         certificate: LinuxCertificate { der: cert.1 },
-                        private_key: LinuxPrivateKey::Tpm(public, private),
+                        private_key: LinuxPrivateKey::Tpm(public, private, ctx.clone()),
                         public_key: LinuxPublicKey {
                             der: spki,
                             label: label.clone(),
@@ -157,7 +167,7 @@ impl native_pkcs11_traits::Backend for LinuxBackend {
     }
 
     fn find_all_certificates(&self) -> native_pkcs11_traits::Result<Vec<Box<dyn Certificate>>> {
-        Ok(collect_credentials()?
+        Ok(collect_credentials(self.ctx.clone())?
             .into_iter()
             .map(|c| Box::new(c) as Box<dyn Certificate>)
             .collect())
@@ -169,13 +179,13 @@ impl native_pkcs11_traits::Backend for LinuxBackend {
     ) -> native_pkcs11_traits::Result<Option<Arc<dyn PrivateKey>>> {
         match query {
             native_pkcs11_traits::KeySearchOptions::Label(label) => {
-                return Ok(collect_credentials()?
+                return Ok(collect_credentials(self.ctx.clone())?
                     .into_iter()
                     .find(|c| c.label == label)
                     .map(|c| Arc::new(c) as Arc<dyn PrivateKey>));
             }
             native_pkcs11_traits::KeySearchOptions::PublicKeyHash(hash) => {
-                return Ok(collect_credentials()?
+                return Ok(collect_credentials(self.ctx.clone())?
                     .into_iter()
                     .find(|c| c.public_key_hash() == hash.to_vec())
                     .map(|c| Arc::new(c) as Arc<dyn PrivateKey>));
@@ -189,13 +199,13 @@ impl native_pkcs11_traits::Backend for LinuxBackend {
     ) -> native_pkcs11_traits::Result<Option<Box<dyn PublicKey>>> {
         match query {
             native_pkcs11_traits::KeySearchOptions::Label(label) => {
-                return Ok(collect_credentials()?
+                return Ok(collect_credentials(self.ctx.clone())?
                     .into_iter()
                     .find(|c| c.label == label)
                     .map(|c| Box::new(c.public_key) as Box<dyn PublicKey>));
             }
             native_pkcs11_traits::KeySearchOptions::PublicKeyHash(hash) => {
-                return Ok(collect_credentials()?
+                return Ok(collect_credentials(self.ctx.clone())?
                     .into_iter()
                     .find(|c| c.public_key_hash() == hash.to_vec())
                     .map(|c| Box::new(c.public_key) as Box<dyn PublicKey>));
@@ -204,7 +214,7 @@ impl native_pkcs11_traits::Backend for LinuxBackend {
     }
 
     fn find_all_private_keys(&self) -> native_pkcs11_traits::Result<Vec<Arc<dyn PrivateKey>>> {
-        let creds = collect_credentials()?;
+        let creds = collect_credentials(self.ctx.clone())?;
         Ok(creds
             .into_iter()
             .map(|cred| Arc::new(cred) as Arc<dyn PrivateKey>)
@@ -212,7 +222,7 @@ impl native_pkcs11_traits::Backend for LinuxBackend {
     }
 
     fn find_all_public_keys(&self) -> native_pkcs11_traits::Result<Vec<Arc<dyn PublicKey>>> {
-        let creds = collect_credentials()?;
+        let creds = collect_credentials(self.ctx.clone())?;
         Ok(creds
             .into_iter()
             .map(|cred| Arc::new(cred.public_key) as Arc<dyn PublicKey>)
@@ -281,16 +291,31 @@ impl PrivateKey for LinuxCredential {
     ) -> Result<Vec<u8>> {
         match &self.private_key {
             LinuxPrivateKey::Raw(_) => todo!(),
-            LinuxPrivateKey::Tpm(public, private) => {
+            LinuxPrivateKey::Tpm(public, private, ctx) => {
+                // let mut ctx = ctx.lock().unwrap();
                 let mut ctx = tpm_context()?;
-                let CREDKIT_SRK = PersistentTpmHandle::new(0x81000001).unwrap();
-                let srk_tr = ctx.tr_from_tpm_public(CREDKIT_SRK.into()).unwrap();
+                let SRK_HANDLE = PersistentTpmHandle::new(0x81000001)?;
 
-                let key = ctx
-                    .execute_with_nullauth_session(|ctx| {
-                        ctx.load(srk_tr.into(), private.clone(), public.clone())
-                    })
-                    .unwrap();
+                let start = std::time::Instant::now();
+
+                ctx.set_sessions((None, None, None));
+
+                let srk_tr = ctx.tr_from_tpm_public(SRK_HANDLE.into())?;
+                tracing::info!(
+                    "tr_from_tpm_public took {:?}",
+                    std::time::Instant::now() - start
+                );
+
+                let start = std::time::Instant::now();
+                tracing::info!("load start");
+                // let key = ctx.load(srk_tr.into(), private.clone(), public.clone())?;
+                let key = ctx.execute_with_nullauth_session(|ctx| {
+                    tracing::info!("inner load start");
+                    let out = ctx.load(srk_tr.into(), private.clone(), public.clone());
+                    tracing::info!("inner load end");
+                    out
+                })?;
+                tracing::info!("ctx.load took {:?}", std::time::Instant::now() - start);
 
                 let scheme = match algorithm {
                     native_pkcs11_traits::SignatureAlgorithm::Ecdsa => {
@@ -302,10 +327,27 @@ impl PrivateKey for LinuxCredential {
                         return Err("bad alg".into());
                     }
                 };
+                tracing::error!("data.len {:?}", data.len());
                 let data = &data[0..(256 / 8)];
+                tracing::error!("2data.len {:?}", data.len());
+                let start = std::time::Instant::now();
                 let sig = ctx.execute_with_nullauth_session(|ctx| {
-                    ctx.sign(key, Digest::try_from(data)?, scheme, null_hash_ticket())
+                    let start = std::time::Instant::now();
+                    let out = ctx.sign(
+                        key,
+                        Digest::try_from(data)?,
+                        tss_esapi::structures::SignatureScheme::Null,
+                        null_hash_ticket(),
+                    );
+                    tracing::info!(
+                        "inner ctx.sign took {:?}",
+                        std::time::Instant::now() - start
+                    );
+                    out
                 })?;
+
+                ctx.flush_context(key.into());
+                tracing::info!("ctx.sign took {:?}", std::time::Instant::now() - start);
                 match sig {
                     tss_esapi::structures::Signature::EcDsa(sig) => {
                         let mut out = vec![];
@@ -366,14 +408,14 @@ impl Certificate for LinuxCredential {
 
 enum LinuxPrivateKey {
     Raw(Vec<u8>),
-    Tpm(Public, Private),
+    Tpm(Public, Private, Arc<Mutex<Context>>),
 }
 
 impl std::fmt::Debug for LinuxPrivateKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Raw(arg0) => f.debug_tuple("Raw").finish(),
-            Self::Tpm(arg0, arg1) => f.debug_tuple("Tpm").field(arg0).field(arg1).finish(),
+            Self::Tpm(arg0, arg1, _) => f.debug_tuple("Tpm").field(arg0).field(arg1).finish(),
         }
     }
 }
@@ -415,7 +457,10 @@ impl PublicKey for LinuxPublicKey {
 
 #[test]
 fn it_works() {
-    LinuxBackend {}.find_all_private_keys().unwrap();
+    LinuxBackend::new()
+        .unwrap()
+        .find_all_private_keys()
+        .unwrap();
 }
 
 #[test]
