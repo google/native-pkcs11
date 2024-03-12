@@ -210,6 +210,8 @@ impl Object {
                 )),
                 AttributeType::Value => Some(Attribute::Value(data.value())),
                 AttributeType::Application => Some(Attribute::Application(data.application())),
+                AttributeType::Private => Some(Attribute::Private(true)),
+                AttributeType::Label => Some(Attribute::Label(data.label())),
                 _ => {
                     debug!("Data object: type_ unimplemented: {:?}", type_);
                     None
