@@ -38,3 +38,16 @@ pub extern "C" fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) ->
     return CKR_OK;
 }
 ```
+
+## Releasing
+
+The [`cargo-ws`](https://github.com/pksunkara/cargo-workspaces) tool can be used
+to version bump and release all crates in the workspace at once. It can be
+installed with `cargo install cargo-workspaces`.
+
+```bash
+# Bump the version of all crates in the workspace
+cargo ws version --no-git-push
+# Publish all crates to crates.io
+cargo ws publish --no-git-push
+```
