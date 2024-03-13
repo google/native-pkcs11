@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::Debug;
+use std::{fmt::Debug, sync::Arc};
 
 use apple_security_framework::{
+    certificate::SecCertificate,
     item::{ItemClass, KeyClass, Limit, Location, Reference},
     key::{GenerateKeyOptions, KeyType, SecKey},
 };
@@ -142,7 +143,7 @@ impl PrivateKey for KeychainPrivateKey {
     fn find_public_key(
         &self,
         _backend: &dyn native_pkcs11_traits::Backend,
-    ) -> native_pkcs11_traits::Result<Option<Box<dyn PublicKey>>> {
+    ) -> native_pkcs11_traits::Result<Option<Arc<dyn PublicKey>>> {
         let sec_copy = self
             .sec_key
             .public_key()
@@ -150,11 +151,11 @@ impl PrivateKey for KeychainPrivateKey {
             .transpose()
             .ok()
             .flatten()
-            .map(|key| Box::new(key) as _);
+            .map(|key| Arc::new(key) as _);
         if sec_copy.is_some() {
             return Ok(sec_copy);
         }
-        Ok(self.pub_key.clone().map(|key| Box::new(key) as _))
+        Ok(self.pub_key.clone().map(|key| Arc::new(key) as _))
     }
 }
 
@@ -239,7 +240,7 @@ impl PublicKey for KeychainPublicKey {
         Ok(())
     }
 
-    fn delete(self: Box<Self>) {
+    fn delete(self: Arc<Self>) {
         let _ = self.sec_key.delete();
     }
 
@@ -271,7 +272,7 @@ pub fn generate_key(
     Ok(SecKey::generate(opts).map_err(|e| e.to_string())?)
 }
 
-pub fn find_key(class: KeyClass, label: &str) -> Result<SecKey> {
+pub fn find_key_using_label(class: KeyClass, label: &str) -> Result<SecKey> {
     let results = crate::keychain::item_search_options()?
         .load_refs(true)
         .label(label)
@@ -289,7 +290,7 @@ pub fn find_key(class: KeyClass, label: &str) -> Result<SecKey> {
 }
 
 #[instrument]
-pub fn find_key2(class: KeyClass, label: &[u8]) -> Result<Option<SecKey>> {
+pub fn find_key_using_application(class: KeyClass, label: &[u8]) -> Result<Option<SecKey>> {
     let results = crate::keychain::item_search_options()?
         .load_refs(true)
         .class(ItemClass::key())
@@ -342,6 +343,52 @@ pub fn find_all_keys(key_class: KeyClass) -> Result<Vec<SecKey>> {
         .collect();
 
     Ok(keys)
+}
+
+#[instrument]
+pub fn find_certificate_using_label(label: &str) -> Result<SecCertificate> {
+    let results = crate::keychain::item_search_options()?
+        .load_refs(true)
+        .label(label)
+        .class(ItemClass::certificate())
+        .limit(1)
+        .search();
+
+    let loaded_certificate = match results?.into_iter().next().ok_or("certificate not found")? {
+        apple_security_framework::item::SearchResult::Ref(Reference::Certificate(cert)) => cert,
+        _ => return Err("no certificate ref")?,
+    };
+
+    Ok(loaded_certificate)
+}
+
+#[instrument]
+pub fn find_certificate_using_application(label: &[u8]) -> Result<Option<SecCertificate>> {
+    let results = crate::keychain::item_search_options()?
+        .load_refs(true)
+        .class(ItemClass::certificate())
+        .application_label(label)
+        .limit(1)
+        .search();
+
+    let results = match results {
+        Err(e) if e.code() == -25300 => return Ok(None),
+        Err(e) => return Err(e)?,
+        Ok(results) => results,
+    };
+
+    let loaded_certificate = results
+        .into_iter()
+        .next()
+        .map(|key| match key {
+            apple_security_framework::item::SearchResult::Ref(Reference::Certificate(cert)) => {
+                Ok::<_, &str>(cert)
+            }
+            _ => Err("no key ref")?,
+        })
+        .transpose()?;
+
+    Ok(loaded_certificate)
 }
 
 #[cfg(test)]
@@ -426,7 +473,7 @@ mod test {
 
             std::mem::drop(key);
 
-            let loaded_key = find_key(KeyClass::private(), label)?;
+            let loaded_key = find_key_using_label(KeyClass::private(), label)?;
 
             let payload = vec![0u8; 32];
             let signature = loaded_key.create_signature(sig_alg, &payload)?;
@@ -494,7 +541,7 @@ mod test {
         for keyclass in [KeyClass::public(), KeyClass::private()] {
             for key in [&key1, &key2] {
                 assert_eq!(
-                    find_key2(keyclass, &key.application_label().unwrap())?
+                    find_key_using_application(keyclass, &key.application_label().unwrap())?
                         .unwrap()
                         .application_label()
                         .unwrap(),
@@ -559,7 +606,7 @@ mod test {
         //     .unwrap();
 
         let found_key = KeychainBackend
-            .find_private_key(native_pkcs11_traits::KeySearchOptions::Label(label))
+            .find_private_key(native_pkcs11_traits::SearchOptions::Label(label))
             .map_err(|e| {
                 dbg!(e);
                 "find"

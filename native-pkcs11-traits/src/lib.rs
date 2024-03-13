@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod data_object;
+
 use std::{
     any::Any,
     hash::Hash,
@@ -83,9 +85,9 @@ pub trait PrivateKey: Send + Sync {
     fn sign(&self, algorithm: &SignatureAlgorithm, data: &[u8]) -> Result<Vec<u8>>;
     fn delete(&self);
     fn algorithm(&self) -> KeyAlgorithm;
-    fn find_public_key(&self, backend: &dyn Backend) -> Result<Option<Box<dyn PublicKey>>> {
+    fn find_public_key(&self, backend: &dyn Backend) -> Result<Option<Arc<dyn PublicKey>>> {
         let pubkey_hash: Digest = self.public_key_hash().as_slice().try_into()?;
-        backend.find_public_key(KeySearchOptions::PublicKeyHash(pubkey_hash))
+        backend.find_public_key(SearchOptions::Hash(pubkey_hash))
     }
 }
 
@@ -104,6 +106,7 @@ impl PartialEq for dyn PrivateKey {
 }
 
 impl Eq for dyn PrivateKey {}
+
 impl Hash for dyn PrivateKey {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.type_id().hash(state);
@@ -117,7 +120,7 @@ pub trait PublicKey: Send + Sync + std::fmt::Debug {
     fn label(&self) -> String;
     fn to_der(&self) -> Vec<u8>;
     fn verify(&self, algorithm: &SignatureAlgorithm, data: &[u8], signature: &[u8]) -> Result<()>;
-    fn delete(self: Box<Self>);
+    fn delete(self: Arc<Self>);
     fn algorithm(&self) -> KeyAlgorithm;
 }
 
@@ -128,6 +131,7 @@ impl PartialEq for dyn PublicKey {
 }
 
 impl Eq for dyn PublicKey {}
+
 impl Hash for dyn PublicKey {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.type_id().hash(state);
@@ -151,7 +155,9 @@ impl PartialEq for dyn Certificate {
         self.to_der() == other.to_der() && self.label() == other.label()
     }
 }
+
 impl Eq for dyn Certificate {}
+
 impl Hash for dyn Certificate {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.type_id().hash(state);
@@ -182,12 +188,15 @@ pub trait CertificateExt: Certificate {
 
 impl<T: Certificate + ?Sized> CertificateExt for T {}
 
+// The Data object Trait
+pub use data_object::DataObject;
+
 #[derive(Debug)]
-pub enum KeySearchOptions {
+pub enum SearchOptions {
     //  TODO(kcking): search keys by _both_ label and public key hash as that is how
     //  they are de-duped and referenced.
     Label(String),
-    PublicKeyHash(Digest),
+    Hash(Digest),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -198,11 +207,14 @@ pub enum KeyAlgorithm {
 
 pub trait Backend: Send + Sync {
     fn name(&self) -> String;
+    fn find_certificate(&self, query: SearchOptions) -> Result<Option<Arc<dyn Certificate>>>;
     fn find_all_certificates(&self) -> Result<Vec<Box<dyn Certificate>>>;
-    fn find_private_key(&self, query: KeySearchOptions) -> Result<Option<Arc<dyn PrivateKey>>>;
-    fn find_public_key(&self, query: KeySearchOptions) -> Result<Option<Box<dyn PublicKey>>>;
+    fn find_private_key(&self, query: SearchOptions) -> Result<Option<Arc<dyn PrivateKey>>>;
+    fn find_public_key(&self, query: SearchOptions) -> Result<Option<Arc<dyn PublicKey>>>;
     fn find_all_private_keys(&self) -> Result<Vec<Arc<dyn PrivateKey>>>;
     fn find_all_public_keys(&self) -> Result<Vec<Arc<dyn PublicKey>>>;
+    fn find_data_object(&self, query: SearchOptions) -> Result<Option<Arc<dyn DataObject>>>;
+    fn find_all_data_objects(&self) -> Result<Vec<Arc<dyn DataObject>>>;
     fn generate_key(
         &self,
         algorithm: KeyAlgorithm,

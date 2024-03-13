@@ -16,36 +16,33 @@
 #![allow(clippy::missing_safety_doc)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
-pub use native_pkcs11_core::Error;
-use native_pkcs11_traits::backend;
-use tracing::metadata::LevelFilter;
-use tracing_error::ErrorLayer;
-use tracing_subscriber::{fmt::format::FmtSpan, prelude::*, EnvFilter, Registry};
-mod object_store;
-mod sessions;
-mod utils;
-
+#[cfg(not(feature = "custom-function-list"))]
+use std::ptr::addr_of_mut;
 use std::{
     cmp,
     convert::TryInto,
     slice,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Once,
-    },
+    sync::atomic::{AtomicBool, Ordering},
 };
 
+pub use native_pkcs11_core::Error;
 use native_pkcs11_core::{
     attribute::{Attribute, Attributes},
     mechanism::{parse_mechanism, SUPPORTED_SIGNATURE_MECHANISMS},
     object::{self, Object},
 };
+use native_pkcs11_traits::backend;
 use pkcs11_sys::*;
+pub use pkcs11_sys::{CKR_OK, CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV};
 
 use crate::{
     sessions::{FindContext, SignContext},
     utils::right_pad_string_to_array,
 };
+
+mod object_store;
+mod sessions;
+mod utils;
 
 const LIBRARY_DESCRIPTION: &[u8; 32] = b"                                ";
 const MANUFACTURER_ID: &[u8; 32] = b"google                          ";
@@ -129,8 +126,6 @@ macro_rules! valid_slot {
     };
 }
 
-//  Export necessary items for registering a custom Backend.
-pub use pkcs11_sys::{CKR_OK, CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV};
 pub static mut FUNC_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
     // In this structure ‘version’ is the cryptoki specification version number. The major and minor
     // versions must be set to 0x02 and 0x28 indicating a version 2.40 compatible structure.
@@ -205,35 +200,8 @@ pub static mut FUNC_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
     C_WaitForSlotEvent: Some(C_WaitForSlotEvent),
 };
 
-static TRACING_INIT: Once = Once::new();
-
 cryptoki_fn!(
     fn C_Initialize(pInitArgs: CK_VOID_PTR) {
-        TRACING_INIT.call_once(|| {
-            let env_filter = EnvFilter::builder()
-                .with_default_directive(LevelFilter::WARN.into())
-                .from_env_lossy();
-            let force_stderr = std::env::var("NATIVE_PKCS11_LOG_STDERR").is_ok();
-            if !force_stderr {
-                if let Ok(journald_layer) = tracing_journald::layer() {
-                    _ = Registry::default()
-                        .with(journald_layer.with_syslog_identifier("native-pkcs11".into()))
-                        .with(env_filter)
-                        .with(ErrorLayer::default())
-                        .try_init();
-                    return;
-                }
-            }
-            _ = Registry::default()
-                .with(
-                    tracing_subscriber::fmt::layer()
-                        .with_writer(std::io::stderr)
-                        .with_span_events(FmtSpan::ENTER),
-                )
-                .with(env_filter)
-                .with(ErrorLayer::default())
-                .try_init();
-        });
         if !pInitArgs.is_null() {
             let args = unsafe { *(pInitArgs as CK_C_INITIALIZE_ARGS_PTR) };
             if !args.pReserved.is_null() {
@@ -281,7 +249,7 @@ cryptoki_fn!(
 cryptoki_fn!(
     unsafe fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) {
         not_null!(ppFunctionList);
-        unsafe { *ppFunctionList = &mut FUNC_LIST };
+        unsafe { *ppFunctionList = addr_of_mut!(FUNC_LIST) };
 
         #[cfg(target_os = "macos")]
         native_pkcs11_traits::register_backend(Box::new(
@@ -640,6 +608,7 @@ cryptoki_fn!(
             .map(|attr| (*attr).try_into())
             .collect::<native_pkcs11_core::Result<Vec<Attribute>>>()?
             .into();
+
         sessions::session(hSession, |session| -> Result {
             session.find_ctx = Some(FindContext {
                 objects: sessions::OBJECT_STORE.lock().unwrap().find(template)?,
@@ -1592,6 +1561,7 @@ pub mod tests {
         );
         assert_eq!(unsafe { C_Finalize(ptr::null_mut()) }, CKR_OK);
     }
+
     #[test]
     #[serial]
     fn cancel_function() {

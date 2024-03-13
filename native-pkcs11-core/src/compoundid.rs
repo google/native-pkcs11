@@ -19,7 +19,7 @@ use crate::Result;
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Id {
     pub label: Option<String>,
-    pub public_key_hash: Vec<u8>,
+    pub hash: Vec<u8>,
 }
 
 fn bincode_opts() -> impl bincode::Options {

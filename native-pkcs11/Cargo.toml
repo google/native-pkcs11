@@ -21,6 +21,7 @@ tracing = "0.1.40"
 tracing-error = "0.2.0"
 tracing-journald = "0.3"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+log = "0.4.21"
 
 [lib]
 crate-type = ["lib", "cdylib"]

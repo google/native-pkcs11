@@ -23,15 +23,17 @@ use core_foundation::{
     base::{TCFType, ToVoid},
     string::CFString,
 };
-use native_pkcs11_traits::Backend;
+use native_pkcs11_traits::{Backend, Certificate, DataObject, SearchOptions};
 use tracing::instrument;
 
 use crate::{
-    certificate::{find_all_certificates, KeychainCertificate},
+    certificate::{find_all_certificates, import_identity, KeychainCertificate},
     key::{
         find_all_keys,
-        find_key,
-        find_key2,
+        find_certificate_using_application,
+        find_certificate_using_label,
+        find_key_using_application,
+        find_key_using_label,
         generate_key,
         Algorithm,
         KeychainPrivateKey,
@@ -54,9 +56,26 @@ impl Backend for KeychainBackend {
     }
 
     #[instrument]
-    fn find_all_certificates(
+    fn find_certificate(
         &self,
-    ) -> native_pkcs11_traits::Result<Vec<Box<dyn native_pkcs11_traits::Certificate>>> {
+        query: SearchOptions,
+    ) -> native_pkcs11_traits::Result<Option<Arc<dyn Certificate>>> {
+        let opt_key = match query {
+            SearchOptions::Label(label) => find_certificate_using_label(&label)
+                .ok()
+                .map(|sec_cert| KeychainCertificate::new(import_identity(&sec_cert)?))
+                .transpose()?,
+            SearchOptions::Hash(certificate_hash) => {
+                find_certificate_using_application(&certificate_hash)?
+                    .map(|sec_cert| KeychainCertificate::new(import_identity(&sec_cert)?))
+                    .transpose()?
+            }
+        };
+        Ok(opt_key.map(|sec_cert| Arc::new(sec_cert) as _))
+    }
+
+    #[instrument]
+    fn find_all_certificates(&self) -> native_pkcs11_traits::Result<Vec<Box<dyn Certificate>>> {
         let certs = find_all_certificates()?
             .into_iter()
             .map(KeychainCertificate::new)
@@ -69,7 +88,7 @@ impl Backend for KeychainBackend {
     #[instrument]
     fn find_private_key(
         &self,
-        query: native_pkcs11_traits::KeySearchOptions,
+        query: SearchOptions,
     ) -> native_pkcs11_traits::Result<Option<Arc<dyn native_pkcs11_traits::PrivateKey>>> {
         let mut pubkeys_by_pubkey_hash: HashMap<Vec<u8>, SecKey> =
             HashMap::from_iter(find_all_certificates()?.into_iter().filter_map(|c| {
@@ -87,17 +106,15 @@ impl Backend for KeychainBackend {
                 .and_then(|sec_key| KeychainPublicKey::new(sec_key, "").ok())
         };
         let opt_key = match query {
-            native_pkcs11_traits::KeySearchOptions::Label(label) => {
-                find_key(KeyClass::private(), &label)
-                    .ok()
-                    .map(|sec_key| {
-                        let cert = find_pubkey_for_seckey(&sec_key);
-                        KeychainPrivateKey::new(sec_key, label, cert)
-                    })
-                    .transpose()?
-            }
-            native_pkcs11_traits::KeySearchOptions::PublicKeyHash(public_key_hash) => {
-                find_key2(KeyClass::private(), &public_key_hash)?
+            SearchOptions::Label(label) => find_key_using_label(KeyClass::private(), &label)
+                .ok()
+                .map(|sec_key| {
+                    let cert = find_pubkey_for_seckey(&sec_key);
+                    KeychainPrivateKey::new(sec_key, label, cert)
+                })
+                .transpose()?,
+            SearchOptions::Hash(public_key_hash) => {
+                find_key_using_application(KeyClass::private(), &public_key_hash)?
                     .map(|sec_key| {
                         let cert = find_pubkey_for_seckey(&sec_key);
                         KeychainPrivateKey::new(sec_key, "", cert)
@@ -111,39 +128,20 @@ impl Backend for KeychainBackend {
     #[instrument]
     fn find_public_key(
         &self,
-        query: native_pkcs11_traits::KeySearchOptions,
-    ) -> native_pkcs11_traits::Result<Option<Box<dyn native_pkcs11_traits::PublicKey>>> {
+        query: SearchOptions,
+    ) -> native_pkcs11_traits::Result<Option<Arc<dyn native_pkcs11_traits::PublicKey>>> {
         let opt_key = match query {
-            native_pkcs11_traits::KeySearchOptions::Label(label) => {
-                find_key(KeyClass::public(), &label)
-                    .ok()
-                    .map(|sec_key| KeychainPublicKey::new(sec_key, label))
-                    .transpose()?
-            }
-            native_pkcs11_traits::KeySearchOptions::PublicKeyHash(public_key_hash) => {
-                find_key2(KeyClass::public(), &public_key_hash)?
+            SearchOptions::Label(label) => find_key_using_label(KeyClass::public(), &label)
+                .ok()
+                .map(|sec_key| KeychainPublicKey::new(sec_key, label))
+                .transpose()?,
+            SearchOptions::Hash(public_key_hash) => {
+                find_key_using_application(KeyClass::public(), &public_key_hash)?
                     .map(|sec_key| KeychainPublicKey::new(sec_key, ""))
                     .transpose()?
             }
         };
-        Ok(opt_key.map(|sec_key| Box::new(sec_key) as _))
-    }
-
-    #[instrument]
-    fn generate_key(
-        &self,
-        algorithm: native_pkcs11_traits::KeyAlgorithm,
-        label: Option<&str>,
-    ) -> native_pkcs11_traits::Result<Arc<dyn native_pkcs11_traits::PrivateKey>> {
-        let alg = match algorithm {
-            native_pkcs11_traits::KeyAlgorithm::Rsa => Algorithm::RSA,
-            native_pkcs11_traits::KeyAlgorithm::Ecc => Algorithm::ECC,
-        };
-        let label = label.unwrap_or("");
-        Ok(
-            generate_key(alg, label, Some(Location::DefaultFileKeychain))
-                .map(|key| KeychainPrivateKey::new(key, label, None).map(Arc::new))??,
-        )
+        Ok(opt_key.map(|sec_key| Arc::new(sec_key) as _))
     }
 
     fn find_all_private_keys(
@@ -189,5 +187,33 @@ impl Backend for KeychainBackend {
             .map(|k| Arc::new(k) as _);
 
         Ok(keys.collect())
+    }
+
+    fn find_data_object(
+        &self,
+        _query: SearchOptions,
+    ) -> native_pkcs11_traits::Result<Option<Arc<dyn DataObject>>> {
+        Err("Finding data object is not not implemented for the Keychain Backend".into())
+    }
+
+    fn find_all_data_objects(&self) -> native_pkcs11_traits::Result<Vec<Arc<dyn DataObject>>> {
+        Err("Finding all data object is not not implemented for the Keychain Backend".into())
+    }
+
+    #[instrument]
+    fn generate_key(
+        &self,
+        algorithm: native_pkcs11_traits::KeyAlgorithm,
+        label: Option<&str>,
+    ) -> native_pkcs11_traits::Result<Arc<dyn native_pkcs11_traits::PrivateKey>> {
+        let alg = match algorithm {
+            native_pkcs11_traits::KeyAlgorithm::Rsa => Algorithm::RSA,
+            native_pkcs11_traits::KeyAlgorithm::Ecc => Algorithm::ECC,
+        };
+        let label = label.unwrap_or("");
+        Ok(
+            generate_key(alg, label, Some(Location::DefaultFileKeychain))
+                .map(|key| KeychainPrivateKey::new(key, label, None).map(Arc::new))??,
+        )
     }
 }

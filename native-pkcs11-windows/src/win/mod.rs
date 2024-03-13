@@ -15,7 +15,7 @@
 
 use std::{ffi::OsString, ops::Deref, str::FromStr, sync::Arc};
 
-use native_pkcs11_traits::Backend;
+use native_pkcs11_traits::{Backend, Certificate, DataObject, SearchOptions};
 use windows::{
     core::Interface,
     Security::Cryptography::Certificates::CertificateStores,
@@ -73,15 +73,15 @@ impl Backend for WindowsBackend {
 
     fn find_private_key(
         &self,
-        _query: native_pkcs11_traits::KeySearchOptions,
+        _query: native_pkcs11_traits::SearchOptions,
     ) -> native_pkcs11_traits::Result<Option<Arc<dyn native_pkcs11_traits::PrivateKey>>> {
         Ok(None)
     }
 
     fn find_public_key(
         &self,
-        _query: native_pkcs11_traits::KeySearchOptions,
-    ) -> native_pkcs11_traits::Result<Option<Box<dyn native_pkcs11_traits::PublicKey>>> {
+        _query: native_pkcs11_traits::SearchOptions,
+    ) -> native_pkcs11_traits::Result<Option<Arc<dyn native_pkcs11_traits::PublicKey>>> {
         Ok(None)
     }
 
@@ -107,6 +107,24 @@ impl Backend for WindowsBackend {
 
     fn name(&self) -> String {
         "Windows CNG".into()
+    }
+
+    fn find_certificate(
+        &self,
+        query: SearchOptions,
+    ) -> native_pkcs11_traits::Result<Option<Arc<dyn Certificate>>> {
+        Ok(None)
+    }
+
+    fn find_data_object(
+        &self,
+        query: SearchOptions,
+    ) -> native_pkcs11_traits::Result<Option<Arc<dyn DataObject>>> {
+        Ok(None)
+    }
+
+    fn find_all_data_objects(&self) -> native_pkcs11_traits::Result<Vec<Arc<dyn DataObject>>> {
+        Ok(vec![])
     }
 }
 
@@ -144,8 +162,6 @@ mod test {
         AsymmetricKeyAlgorithmProvider,
         CryptographicEngine,
     };
-
-    use super::*;
 
     #[test]
     fn keygen() -> native_pkcs11_traits::Result<()> {

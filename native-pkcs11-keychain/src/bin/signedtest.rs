@@ -162,7 +162,7 @@ fn unpersisted_public_key() -> Result<(), native_pkcs11_keychain::Error> {
     )?;
 
     let found_key = KeychainBackend {}
-        .find_private_key(native_pkcs11_traits::KeySearchOptions::Label(label))
+        .find_private_key(native_pkcs11_traits::SearchOptions::Label(label))
         .map_err(|e| {
             dbg!(e);
             "find"
