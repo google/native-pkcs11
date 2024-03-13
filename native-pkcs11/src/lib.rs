@@ -16,24 +16,24 @@
 #![allow(clippy::missing_safety_doc)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
+#[cfg(not(feature = "custom-function-list"))]
+use std::ptr::addr_of_mut;
 use std::{
     cmp,
     convert::TryInto,
     slice,
     sync::atomic::{AtomicBool, Ordering},
 };
-#[cfg(not(feature = "custom-function-list"))]
-use std::ptr::addr_of_mut;
 
+pub use native_pkcs11_core::Error;
 use native_pkcs11_core::{
     attribute::{Attribute, Attributes},
     mechanism::{parse_mechanism, SUPPORTED_SIGNATURE_MECHANISMS},
     object::{self, Object},
 };
-pub use native_pkcs11_core::Error;
 use native_pkcs11_traits::backend;
 use pkcs11_sys::*;
-pub use pkcs11_sys::{CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV, CKR_OK};
+pub use pkcs11_sys::{CKR_OK, CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV};
 
 use crate::{
     sessions::{FindContext, SignContext},
