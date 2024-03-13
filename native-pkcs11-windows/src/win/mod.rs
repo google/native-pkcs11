@@ -15,13 +15,14 @@
 
 use std::{ffi::OsString, ops::Deref, str::FromStr, sync::Arc};
 
-use native_pkcs11_traits::{Backend, Certificate, DataObject, SearchOptions};
 use windows::{
     core::Interface,
     Security::Cryptography::Certificates::CertificateStores,
     Storage::Streams::{Buffer, IBuffer},
     Win32::System::WinRT::IBufferByteAccess,
 };
+
+use native_pkcs11_traits::{Backend, Certificate, DataObject, SearchOptions};
 
 //  https://stackoverflow.com/questions/2742739/how-do-i-know-what-the-storename-of-a-certificate-is
 const STORE_NAME: &str = "My";
@@ -81,7 +82,7 @@ impl Backend for WindowsBackend {
     fn find_public_key(
         &self,
         _query: native_pkcs11_traits::SearchOptions,
-    ) -> native_pkcs11_traits::Result<Option<Box<dyn native_pkcs11_traits::PublicKey>>> {
+    ) -> native_pkcs11_traits::Result<Option<Arc<dyn native_pkcs11_traits::PublicKey>>> {
         Ok(None)
     }
 
@@ -156,12 +157,13 @@ fn backend() {
 
 #[cfg(test)]
 mod test {
-    use native_pkcs11_traits::random_label;
     use windows::Security::Cryptography::Core::{
         AsymmetricAlgorithmNames,
         AsymmetricKeyAlgorithmProvider,
         CryptographicEngine,
     };
+
+    use native_pkcs11_traits::random_label;
 
     #[test]
     fn keygen() -> native_pkcs11_traits::Result<()> {
