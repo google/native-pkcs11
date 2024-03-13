@@ -3,11 +3,11 @@ use std::{fs, fs::OpenOptions, path::PathBuf, sync::Once};
 use tracing::level_filters::LevelFilter;
 use tracing_error::ErrorLayer;
 use tracing_subscriber::{
-    EnvFilter,
     fmt::format::FmtSpan,
     layer::SubscriberExt,
-    Registry,
     util::SubscriberInitExt,
+    EnvFilter,
+    Registry,
 };
 
 static TRACING_INIT: Once = Once::new();
