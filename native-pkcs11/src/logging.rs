@@ -3,11 +3,11 @@ use std::{fs, fs::OpenOptions, path::PathBuf, sync::Once};
 use tracing::level_filters::LevelFilter;
 use tracing_error::ErrorLayer;
 use tracing_subscriber::{
+    EnvFilter,
     fmt::format::FmtSpan,
     layer::SubscriberExt,
-    util::SubscriberInitExt,
-    EnvFilter,
     Registry,
+    util::SubscriberInitExt,
 };
 
 static TRACING_INIT: Once = Once::new();
@@ -31,7 +31,7 @@ fn init(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let log_home = match log_home {
         None => {
-            let log_home = dirs::home_dir().ok_or("No home directory")?;
+            let log_home = etcetera::home_dir().map_err(|e| format!("No home directory {e:?}"))?;
             log_home.join(".cosmian")
         }
         Some(log_home) => PathBuf::from(log_home),

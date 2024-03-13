@@ -15,13 +15,14 @@
 
 use std::{ffi::OsString, ops::Deref, str::FromStr, sync::Arc};
 
-use native_pkcs11_traits::Backend;
 use windows::{
     core::Interface,
     Security::Cryptography::Certificates::CertificateStores,
     Storage::Streams::{Buffer, IBuffer},
     Win32::System::WinRT::IBufferByteAccess,
 };
+
+use native_pkcs11_traits::{Backend, Certificate, DataObject, SearchOptions};
 
 //  https://stackoverflow.com/questions/2742739/how-do-i-know-what-the-storename-of-a-certificate-is
 const STORE_NAME: &str = "My";
@@ -108,6 +109,24 @@ impl Backend for WindowsBackend {
     fn name(&self) -> String {
         "Windows CNG".into()
     }
+
+    fn find_certificate(
+        &self,
+        query: SearchOptions,
+    ) -> native_pkcs11_traits::Result<Option<Arc<dyn Certificate>>> {
+        Ok(None)
+    }
+
+    fn find_data_object(
+        &self,
+        query: SearchOptions,
+    ) -> native_pkcs11_traits::Result<Option<Arc<dyn DataObject>>> {
+        Ok(None)
+    }
+
+    fn find_all_data_objects(&self) -> native_pkcs11_traits::Result<Vec<Arc<dyn DataObject>>> {
+        Ok(vec![])
+    }
 }
 
 #[derive(Debug)]
@@ -138,14 +157,13 @@ fn backend() {
 
 #[cfg(test)]
 mod test {
-    use native_pkcs11_traits::random_label;
     use windows::Security::Cryptography::Core::{
         AsymmetricAlgorithmNames,
         AsymmetricKeyAlgorithmProvider,
         CryptographicEngine,
     };
 
-    use super::*;
+    use native_pkcs11_traits::random_label;
 
     #[test]
     fn keygen() -> native_pkcs11_traits::Result<()> {
