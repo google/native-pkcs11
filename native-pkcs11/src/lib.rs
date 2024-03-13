@@ -20,7 +20,7 @@
 use std::ptr::addr_of_mut;
 use std::{
     cmp,
-    convert::TryInto,
+    ptr::addr_of_mut,
     slice,
     sync::atomic::{AtomicBool, Ordering},
 };

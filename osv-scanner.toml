@@ -1,3 +1,7 @@
 [[IgnoredVulns]]
 id = "RUSTSEC-2022-0034"
 reason = "pkcs11 crate in this repository is distinct from https://crates.io/crates/pkcs11"
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2023-0071"
+reason = "The rsa crate is only used for marshalling, the vulnerable cryto primative is not used"
