@@ -16,32 +16,30 @@
 #![allow(clippy::missing_safety_doc)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
-#[cfg(not(feature = "custom-function-list"))]
-use std::ptr::addr_of_mut;
 use std::{
     cmp,
     convert::TryInto,
     slice,
     sync::atomic::{AtomicBool, Ordering},
 };
+#[cfg(not(feature = "custom-function-list"))]
+use std::ptr::addr_of_mut;
 
-pub use native_pkcs11_core::Error;
 use native_pkcs11_core::{
     attribute::{Attribute, Attributes},
     mechanism::{parse_mechanism, SUPPORTED_SIGNATURE_MECHANISMS},
     object::{self, Object},
 };
+pub use native_pkcs11_core::Error;
 use native_pkcs11_traits::backend;
 use pkcs11_sys::*;
-pub use pkcs11_sys::{CKR_OK, CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV};
+pub use pkcs11_sys::{CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV, CKR_OK};
 
-pub use crate::logging::inititalize_logging;
 use crate::{
     sessions::{FindContext, SignContext},
     utils::right_pad_string_to_array,
 };
 
-mod logging;
 mod object_store;
 mod sessions;
 mod utils;
@@ -204,8 +202,6 @@ pub static mut FUNC_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
 
 cryptoki_fn!(
     fn C_Initialize(pInitArgs: CK_VOID_PTR) {
-        // In cased the caller did not initialize logging, we do it here.
-        inititalize_logging("native-pkcs11.log", None, None);
         if !pInitArgs.is_null() {
             let args = unsafe { *(pInitArgs as CK_C_INITIALIZE_ARGS_PTR) };
             if !args.pReserved.is_null() {
