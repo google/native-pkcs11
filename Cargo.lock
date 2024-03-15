@@ -508,6 +508,7 @@ dependencies = [
  "once_cell",
  "rand",
  "x509-cert",
+ "zeroize",
 ]
 
 [[package]]

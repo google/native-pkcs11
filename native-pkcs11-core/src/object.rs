@@ -223,7 +223,8 @@ impl Object {
                     })
                     .ok()?,
                 )),
-                AttributeType::Value => Some(Attribute::Value(data.value())),
+                // TODO(BGR) we should hold zeroizable values here
+                AttributeType::Value => Some(Attribute::Value(data.value().to_vec())),
                 AttributeType::Application => Some(Attribute::Application(data.application())),
                 AttributeType::Private => Some(Attribute::Private(true)),
                 AttributeType::Label => Some(Attribute::Label(data.label())),
