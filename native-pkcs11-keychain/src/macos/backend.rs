@@ -29,15 +29,9 @@ use tracing::instrument;
 use crate::{
     certificate::{find_all_certificates, import_identity, KeychainCertificate},
     key::{
-        find_all_keys,
-        find_certificate_using_application,
-        find_certificate_using_label,
-        find_key_using_application,
-        find_key_using_label,
-        generate_key,
-        Algorithm,
-        KeychainPrivateKey,
-        KeychainPublicKey,
+        find_all_keys, find_certificate_using_application, find_certificate_using_label,
+        find_key_using_application, find_key_using_label, generate_key, Algorithm,
+        KeychainPrivateKey, KeychainPublicKey,
     },
 };
 
