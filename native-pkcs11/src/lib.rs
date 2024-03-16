@@ -18,11 +18,17 @@
 
 #[cfg(not(feature = "custom-function-list"))]
 use std::ptr::addr_of_mut;
+use std::sync::Once;
 use std::{
-    cmp,
-    slice,
+    cmp, slice,
     sync::atomic::{AtomicBool, Ordering},
 };
+use tracing::level_filters::LevelFilter;
+use tracing_error::ErrorLayer;
+use tracing_subscriber::fmt::format::FmtSpan;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{EnvFilter, Registry};
 
 pub use native_pkcs11_core::Error;
 use native_pkcs11_core::{
@@ -244,11 +250,44 @@ cryptoki_fn!(
     }
 );
 
+static TRACING_INIT: Once = Once::new();
+
+// Default tracing using syslog or stderr
+#[cfg(not(feature = "custom-function-list"))]
+fn enable_tracing() {
+    let env_filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::WARN.into())
+        .from_env_lossy();
+    let force_stderr = std::env::var("NATIVE_PKCS11_LOG_STDERR").is_ok();
+    if !force_stderr {
+        if let Ok(journald_layer) = tracing_journald::layer() {
+            _ = Registry::default()
+                .with(journald_layer.with_syslog_identifier("native-pkcs11".into()))
+                .with(env_filter)
+                .with(ErrorLayer::default())
+                .try_init();
+            return;
+        }
+    }
+    _ = Registry::default()
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_writer(std::io::stderr)
+                .with_span_events(FmtSpan::ENTER),
+        )
+        .with(env_filter)
+        .with(ErrorLayer::default())
+        .try_init();
+}
+
 #[cfg(not(feature = "custom-function-list"))]
 cryptoki_fn!(
     unsafe fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) {
         not_null!(ppFunctionList);
         unsafe { *ppFunctionList = addr_of_mut!(FUNC_LIST) };
+
+        // Initialize tracing only once.
+        TRACING_INIT.call_once(enable_tracing);
 
         #[cfg(target_os = "macos")]
         native_pkcs11_traits::register_backend(Box::new(
