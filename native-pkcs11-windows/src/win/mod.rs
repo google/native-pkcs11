@@ -158,7 +158,9 @@ fn backend() {
 mod test {
     use native_pkcs11_traits::random_label;
     use windows::Security::Cryptography::Core::{
-        AsymmetricAlgorithmNames, AsymmetricKeyAlgorithmProvider, CryptographicEngine,
+        AsymmetricAlgorithmNames,
+        AsymmetricKeyAlgorithmProvider,
+        CryptographicEngine,
     };
 
     #[test]

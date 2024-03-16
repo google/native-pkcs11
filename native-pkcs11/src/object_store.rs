@@ -16,11 +16,16 @@ use std::collections::HashMap;
 
 use native_pkcs11_core::{
     attribute::{Attribute, AttributeType, Attributes},
-    compoundid, Result,
+    compoundid,
+    Result,
 };
 use native_pkcs11_traits::{backend, SearchOptions};
 use pkcs11_sys::{
-    CKO_CERTIFICATE, CKO_PRIVATE_KEY, CKO_PUBLIC_KEY, CKO_SECRET_KEY, CKP_BASELINE_PROVIDER,
+    CKO_CERTIFICATE,
+    CKO_PRIVATE_KEY,
+    CKO_PUBLIC_KEY,
+    CKO_SECRET_KEY,
+    CKP_BASELINE_PROVIDER,
     CK_OBJECT_HANDLE,
 };
 use tracing::{debug, instrument, trace, warn};

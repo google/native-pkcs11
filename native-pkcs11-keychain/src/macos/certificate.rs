@@ -31,12 +31,19 @@ use x509_cert::{
     der::{
         asn1::{GeneralizedTime, Ia5String, OctetString},
         oid::ObjectIdentifier,
-        Decode, Encode,
+        Decode,
+        Encode,
     },
     ext::{
         pkix::{
-            name::GeneralName, AuthorityKeyIdentifier, BasicConstraints, ExtendedKeyUsage,
-            KeyUsage, KeyUsages, SubjectAltName, SubjectKeyIdentifier,
+            name::GeneralName,
+            AuthorityKeyIdentifier,
+            BasicConstraints,
+            ExtendedKeyUsage,
+            KeyUsage,
+            KeyUsages,
+            SubjectAltName,
+            SubjectKeyIdentifier,
         },
         Extension,
     },
@@ -44,12 +51,14 @@ use x509_cert::{
     serial_number::SerialNumber,
     spki::{der::asn1::BitString, EncodePublicKey, SubjectPublicKeyInfo},
     time::Validity,
-    Certificate, TbsCertificate,
+    Certificate,
+    TbsCertificate,
 };
 
 use crate::{
     key::{Algorithm, KeychainPublicKey},
-    Result, LOGIN_KEYCHAIN_PATH,
+    Result,
+    LOGIN_KEYCHAIN_PATH,
 };
 
 pub struct KeychainCertificate {
@@ -236,19 +245,21 @@ mod test {
         // such that  they are visible to the next search query.
         std::thread::sleep(std::time::Duration::from_secs(1));
 
-        assert!(crate::macos::keychain::item_search_options()?
-            .keychains(&[SecKeychain::open(LOGIN_KEYCHAIN_PATH)?])
-            .class(ItemClass::identity())
-            .limit(Limit::All)
-            .load_refs(true)
-            .search()?
-            .iter()
-            .any(|result| match result {
-                apple_security_framework::item::SearchResult::Ref(
-                    apple_security_framework::item::Reference::Identity(id),
-                ) => id.certificate().unwrap().subject() == cert.subject(),
-                _ => false,
-            }));
+        assert!(
+            crate::macos::keychain::item_search_options()?
+                .keychains(&[SecKeychain::open(LOGIN_KEYCHAIN_PATH)?])
+                .class(ItemClass::identity())
+                .limit(Limit::All)
+                .load_refs(true)
+                .search()?
+                .iter()
+                .any(|result| match result {
+                    apple_security_framework::item::SearchResult::Ref(
+                        apple_security_framework::item::Reference::Identity(id),
+                    ) => id.certificate().unwrap().subject() == cert.subject(),
+                    _ => false,
+                })
+        );
 
         //  Clean up
         cert.delete()?;

@@ -18,17 +18,14 @@
 
 #[cfg(not(feature = "custom-function-list"))]
 use std::ptr::addr_of_mut;
-use std::sync::Once;
 use std::{
-    cmp, slice,
-    sync::atomic::{AtomicBool, Ordering},
+    cmp,
+    slice,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Once,
+    },
 };
-use tracing::level_filters::LevelFilter;
-use tracing_error::ErrorLayer;
-use tracing_subscriber::fmt::format::FmtSpan;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::{EnvFilter, Registry};
 
 pub use native_pkcs11_core::Error;
 use native_pkcs11_core::{
@@ -39,6 +36,15 @@ use native_pkcs11_core::{
 use native_pkcs11_traits::backend;
 use pkcs11_sys::*;
 pub use pkcs11_sys::{CKR_OK, CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV};
+use tracing::level_filters::LevelFilter;
+use tracing_error::ErrorLayer;
+use tracing_subscriber::{
+    fmt::format::FmtSpan,
+    layer::SubscriberExt,
+    util::SubscriberInitExt,
+    EnvFilter,
+    Registry,
+};
 
 use crate::{
     sessions::{FindContext, SignContext},
