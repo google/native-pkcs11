@@ -162,6 +162,7 @@ mod test {
         AsymmetricKeyAlgorithmProvider,
         CryptographicEngine,
     };
+    use crate::win::Bytes;
 
     #[test]
     fn keygen() -> native_pkcs11_traits::Result<()> {
