@@ -8,5 +8,8 @@ rust-version.workspace = true
 repository.workspace = true
 license.workspace = true
 
+[features]
+custom-function-list = []
+
 [build-dependencies]
 bindgen = { version = "0.69.4", optional = true }

@@ -148,6 +148,7 @@ pub static mut FUNC_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
     C_Initialize: Some(C_Initialize),
     C_Finalize: Some(C_Finalize),
     C_GetInfo: Some(C_GetInfo),
+    #[cfg(not(feature = "custom-function-list"))]
     C_GetFunctionList: Some(C_GetFunctionList),
     C_GetSlotList: Some(C_GetSlotList),
     C_GetSlotInfo: Some(C_GetSlotInfo),

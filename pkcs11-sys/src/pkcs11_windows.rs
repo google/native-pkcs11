@@ -8608,6 +8608,7 @@ extern "C" {
 extern "C" {
     pub fn C_GetInfo(pInfo: CK_INFO_PTR) -> CK_RV;
 }
+#[cfg(not(feature = "custom-function-list"))]
 extern "C" {
     pub fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) -> CK_RV;
 }
@@ -10949,6 +10950,7 @@ pub struct CK_FUNCTION_LIST {
     pub C_Initialize: CK_C_Initialize,
     pub C_Finalize: CK_C_Finalize,
     pub C_GetInfo: CK_C_GetInfo,
+    #[cfg(not(feature = "custom-function-list"))]
     pub C_GetFunctionList: CK_C_GetFunctionList,
     pub C_GetSlotList: CK_C_GetSlotList,
     pub C_GetSlotInfo: CK_C_GetSlotInfo,
