@@ -6,7 +6,7 @@ members = [
     "native-pkcs11-traits",
     "native-pkcs11-keychain",
     "pkcs11-sys",
-#    "native-pkcs11-windows",
+    "native-pkcs11-windows",
 ]
 
 [workspace.package]

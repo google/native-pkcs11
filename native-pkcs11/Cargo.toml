@@ -9,7 +9,7 @@ repository.workspace = true
 license.workspace = true
 
 [features]
-custom-function-list = []
+custom-function-list = ["pkcs11-sys/custom-function-list"]
 
 [dependencies]
 native-pkcs11-core = { version = "^0.2.14", path = "../native-pkcs11-core" }

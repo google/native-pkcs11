@@ -25,6 +25,8 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
 };
+#[cfg(not(feature = "custom-function-list"))]
+use std::Once;
 
 pub use native_pkcs11_core::Error;
 use native_pkcs11_core::{
