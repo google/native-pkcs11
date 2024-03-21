@@ -33,7 +33,11 @@ your crate. For example:
 use native_pkcs11::{CKR_OK, CK_FUNCTION_LIST_PTR_PTR, CK_RV, FUNC_LIST};
 #[no_mangle]
 pub extern "C" fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) -> CK_RV {
+    // add the custom backend
     native_pkcs11_traits::register_backend(Box::new(backend::MyBackend {}));
+    // map this function to the native-pkcs11 function list C_GetFunctionList
+    FUNC_LIST.C_GetFunctionList = Some(C_GetFunctionList);
+    // assign the result to the output parameter
     unsafe { *ppFunctionList = &mut FUNC_LIST };
     return CKR_OK;
 }
