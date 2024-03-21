@@ -18,13 +18,14 @@
 
 #[cfg(not(feature = "custom-function-list"))]
 use std::ptr::addr_of_mut;
+#[cfg(not(feature = "custom-function-list"))]
+use std::sync::Once;
 use std::{
     cmp,
     slice,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-    },
+    sync::atomic::{AtomicBool, Ordering},
 };
+
 pub use native_pkcs11_core::Error;
 use native_pkcs11_core::{
     attribute::{Attribute, Attributes},
@@ -34,8 +35,6 @@ use native_pkcs11_core::{
 use native_pkcs11_traits::backend;
 use pkcs11_sys::*;
 pub use pkcs11_sys::{CKR_OK, CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV};
-#[cfg(not(feature = "custom-function-list"))]
-use std::sync::Once;
 #[cfg(not(feature = "custom-function-list"))]
 use tracing::level_filters::LevelFilter;
 #[cfg(not(feature = "custom-function-list"))]
