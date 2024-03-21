@@ -38,8 +38,6 @@ use native_pkcs11_traits::backend;
 use pkcs11_sys::*;
 pub use pkcs11_sys::{CKR_OK, CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV};
 #[cfg(not(feature = "custom-function-list"))]
-use std::sync::Once;
-#[cfg(not(feature = "custom-function-list"))]
 use tracing::level_filters::LevelFilter;
 #[cfg(not(feature = "custom-function-list"))]
 use tracing_error::ErrorLayer;
