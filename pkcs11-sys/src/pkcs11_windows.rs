@@ -8608,7 +8608,6 @@ extern "C" {
 extern "C" {
     pub fn C_GetInfo(pInfo: CK_INFO_PTR) -> CK_RV;
 }
-#[cfg(not(feature = "custom-function-list"))]
 extern "C" {
     pub fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) -> CK_RV;
 }
