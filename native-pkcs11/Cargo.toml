@@ -16,7 +16,7 @@ native-pkcs11-core = { version = "^0.2.14", path = "../native-pkcs11-core" }
 native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
 once_cell = "1.19.0"
 pkcs11-sys = { version = "0.2.0", path = "../pkcs11-sys" }
-thiserror = "1.0.57"
+thiserror = "1.0.59"
 tracing = "0.1.40"
 tracing-error = "0.2.0"
 tracing-journald = "0.3"
