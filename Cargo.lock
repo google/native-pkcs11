@@ -12,30 +12,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "apple-security-framework"
-version = "2.9.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07831f002eaa83d94f7e2c1300f3268a8f949c35a41dd99faceb6575c191d871"
-dependencies = [
- "apple-security-framework-sys",
- "bitflags 2.4.2",
- "core-foundation",
- "core-foundation-sys",
- "libc",
- "num-bigint",
-]
-
-[[package]]
-name = "apple-security-framework-sys"
-version = "2.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09acfa027e87e9f590474e9ef19d0f12158bf1c72af80ac76806f17e84959a42"
-dependencies = [
- "core-foundation-sys",
- "libc",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -465,13 +441,13 @@ dependencies = [
 name = "native-pkcs11-keychain"
 version = "0.2.17"
 dependencies = [
- "apple-security-framework",
- "apple-security-framework-sys",
  "core-foundation",
  "native-pkcs11-traits",
  "p256",
  "rand",
  "rsa",
+ "security-framework",
+ "security-framework-sys",
  "serial_test",
  "spki",
  "thiserror",
@@ -859,6 +835,30 @@ dependencies = [
  "pkcs8",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "security-framework"
+version = "2.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05b64fb303737d99b81884b2c63433e9ae28abebe5eb5045dcdd175dc2ecf4de"
+dependencies = [
+ "bitflags 1.3.2",
+ "core-foundation",
+ "core-foundation-sys",
+ "libc",
+ "num-bigint",
+ "security-framework-sys",
+]
+
+[[package]]
+name = "security-framework-sys"
+version = "2.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e932934257d3b408ed8f30db49d85ea163bfe74961f017f405b025af298f0c7a"
+dependencies = [
+ "core-foundation-sys",
+ "libc",
 ]
 
 [[package]]

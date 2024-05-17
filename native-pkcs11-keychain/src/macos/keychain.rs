@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use apple_security_framework::{
+use security_framework::{
     item::ItemSearchOptions,
     os::macos::{item::ItemSearchOptionsExt, keychain::SecKeychain},
 };

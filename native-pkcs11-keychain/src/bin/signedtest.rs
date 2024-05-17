@@ -17,16 +17,16 @@
 
 #[cfg(target_os = "macos")]
 mod macos {
-    pub use apple_security_framework::{
-        item::{add_item, AddRef, ItemAddOptions, ItemClass, ItemSearchOptions, KeyClass},
-        key::{GenerateKeyOptions, KeyType},
-    };
     pub use native_pkcs11_keychain::certificate::{
         find_all_certificates,
         import_certificate,
         self_signed_certificate,
     };
     pub use native_pkcs11_traits::random_label;
+    pub use security_framework::{
+        item::{add_item, AddRef, ItemAddOptions, ItemClass, ItemSearchOptions, KeyClass},
+        key::{GenerateKeyOptions, KeyType},
+    };
 }
 #[cfg(target_os = "macos")]
 fn main() -> Result<(), native_pkcs11_keychain::Error> {
@@ -41,11 +41,11 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
     let args = GenerateKeyOptions::default()
         .set_key_type(KeyType::ec())
         .set_label(label)
-        .set_token(apple_security_framework::key::Token::SecureEnclave)
-        .set_location(apple_security_framework::item::Location::DataProtectionKeychain)
+        .set_token(security_framework::key::Token::SecureEnclave)
+        .set_location(security_framework::item::Location::DataProtectionKeychain)
         .to_dictionary();
 
-    let generated_key = apple_security_framework::key::SecKey::generate(args)?;
+    let generated_key = security_framework::key::SecKey::generate(args)?;
 
     if generated_key.external_representation().is_some() {
         Err("expected enclave key to not be exportable")?;
@@ -69,9 +69,9 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
     }
 
     let found_key = match results.first().ok_or("no key found")? {
-        apple_security_framework::item::SearchResult::Ref(
-            apple_security_framework::item::Reference::Key(key),
-        ) => key,
+        security_framework::item::SearchResult::Ref(security_framework::item::Reference::Key(
+            key,
+        )) => key,
         _ => Err("expected ref result type")?,
     };
 
@@ -88,14 +88,14 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
 
     let test_payload = &random_label();
     let signature = generated_key.create_signature(
-        apple_security_framework_sys::key::Algorithm::ECDSASignatureMessageX962SHA256,
+        security_framework_sys::key::Algorithm::ECDSASignatureMessageX962SHA256,
         test_payload.as_bytes(),
     )?;
     if !generated_key
         .public_key()
         .ok_or("no pubkey")?
         .verify_signature(
-            apple_security_framework_sys::key::Algorithm::ECDSASignatureMessageX962SHA256,
+            security_framework_sys::key::Algorithm::ECDSASignatureMessageX962SHA256,
             test_payload.as_bytes(),
             &signature,
         )?
@@ -106,10 +106,10 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
     let cert =
         self_signed_certificate(native_pkcs11_keychain::key::Algorithm::ECC, &generated_key)?;
     let cert = import_certificate(&cert)?;
-    let add_params = ItemAddOptions::new(apple_security_framework::item::ItemAddValue::Ref(
+    let add_params = ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(
         AddRef::Certificate(cert.clone()),
     ))
-    .set_location(apple_security_framework::item::Location::DataProtectionKeychain)
+    .set_location(security_framework::item::Location::DataProtectionKeychain)
     .to_dictionary();
     add_item(add_params)?;
 
@@ -135,16 +135,16 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
 //  available.
 #[cfg(target_os = "macos")]
 fn unpersisted_public_key() -> Result<(), native_pkcs11_keychain::Error> {
-    use apple_security_framework::key::SecKey;
     use macos::*;
     use native_pkcs11_keychain::KeychainBackend;
     use native_pkcs11_traits::Backend;
+    use security_framework::key::SecKey;
     let label = random_label();
     let key1 = SecKey::generate(
         GenerateKeyOptions::default()
             .set_key_type(KeyType::ec())
             .set_label(&label)
-            .set_token(apple_security_framework::key::Token::SecureEnclave)
+            .set_token(security_framework::key::Token::SecureEnclave)
             //  NOTE: Purposefully not storing in keychain on generation so we
             //  do not persist the public key.
             // .set_location(security_framework::item::Location::DataProtectionKeychain)
@@ -154,9 +154,9 @@ fn unpersisted_public_key() -> Result<(), native_pkcs11_keychain::Error> {
     let pubkey_hash = key1.public_key().unwrap().application_label().unwrap();
 
     add_item(
-        ItemAddOptions::new(apple_security_framework::item::ItemAddValue::Ref(
-            AddRef::Key(key1),
-        ))
+        ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(AddRef::Key(
+            key1,
+        )))
         .set_label(&label)
         .to_dictionary(),
     )?;
