@@ -451,7 +451,7 @@ mod test {
     #[ignore]
     fn stress_test_keygen() {
         let try_gen_key = || -> bool {
-            let label = &random_label();
+            let label = random_label();
             match generate_key(Algorithm::RSA, &label, Some(Location::DefaultFileKeychain)) {
                 Ok(key) => {
                     let _ = key.delete();
@@ -473,7 +473,7 @@ mod test {
                 .into_iter()
                 .map(|h| h.join().unwrap())
                 //  fold so we don't early exit other threads
-                .fold(true, |acc, b| acc && b)
+                .all(|b| b)
         );
     }
 

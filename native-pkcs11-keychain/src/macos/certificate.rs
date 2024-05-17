@@ -212,66 +212,6 @@ pub fn import_identity(certificate: &SecCertificate) -> Result<SecIdentity> {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use apple_security_framework::item::Location;
-    use native_pkcs11_traits::random_label;
-    use serial_test::serial;
-
-    use super::*;
-    #[test]
-    #[serial]
-    fn test_self_signed_certificate() -> Result<()> {
-        use apple_security_framework::{
-            item::{ItemClass, Limit},
-            os::macos::item::ItemSearchOptionsExt,
-        };
-
-        use crate::key::generate_key;
-
-        let label = random_label();
-        let key = generate_key(Algorithm::RSA, &label, Some(Location::DefaultFileKeychain))?;
-
-        let cert = self_signed_certificate(Algorithm::RSA, &key)?;
-
-        let cert = import_certificate(&cert)?;
-
-        //  NOTE(kcking): Importing a certificate that has a private key already
-        //  stored in the keychain will treat that certificate as an identity, even
-        //  without calling import_identity.
-        // let identity = import_identity(&cert)?;
-
-        //  HACK(kcking): The macOS keychain takes some time to flush all of the updates
-        // such that  they are visible to the next search query.
-        std::thread::sleep(std::time::Duration::from_secs(1));
-
-        assert!(
-            crate::macos::keychain::item_search_options()?
-                .keychains(&[SecKeychain::open(LOGIN_KEYCHAIN_PATH)?])
-                .class(ItemClass::identity())
-                .limit(Limit::All)
-                .load_refs(true)
-                .search()?
-                .iter()
-                .any(|result| match result {
-                    apple_security_framework::item::SearchResult::Ref(
-                        apple_security_framework::item::Reference::Identity(id),
-                    ) => id.certificate().unwrap().subject() == cert.subject(),
-                    _ => false,
-                })
-        );
-
-        //  Clean up
-        cert.delete()?;
-        //  NOTE(kcking): Deleting the certificate also deletes the identity since
-        //  they are the same underlying object, so identity.delete() is not needed.
-        // identity.delete()?;
-        key.public_key().ok_or("no public key")?.delete()?;
-        key.delete()?;
-        Ok(())
-    }
-}
-
 pub fn random_serial_number() -> [u8; 16] {
     use rand::Rng;
     rand::thread_rng().gen::<u128>().to_be_bytes()
@@ -415,4 +355,64 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
     };
 
     Ok(cert.to_der()?)
+}
+
+#[cfg(test)]
+mod test {
+    use apple_security_framework::item::Location;
+    use native_pkcs11_traits::random_label;
+    use serial_test::serial;
+
+    use super::*;
+    #[test]
+    #[serial]
+    fn test_self_signed_certificate() -> Result<()> {
+        use apple_security_framework::{
+            item::{ItemClass, Limit},
+            os::macos::item::ItemSearchOptionsExt,
+        };
+
+        use crate::key::generate_key;
+
+        let label = random_label();
+        let key = generate_key(Algorithm::RSA, &label, Some(Location::DefaultFileKeychain))?;
+
+        let cert = self_signed_certificate(Algorithm::RSA, &key)?;
+
+        let cert = import_certificate(&cert)?;
+
+        //  NOTE(kcking): Importing a certificate that has a private key already
+        //  stored in the keychain will treat that certificate as an identity, even
+        //  without calling import_identity.
+        // let identity = import_identity(&cert)?;
+
+        //  HACK(kcking): The macOS keychain takes some time to flush all of the updates
+        // such that  they are visible to the next search query.
+        std::thread::sleep(std::time::Duration::from_secs(1));
+
+        assert!(
+            crate::macos::keychain::item_search_options()?
+                .keychains(&[SecKeychain::open(LOGIN_KEYCHAIN_PATH)?])
+                .class(ItemClass::identity())
+                .limit(Limit::All)
+                .load_refs(true)
+                .search()?
+                .iter()
+                .any(|result| match result {
+                    apple_security_framework::item::SearchResult::Ref(
+                        apple_security_framework::item::Reference::Identity(id),
+                    ) => id.certificate().unwrap().subject() == cert.subject(),
+                    _ => false,
+                })
+        );
+
+        //  Clean up
+        cert.delete()?;
+        //  NOTE(kcking): Deleting the certificate also deletes the identity since
+        //  they are the same underlying object, so identity.delete() is not needed.
+        // identity.delete()?;
+        key.public_key().ok_or("no public key")?.delete()?;
+        key.delete()?;
+        Ok(())
+    }
 }

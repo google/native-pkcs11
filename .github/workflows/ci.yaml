@@ -57,9 +57,12 @@ jobs:
           for crate in native-pkcs11 native-pkcs11-core native-pkcs11-traits
           pkcs11-sys native-pkcs11-keychain native-pkcs11-windows; do cargo
           build --verbose -p $crate || exit 1 ; done
-      - name: Run Clippy
+      - name: Run Clippy (default features)
         if: matrix.toolchain == 'stable'
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --tests -- -D warnings
+      - name: Run Clippy (all features)
+        if: matrix.toolchain == 'stable'
+        run: cargo clippy --tests --all-features -- -D warnings
       - name: Run cargo-deny
         if: matrix.os == 'ubuntu-latest'
         uses: EmbarkStudios/cargo-deny-action@3f4a782664881cf5725d0ffd23969fcce89fd868 # v1.6.3
