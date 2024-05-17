@@ -17,16 +17,16 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use apple_security_framework::{
+use native_pkcs11_traits::random_label;
+use rsa::{pkcs1::DecodeRsaPublicKey, pkcs8::AssociatedOid};
+use security_framework::{
     certificate::SecCertificate,
     identity::SecIdentity,
     item::{add_item, AddRef, ItemAddOptions, ItemClass, Reference},
     key::SecKey,
     os::macos::{identity::SecIdentityExt, keychain::SecKeychain},
 };
-use apple_security_framework_sys::base::errSecItemNotFound;
-use native_pkcs11_traits::random_label;
-use rsa::{pkcs1::DecodeRsaPublicKey, pkcs8::AssociatedOid};
+use security_framework_sys::base::errSecItemNotFound;
 use x509_cert::{
     der::{
         asn1::{GeneralizedTime, Ia5String, OctetString},
@@ -112,10 +112,10 @@ impl native_pkcs11_traits::Certificate for KeychainCertificate {
 pub fn import_certificate(der: &[u8]) -> Result<SecCertificate> {
     let cert = SecCertificate::from_der(der)?;
 
-    let add_params = ItemAddOptions::new(apple_security_framework::item::ItemAddValue::Ref(
+    let add_params = ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(
         AddRef::Certificate(cert.clone()),
     ))
-    .set_location(apple_security_framework::item::Location::DefaultFileKeychain)
+    .set_location(security_framework::item::Location::DefaultFileKeychain)
     .set_label(cert.subject_summary())
     .to_dictionary();
     add_item(add_params)?;
@@ -135,7 +135,7 @@ pub fn find_certificate(pub_key_hash: &[u8]) -> Result<Option<SecIdentity>> {
     }
 
     let cert = match results.into_iter().next().ok_or("certificate not found")? {
-        apple_security_framework::item::SearchResult::Ref(Reference::Certificate(certificate)) => {
+        security_framework::item::SearchResult::Ref(Reference::Certificate(certificate)) => {
             certificate
         }
         _ => return Err("no key ref")?,
@@ -160,7 +160,7 @@ pub fn find_all_certificates() -> Result<Vec<SecIdentity>> {
     let loaded_identites = results?
         .into_iter()
         .filter_map(|result| match result {
-            apple_security_framework::item::SearchResult::Ref(Reference::Identity(identity)) => {
+            security_framework::item::SearchResult::Ref(Reference::Identity(identity)) => {
                 Some(identity)
             }
             _ => None,
@@ -194,10 +194,10 @@ pub fn import_identity(certificate: &SecCertificate) -> Result<SecIdentity> {
     let keychain = SecKeychain::open(LOGIN_KEYCHAIN_PATH)?;
     let identity = SecIdentity::with_certificate(&[keychain], certificate)?;
 
-    let add_params = ItemAddOptions::new(apple_security_framework::item::ItemAddValue::Ref(
+    let add_params = ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(
         AddRef::Identity(identity.clone()),
     ))
-    .set_location(apple_security_framework::item::Location::DefaultFileKeychain)
+    .set_location(security_framework::item::Location::DefaultFileKeychain)
     .set_label(certificate.subject_summary())
     .to_dictionary();
 
@@ -338,11 +338,9 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
     let payload = tbs_certificate.to_der()?;
     let signature = private_key.create_signature(
         match key_algorithm {
-            Algorithm::RSA => {
-                apple_security_framework_sys::key::Algorithm::RSASignatureMessagePSSSHA256
-            }
+            Algorithm::RSA => security_framework_sys::key::Algorithm::RSASignatureMessagePSSSHA256,
             Algorithm::ECC => {
-                apple_security_framework_sys::key::Algorithm::ECDSASignatureMessageX962SHA256
+                security_framework_sys::key::Algorithm::ECDSASignatureMessageX962SHA256
             }
         },
         &payload,
@@ -359,15 +357,15 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
 
 #[cfg(test)]
 mod test {
-    use apple_security_framework::item::Location;
     use native_pkcs11_traits::random_label;
+    use security_framework::item::Location;
     use serial_test::serial;
 
     use super::*;
     #[test]
     #[serial]
     fn test_self_signed_certificate() -> Result<()> {
-        use apple_security_framework::{
+        use security_framework::{
             item::{ItemClass, Limit},
             os::macos::item::ItemSearchOptionsExt,
         };
@@ -399,8 +397,8 @@ mod test {
                 .search()?
                 .iter()
                 .any(|result| match result {
-                    apple_security_framework::item::SearchResult::Ref(
-                        apple_security_framework::item::Reference::Identity(id),
+                    security_framework::item::SearchResult::Ref(
+                        security_framework::item::Reference::Identity(id),
                     ) => id.certificate().unwrap().subject() == cert.subject(),
                     _ => false,
                 })
