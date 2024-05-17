@@ -265,6 +265,7 @@ pub fn generate_key(
         label: Some(label.into()),
         token: Some(security_framework::key::Token::Software),
         location,
+        access_control: None,
     }
     .to_dictionary();
 

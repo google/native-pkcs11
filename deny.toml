@@ -20,13 +20,8 @@ copyleft = "deny"
 [bans]
 multiple-versions = "deny"
 skip = [
-    { name = "bitflags", version = "=1.3.2" },
     { name = "regex-automata", version = "=0.1.10" },
     { name = "regex-syntax", version = "=0.6.29" },
-    { name = "windows_x86_64_gnu", version = "=0.48.5" },
-    { name = "windows_x86_64_msvc", version = "=0.48.5" },
-    { name = "windows-sys", version = "=0.48.0" },
-    { name = "windows-targets", version = "=0.48.5" },
 ]
 
 [sources]
