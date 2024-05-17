@@ -49,30 +49,27 @@ pub struct DataObject {
     pub value: Vec<u8>,
 }
 
-// TODO(bweeks): resolve by improving the ObjectStore implementation.
-#[allow(clippy::derived_hash_with_manual_eq)]
-#[derive(Debug, Hash, Eq, Clone)]
-pub enum Object {
-    Certificate(Arc<dyn Certificate>),
-    PrivateKey(Arc<dyn PrivateKey>),
+// Usage of generics is a workaround for the following issue:
+// https://github.com/rust-lang/rust/issues/78808#issuecomment-1664416547
+#[derive(Debug, PartialEq, Hash, Eq)]
+pub enum Object<
+    DynCertificate: ?Sized + PartialEq = dyn Certificate,
+    DynPrivateKey: ?Sized + PartialEq = dyn PrivateKey,
+    DynPublicKey: ?Sized + PartialEq = dyn PublicKey,
+> {
+    Certificate(Arc<DynCertificate>),
+    PrivateKey(Arc<DynPrivateKey>),
     Profile(CK_PROFILE_ID),
-    PublicKey(Arc<dyn PublicKey>),
+    PublicKey(Arc<DynPublicKey>),
 }
 
-//  #[derive(PartialEq)] fails to compile because it tries to move the Box<_>ed
-//  values.
-//  https://github.com/rust-lang/rust/issues/78808#issuecomment-723304465
-impl PartialEq for Object {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::Certificate(l0), Self::Certificate(r0)) => l0 == r0,
-            (Self::PrivateKey(l0), Self::PrivateKey(r0)) => l0 == r0,
-            (Self::Profile(l0), Self::Profile(r0)) => l0 == r0,
-            (Self::PublicKey(l0), Self::PublicKey(r0)) => l0 == r0,
-            (
-                Self::Certificate(_) | Self::PrivateKey(_) | Self::Profile(_) | Self::PublicKey(_),
-                _,
-            ) => false,
+impl Clone for Object {
+    fn clone(&self) -> Self {
+        match self {
+            Object::Certificate(cert) => Object::Certificate(cert.clone()),
+            Object::PrivateKey(private_key) => Object::PrivateKey(private_key.clone()),
+            Object::Profile(id) => Object::Profile(*id),
+            Object::PublicKey(public_key) => Object::PublicKey(public_key.clone()),
         }
     }
 }
