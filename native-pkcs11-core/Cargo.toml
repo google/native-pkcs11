@@ -19,10 +19,10 @@ p256 = { version = "0.13.2", default-features = false, features = [
 ] }
 pkcs1 = { version = "0.7.5", default-features = false }
 pkcs11-sys = { version = "0.2.0", path = "../pkcs11-sys" }
-serde = { version = "1.0.201", features = ["derive"] }
+serde = { version = "1.0.202", features = ["derive"] }
 strum = "0.26.2"
 strum_macros = "0.26.2"
-thiserror = "1.0.60"
+thiserror = "1.0.61"
 tracing = "0.1.40"
 
 [dev-dependencies]
