@@ -16,7 +16,6 @@ use std::collections::HashMap;
 
 use native_pkcs11_core::{
     attribute::{Attribute, AttributeType, Attributes},
-    compoundid,
     Result,
 };
 use native_pkcs11_traits::{backend, KeySearchOptions};
@@ -124,8 +123,7 @@ impl ObjectStore {
                     let key_search_opts = if let Some(Attribute::Id(id)) =
                         template.get(AttributeType::Id)
                     {
-                        let id = compoundid::decode(id)?;
-                        KeySearchOptions::PublicKeyHash(id.public_key_hash.as_slice().try_into()?)
+                        KeySearchOptions::PublicKeyHash(id.as_slice().try_into()?)
                     } else if let Some(Attribute::Label(label)) = template.get(AttributeType::Label)
                     {
                         KeySearchOptions::Label(label.into())

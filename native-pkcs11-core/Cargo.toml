@@ -9,7 +9,6 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-bincode = "1.3.3"
 native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
 once_cell = "1.19.0"
 p256 = { version = "0.13.2", default-features = false, features = [
@@ -19,7 +18,6 @@ p256 = { version = "0.13.2", default-features = false, features = [
 ] }
 pkcs1 = { version = "0.7.5", default-features = false }
 pkcs11-sys = { version = "0.2.0", path = "../pkcs11-sys" }
-serde = { version = "1.0.202", features = ["derive"] }
 strum = "0.26.2"
 strum_macros = "0.26.2"
 thiserror = "1.0.61"
