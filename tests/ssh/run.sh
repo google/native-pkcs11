@@ -27,12 +27,12 @@ export NATIVE_PKCS11_KEYCHAIN_PATH=$HOME/Library/Keychains/nativepkcs11test-db
 cargo run --bin create_selfsigned
 security set-key-partition-list -S apple-tool:,apple: -s -k "" $NATIVE_PKCS11_KEYCHAIN_PATH
 
-../package-lipo.sh
+../../package-lipo.sh
 
 cat sshd_config.template | envsubst > sshd_config
 chmod 0600 ssh_host_ecdsa_key
 
-NATIVE_PKCS11_LOG_STDERR=1 RUST_LOG=debug /usr/bin/ssh-keygen -D $PWD/../target/libnative_pkcs11.dylib | grep -v pkcs11 > authorized_keys
+NATIVE_PKCS11_LOG_STDERR=1 RUST_LOG=debug /usr/bin/ssh-keygen -D $PWD/../../target/libnative_pkcs11.dylib | grep -v pkcs11 > authorized_keys
 
 ($(which sshd) -D -e -f $PWD/sshd_config)&
 SSHD_JOB=$!
@@ -40,7 +40,7 @@ SSHD_JOB=$!
 sleep 1
 
 SUCCESS=0
-if NATIVE_PKCS11_LOG_STDERR=1 RUST_LOG=trace /usr/bin/ssh -vv -F ssh_config -o "PKCS11Provider=$PWD/../target/libnative_pkcs11.dylib" test exit 0; then
+if NATIVE_PKCS11_LOG_STDERR=1 RUST_LOG=trace /usr/bin/ssh -vv -F ssh_config -o "PKCS11Provider=$PWD/../../target/libnative_pkcs11.dylib" test exit 0; then
   SUCCESS=1
 fi
 
