@@ -86,4 +86,12 @@ jobs:
         with:
           toolchain: stable
           targets: aarch64-apple-darwin,x86_64-apple-darwin
-      - run: ssh-testing/run.sh
+      - run: tests/ssh/run.sh
+
+  integration-macos-java:
+    name: macos java
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - run: cargo build --verbose
+      - run: tests/java/run.sh
