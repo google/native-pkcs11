@@ -17,7 +17,6 @@ use pkcs11_sys::*;
 use thiserror::Error;
 
 pub mod attribute;
-pub mod compoundid;
 pub mod mechanism;
 pub mod object;
 
@@ -105,9 +104,6 @@ pub enum Error {
     Backend(#[from] Box<dyn std::error::Error>),
 
     #[error("{0}")]
-    Bincode(#[from] Box<bincode::ErrorKind>),
-
-    #[error("{0}")]
     Todo(String),
 }
 
@@ -134,7 +130,6 @@ impl From<Error> for CK_RV {
             Error::TokenWriteProtected => CKR_TOKEN_WRITE_PROTECTED,
 
             Error::Backend(_)
-            | Error::Bincode(_)
             | Error::FromUtf8(_)
             | Error::FromVecWithNul(_)
             | Error::NullPtr
