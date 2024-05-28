@@ -39,6 +39,16 @@ pub extern "C" fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) ->
 }
 ```
 
+## Running tests
+
+### macOS
+
+Create a tempory keychain and set `NATIVE_PKCS11_KEYCHAIN_PATH` to run `cargo test` without endless password prompts.
+```
+$ . tests/create_keychain.sh
+$ cargo test
+```
+
 ## Releasing
 
 The [`cargo-ws`](https://github.com/pksunkara/cargo-workspaces) tool can be used

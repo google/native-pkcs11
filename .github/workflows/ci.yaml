@@ -67,6 +67,14 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         uses: EmbarkStudios/cargo-deny-action@3f4a782664881cf5725d0ffd23969fcce89fd868 # v1.6.3
 
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - run: echo "NATIVE_PKCS11_KEYCHAIN_PATH=$RUNNER_TEMP/Test.keychain" >> $GITHUB_ENV
+      - run: security create-keychain -p '' "$NATIVE_PKCS11_KEYCHAIN_PATH"
+      - run: cargo test --verbose
+
   rustfmt:
     runs-on: ubuntu-latest
     steps:

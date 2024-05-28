@@ -25,11 +25,6 @@ pub mod certificate;
 pub mod key;
 pub mod keychain;
 
-//  NOTE(kcking): I think this just works because any non-System path defaults
-//  to the Login keychain
-pub const LOGIN_KEYCHAIN_PATH: &str = "login.keychain";
-pub const SYSTEM_KEYCHAIN_PATH: &str = "/Library/Keychains/System.keychain";
-
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub struct Error {
