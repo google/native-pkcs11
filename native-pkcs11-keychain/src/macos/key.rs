@@ -352,12 +352,12 @@ mod test {
     use serial_test::serial;
 
     use super::*;
-    use crate::KeychainBackend;
+    use crate::{keychain, KeychainBackend};
     #[test]
     #[serial]
     fn key_label() -> crate::Result<()> {
         let label = random_label();
-        let key = generate_key(Algorithm::RSA, &label, Some(Location::DefaultFileKeychain))?;
+        let key = generate_key(Algorithm::RSA, &label, Some(keychain::location()?))?;
 
         let mut found = false;
         for res in crate::keychain::item_search_options()?
@@ -414,7 +414,7 @@ mod test {
         ] {
             let label = &random_label();
 
-            let key = generate_key(key_alg, label, Some(Location::DefaultFileKeychain))?;
+            let key = generate_key(key_alg, label, Some(keychain::location()?))?;
 
             let first_pubkey = key
                 .public_key()
@@ -451,7 +451,7 @@ mod test {
     fn stress_test_keygen() {
         let try_gen_key = || -> bool {
             let label = random_label();
-            match generate_key(Algorithm::RSA, &label, Some(Location::DefaultFileKeychain)) {
+            match generate_key(Algorithm::RSA, &label, Some(keychain::location().unwrap())) {
                 Ok(key) => {
                     let _ = key.delete();
                     true
@@ -478,16 +478,8 @@ mod test {
 
     #[test]
     fn keychain_pubkey_hash_find() -> Result<()> {
-        let key1 = generate_key(
-            Algorithm::ECC,
-            &random_label(),
-            Some(Location::DefaultFileKeychain),
-        )?;
-        let key2 = generate_key(
-            Algorithm::ECC,
-            &random_label(),
-            Some(Location::DefaultFileKeychain),
-        )?;
+        let key1 = generate_key(Algorithm::ECC, &random_label(), Some(keychain::location()?))?;
+        let key2 = generate_key(Algorithm::ECC, &random_label(), Some(keychain::location()?))?;
         assert_ne!(key1.application_label(), key2.application_label());
 
         for keyclass in [KeyClass::public(), KeyClass::private()] {

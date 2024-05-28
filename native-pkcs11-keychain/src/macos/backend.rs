@@ -19,10 +19,7 @@ use core_foundation::{
     string::CFString,
 };
 use native_pkcs11_traits::Backend;
-use security_framework::{
-    item::{KeyClass, Location},
-    key::SecKey,
-};
+use security_framework::{item::KeyClass, key::SecKey};
 use security_framework_sys::item::kSecAttrLabel;
 use tracing::instrument;
 
@@ -37,6 +34,7 @@ use crate::{
         KeychainPrivateKey,
         KeychainPublicKey,
     },
+    keychain,
 };
 
 #[derive(Debug, Default)]
@@ -140,10 +138,8 @@ impl Backend for KeychainBackend {
             native_pkcs11_traits::KeyAlgorithm::Ecc => Algorithm::ECC,
         };
         let label = label.unwrap_or("");
-        Ok(
-            generate_key(alg, label, Some(Location::DefaultFileKeychain))
-                .map(|key| KeychainPrivateKey::new(key, label, None).map(Arc::new))??,
-        )
+        Ok(generate_key(alg, label, Some(keychain::location()?))
+            .map(|key| KeychainPrivateKey::new(key, label, None).map(Arc::new))??)
     }
 
     fn find_all_private_keys(

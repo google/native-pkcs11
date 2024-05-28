@@ -24,7 +24,7 @@ use security_framework::{
     identity::SecIdentity,
     item::{add_item, AddRef, ItemAddOptions, ItemClass, Reference},
     key::SecKey,
-    os::macos::{identity::SecIdentityExt, keychain::SecKeychain},
+    os::macos::identity::SecIdentityExt,
 };
 use security_framework_sys::base::errSecItemNotFound;
 use x509_cert::{
@@ -57,8 +57,8 @@ use x509_cert::{
 
 use crate::{
     key::{Algorithm, KeychainPublicKey},
+    keychain,
     Result,
-    LOGIN_KEYCHAIN_PATH,
 };
 
 pub struct KeychainCertificate {
@@ -115,7 +115,7 @@ pub fn import_certificate(der: &[u8]) -> Result<SecCertificate> {
     let add_params = ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(
         AddRef::Certificate(cert.clone()),
     ))
-    .set_location(security_framework::item::Location::DefaultFileKeychain)
+    .set_location(keychain::location()?)
     .set_label(cert.subject_summary())
     .to_dictionary();
     add_item(add_params)?;
@@ -191,13 +191,13 @@ pub fn find_all_certificates() -> Result<Vec<SecIdentity>> {
 //  `SecIdentity::with_certificate` to search for the private key corresponding
 //  to a certificate.
 pub fn import_identity(certificate: &SecCertificate) -> Result<SecIdentity> {
-    let keychain = SecKeychain::open(LOGIN_KEYCHAIN_PATH)?;
+    let keychain = keychain::keychain_or_default()?;
     let identity = SecIdentity::with_certificate(&[keychain], certificate)?;
 
     let add_params = ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(
         AddRef::Identity(identity.clone()),
     ))
-    .set_location(security_framework::item::Location::DefaultFileKeychain)
+    .set_location(keychain::location()?)
     .set_label(certificate.subject_summary())
     .to_dictionary();
 
@@ -358,22 +358,18 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
 #[cfg(test)]
 mod test {
     use native_pkcs11_traits::random_label;
-    use security_framework::item::Location;
     use serial_test::serial;
 
     use super::*;
     #[test]
     #[serial]
     fn test_self_signed_certificate() -> Result<()> {
-        use security_framework::{
-            item::{ItemClass, Limit},
-            os::macos::item::ItemSearchOptionsExt,
-        };
+        use security_framework::item::{ItemClass, Limit};
 
         use crate::key::generate_key;
 
         let label = random_label();
-        let key = generate_key(Algorithm::RSA, &label, Some(Location::DefaultFileKeychain))?;
+        let key = generate_key(Algorithm::RSA, &label, Some(keychain::location()?))?;
 
         let cert = self_signed_certificate(Algorithm::RSA, &key)?;
 
@@ -390,7 +386,6 @@ mod test {
 
         assert!(
             crate::macos::keychain::item_search_options()?
-                .keychains(&[SecKeychain::open(LOGIN_KEYCHAIN_PATH)?])
                 .class(ItemClass::identity())
                 .limit(Limit::All)
                 .load_refs(true)

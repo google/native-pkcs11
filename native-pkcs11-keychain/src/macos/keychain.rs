@@ -13,16 +13,36 @@
 // limitations under the License.
 
 use security_framework::{
-    item::ItemSearchOptions,
+    item::{ItemSearchOptions, Location},
     os::macos::{item::ItemSearchOptionsExt, keychain::SecKeychain},
 };
 
 use crate::Result;
 
+fn keychain() -> Result<Option<SecKeychain>> {
+    match std::env::var("NATIVE_PKCS11_KEYCHAIN_PATH") {
+        Ok(path) => Ok(Some(SecKeychain::open(path)?)),
+        Err(_) => Ok(None),
+    }
+}
+
+pub(crate) fn keychain_or_default() -> Result<SecKeychain> {
+    match keychain()? {
+        Some(keychain) => Ok(keychain),
+        None => Ok(SecKeychain::default()?),
+    }
+}
+
+pub(crate) fn location() -> Result<Location> {
+    match keychain()? {
+        Some(keychain) => Ok(Location::FileKeychain(keychain)),
+        None => Ok(Location::DefaultFileKeychain),
+    }
+}
+
 pub fn item_search_options() -> Result<ItemSearchOptions> {
     let mut opts = ItemSearchOptions::new();
-    if let Ok(path) = std::env::var("NATIVE_PKCS11_KEYCHAIN_PATH") {
-        let keychain = SecKeychain::open(path)?;
+    if let Some(keychain) = keychain()? {
         opts.keychains(&[keychain]);
     }
     Ok(opts)
