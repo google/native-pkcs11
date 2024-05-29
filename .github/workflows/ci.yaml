@@ -67,14 +67,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         uses: EmbarkStudios/cargo-deny-action@3f4a782664881cf5725d0ffd23969fcce89fd868 # v1.6.3
 
-  test:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - run: echo "NATIVE_PKCS11_KEYCHAIN_PATH=$RUNNER_TEMP/Test.keychain" >> $GITHUB_ENV
-      - run: security create-keychain -p '' "$NATIVE_PKCS11_KEYCHAIN_PATH"
-      - run: cargo test --verbose
-
   rustfmt:
     runs-on: ubuntu-latest
     steps:
@@ -85,8 +77,7 @@ jobs:
           components: rustfmt
       - run: cargo fmt -- --check
 
-  integration-macos-ssh:
-    name: macos ssh
+  test-macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
@@ -94,12 +85,16 @@ jobs:
         with:
           toolchain: stable
           targets: aarch64-apple-darwin,x86_64-apple-darwin
-      - run: tests/ssh/run.sh
-
-  integration-macos-java:
-    name: macos java
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - run: cargo build --verbose
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: cargo test
+        run: . tests/create_keychain.sh && cargo test --verbose
       - run: tests/java/run.sh
+      - run: tests/ssh/run.sh

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TMP_DIR=$(mktemp --directory)
-export NATIVE_PKCS11_KEYCHAIN_PATH="$TMP_DIR/native-pkcs11.keychain"
+NATIVE_PKCS11_TMPDIR=$(mktemp -d -p "${RUNNER_TEMP:-}") || return 1
+export NATIVE_PKCS11_TMPDIR
+export NATIVE_PKCS11_KEYCHAIN_PATH="$NATIVE_PKCS11_TMPDIR/Test.keychain"
 security create-keychain -p '' "$NATIVE_PKCS11_KEYCHAIN_PATH"

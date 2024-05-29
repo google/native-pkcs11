@@ -1,6 +1,6 @@
 Port 17777
 HostKey $PWD/ssh_host_ecdsa_key
-AuthorizedKeysFile $PWD/authorized_keys
+AuthorizedKeysFile $AUTHORIZED_KEYS
 
 Protocol 2
 PubkeyAuthentication yes
