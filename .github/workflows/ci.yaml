@@ -23,9 +23,6 @@ on:
 permissions:
   contents: read
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   build:
     strategy:
@@ -39,6 +36,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
+      - run: rustup toolchain install nightly --profile minimal --component rustfmt
       - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
         with:
           path: |
@@ -57,6 +55,7 @@ jobs:
           for crate in native-pkcs11 native-pkcs11-core native-pkcs11-traits
           pkcs11-sys native-pkcs11-keychain native-pkcs11-windows; do cargo
           build --verbose -p $crate || exit 1 ; done
+      - run: cargo +nightly fmt -- --check
       - name: Run Clippy (default features)
         if: matrix.toolchain == 'stable'
         run: cargo clippy --tests -- -D warnings
@@ -65,25 +64,19 @@ jobs:
         run: cargo clippy --tests --all-features -- -D warnings
       - name: Run cargo-deny
         if: matrix.os == 'ubuntu-latest'
-        uses: EmbarkStudios/cargo-deny-action@3f4a782664881cf5725d0ffd23969fcce89fd868 # v1.6.3
+        uses: EmbarkStudios/cargo-deny-action@3f4a782664881cf5725d0ffd23969fcce89fd868 # v1.6.3∂ß
 
-  rustfmt:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v1.2.0
-      - uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
-        with:
-          toolchain: nightly
-          components: rustfmt
-      - run: cargo fmt -- --check
-
-  test-macos:
-    runs-on: macos-latest
+  test:
+    strategy:
+      matrix:
+        os: [macos-latest]
+        toolchain: ["stable"]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
         with:
-          toolchain: stable
+          toolchain: ${{ matrix.toolchain }}
           targets: aarch64-apple-darwin,x86_64-apple-darwin
       - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
         with:
