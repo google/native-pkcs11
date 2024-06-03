@@ -477,6 +477,7 @@ mod test {
     }
 
     #[test]
+    #[ignore = "https://github.com/google/native-pkcs11/issues/302"]
     fn keychain_pubkey_hash_find() -> Result<()> {
         let key1 = generate_key(Algorithm::ECC, &random_label(), Some(keychain::location()?))?;
         let key2 = generate_key(Algorithm::ECC, &random_label(), Some(keychain::location()?))?;
