@@ -593,6 +593,7 @@ cryptoki_fn!(
             } else {
                 &mut []
             };
+            let mut result = Ok(());
             for attribute in template.iter_mut() {
                 let type_ = attribute
                     .type_
@@ -605,15 +606,17 @@ cryptoki_fn!(
                         continue;
                     }
                     if (attribute.ulValueLen as usize) < value.len() {
+                        result = Err(Error::BufferTooSmall);
                         continue;
                     }
                     unsafe { slice::from_raw_parts_mut(attribute.pValue as *mut u8, value.len()) }
                         .copy_from_slice(&value);
                 } else {
                     attribute.ulValueLen = CK_UNAVAILABLE_INFORMATION;
+                    result = Err(Error::AttributeTypeInvalid(attribute.type_));
                 }
             }
-            Ok(())
+            result
         })
     }
 );

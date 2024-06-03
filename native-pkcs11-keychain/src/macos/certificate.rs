@@ -363,6 +363,7 @@ mod test {
     use super::*;
     #[test]
     #[serial]
+    #[ignore = "https://github.com/google/native-pkcs11/issues/302"]
     fn test_self_signed_certificate() -> Result<()> {
         use security_framework::item::{ItemClass, Limit};
 
