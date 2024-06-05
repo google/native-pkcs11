@@ -200,7 +200,7 @@ impl Object {
                 return false;
             }
         }
-        for other in &**others {
+        for other in others {
             if let Some(attr) = self.attribute(other.attribute_type()) {
                 if *other != attr {
                     return false;

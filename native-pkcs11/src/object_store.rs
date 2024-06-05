@@ -14,6 +14,7 @@
 
 use std::collections::HashMap;
 
+use cached::{Cached, TimedCache};
 use native_pkcs11_core::{
     attribute::{Attribute, AttributeType, Attributes},
     Result,
@@ -36,7 +37,7 @@ pub struct ObjectStore {
     objects: HashMap<CK_OBJECT_HANDLE, Object>,
     handles_by_object: HashMap<Object, CK_OBJECT_HANDLE>,
     next_object_handle: CK_OBJECT_HANDLE,
-    last_loaded_certs: Option<std::time::Instant>,
+    query_cache: TimedCache<Attributes, Vec<CK_OBJECT_HANDLE>>,
 }
 
 impl ObjectStore {
@@ -63,31 +64,98 @@ impl ObjectStore {
         //
         // Firefox + NSS query certificates for every TLS connection in order to
         // evaluate server trust. Cache the results for 3 seconds.
-        self.load_cache()?;
-
-        // If the template is empty, return all objects in the store.
-        // TODO(bweeks): search the backend as well.
-        if template.is_empty() {
-            return Ok(self.find_all());
-        }
-
-        // Search the store for objects matching the template.
-        let output = self.find_store(&template);
-        if output.is_empty() {
-            // If no objects were found in the store, fallback to searching the backend.
-            self.find_backend(&template)
+        if let Some(c) = self.query_cache.cache_get(&template) {
+            Ok(c.to_vec())
         } else {
+            let output = self.find_impl(&template)?;
+            self.query_cache.cache_set(template, output.clone());
             Ok(output)
         }
     }
 
-    fn load_cache(&mut self) -> Result<()> {
-        if let Some(last) = self.last_loaded_certs {
-            if last.elapsed() < std::time::Duration::from_secs(3) {
-                return Ok(());
-            }
+    #[instrument(skip(self))]
+    fn find_impl(&mut self, template: &Attributes) -> Result<Vec<CK_OBJECT_HANDLE>> {
+        self.find_with_backend(template)?;
+        if template.is_empty() {
+            Ok(self.find_all())
+        } else {
+            Ok(self.find_store(template))
+        }
+    }
+
+    #[instrument(skip(self))]
+    fn find_all(&self) -> Vec<CK_OBJECT_HANDLE> {
+        self.objects.keys().copied().collect()
+    }
+
+    #[instrument(skip(self))]
+    fn find_store(&self, template: &Attributes) -> Vec<CK_OBJECT_HANDLE> {
+        self.objects
+            .iter()
+            .filter(|(_, object)| object.matches(template))
+            .map(|(handle, _)| *handle)
+            .collect()
+    }
+
+    #[instrument(skip(self))]
+    fn find_with_backend(&mut self, template: &Attributes) -> Result<()> {
+        if template.is_empty() {
+            self.find_with_backend_all_certificates()?;
+            self.find_with_backend_all_public_keys()?;
+            self.find_with_backend_all_private_keys()?;
+            return Ok(());
         }
 
+        let class = match template.get(AttributeType::Class) {
+            Some(Attribute::Class(class)) => class,
+            None => {
+                return Err(Error::Todo("no class attribute".to_string()));
+            }
+            class => {
+                return Err(Error::Todo(format!("class {:?} not implemented", class)));
+            }
+        };
+        match *class {
+            CKO_CERTIFICATE => {
+                if template.len() > 1 {
+                    warn!("ignoring attributes for certificate search");
+                }
+                self.find_with_backend_all_certificates()?;
+            }
+            // CKO_NSS_TRUST | CKO_NETSCAPE_BUILTIN_ROOT_LIST
+            3461563219 | 3461563220 => (),
+            CKO_SECRET_KEY => (),
+            CKO_PUBLIC_KEY | CKO_PRIVATE_KEY => {
+                let opts = if let Some(Attribute::Id(id)) = template.get(AttributeType::Id) {
+                    KeySearchOptions::PublicKeyHash(id.as_slice().try_into()?)
+                } else if let Some(Attribute::Label(label)) = template.get(AttributeType::Label) {
+                    KeySearchOptions::Label(label.into())
+                } else {
+                    match *class {
+                        CKO_PRIVATE_KEY => self.find_with_backend_all_private_keys()?,
+                        CKO_PUBLIC_KEY => self.find_with_backend_all_public_keys()?,
+                        _ => unreachable!(),
+                    }
+                    return Ok(());
+                };
+                match *class {
+                    CKO_PRIVATE_KEY => backend().find_private_key(opts)?.map(|key| {
+                        self.insert(Object::PrivateKey(key));
+                    }),
+                    CKO_PUBLIC_KEY => backend().find_public_key(opts)?.map(|key| {
+                        self.insert(Object::PublicKey(key.into()));
+                    }),
+                    _ => unreachable!(),
+                };
+            }
+            _ => {
+                return Err(Error::AttributeTypeInvalid(*class));
+            }
+        }
+        Ok(())
+    }
+
+    fn find_with_backend_all_certificates(&mut self) -> Result<()> {
         for cert in backend().find_all_certificates()? {
             let private_key = backend().find_private_key(KeySearchOptions::PublicKeyHash(
                 cert.public_key().public_key_hash().as_slice().try_into()?,
@@ -99,88 +167,21 @@ impl ObjectStore {
             };
             self.insert(Object::Certificate(cert.into()));
         }
-        //  Add all keys, regardless of label.
-        for private_key in backend().find_all_private_keys()? {
-            self.insert(Object::PrivateKey(private_key));
-        }
-        for public_key in backend().find_all_public_keys()? {
-            self.insert(Object::PublicKey(public_key));
-        }
-        self.last_loaded_certs = Some(std::time::Instant::now());
         Ok(())
     }
 
-    fn find_all(&self) -> Vec<CK_OBJECT_HANDLE> {
-        self.objects.keys().copied().collect()
-    }
-
-    fn find_store(&self, template: &Attributes) -> Vec<CK_OBJECT_HANDLE> {
-        self.objects
-            .iter()
-            .filter(|(_, object)| object.matches(template))
-            .map(|(handle, _)| *handle)
-            .collect()
-    }
-
-    fn find_backend(&mut self, template: &Attributes) -> Result<Vec<CK_OBJECT_HANDLE>> {
-        let mut output = vec![];
-        let class = match template.get(AttributeType::Class) {
-            Some(Attribute::Class(class)) => class,
-            None => {
-                return Err(Error::Todo("no class attribute".to_string()));
-            }
-            class => {
-                todo!("class not implemented: {:?}", class);
-            }
-        };
-        match *class {
-            CKO_CERTIFICATE => (),
-            // CKO_NSS_TRUST | CKO_NETSCAPE_BUILTIN_ROOT_LIST
-            3461563219 | 3461563220 => (),
-            CKO_SECRET_KEY => (),
-            CKO_PUBLIC_KEY | CKO_PRIVATE_KEY => {
-                let key_search_opts = if let Some(Attribute::Id(id)) =
-                    template.get(AttributeType::Id)
-                {
-                    KeySearchOptions::PublicKeyHash(id.as_slice().try_into()?)
-                } else if let Some(Attribute::Label(label)) = template.get(AttributeType::Label) {
-                    KeySearchOptions::Label(label.into())
-                } else {
-                    for private_key in backend().find_all_private_keys()? {
-                        //  Only consider keys that have both private and public parts present.
-                        let public_key = match private_key.find_public_key(backend()) {
-                            Ok(Some(public_key)) => public_key,
-                            _ => continue,
-                        };
-                        match *class {
-                            CKO_PRIVATE_KEY => {
-                                output.push(self.insert(Object::PrivateKey(private_key)));
-                            }
-                            CKO_PUBLIC_KEY => {
-                                output.push(self.insert(Object::PublicKey(public_key.into())));
-                            }
-                            _ => {}
-                        };
-                    }
-                    return Ok(output);
-                };
-                match *class {
-                    CKO_PRIVATE_KEY => backend().find_private_key(key_search_opts)?.map(|key| {
-                        output.push(self.insert(Object::PrivateKey(key)));
-                    }),
-                    CKO_PUBLIC_KEY => backend().find_public_key(key_search_opts)?.map(|key| {
-                        output.push(self.insert(Object::PublicKey(key.into())));
-                    }),
-                    _ => {
-                        todo!();
-                    }
-                };
-            }
-            _ => {
-                return Err(Error::AttributeTypeInvalid(*class));
-            }
+    fn find_with_backend_all_public_keys(&mut self) -> Result<()> {
+        for private_key in backend().find_all_private_keys()? {
+            self.insert(Object::PrivateKey(private_key));
         }
-        Ok(output)
+        Ok(())
+    }
+
+    fn find_with_backend_all_private_keys(&mut self) -> Result<()> {
+        for private_key in backend().find_all_private_keys()? {
+            self.insert(Object::PrivateKey(private_key));
+        }
+        Ok(())
     }
 }
 
@@ -190,7 +191,7 @@ impl Default for ObjectStore {
             objects: HashMap::from([(1, Object::Profile(CKP_BASELINE_PROVIDER))]),
             handles_by_object: HashMap::from([(Object::Profile(CKP_BASELINE_PROVIDER), 1)]),
             next_object_handle: 2,
-            last_loaded_certs: None,
+            query_cache: TimedCache::with_lifespan(10),
         }
     }
 }
