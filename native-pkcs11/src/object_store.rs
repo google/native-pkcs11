@@ -74,8 +74,9 @@ impl ObjectStore {
         // Search the store for objects matching the template.
         let output = self.find_store(&template);
         if output.is_empty() {
-            // If no objects were found in the store, fallback to searching the backend.
-            self.find_backend(&template)
+            // No objects found, load objects from the backend and try search again.
+            self.find_backend(&template)?;
+            Ok(self.find_store(&template))
         } else {
             Ok(output)
         }
@@ -122,8 +123,7 @@ impl ObjectStore {
             .collect()
     }
 
-    fn find_backend(&mut self, template: &Attributes) -> Result<Vec<CK_OBJECT_HANDLE>> {
-        let mut output = vec![];
+    fn find_backend(&mut self, template: &Attributes) -> Result<()> {
         let class = match template.get(AttributeType::Class) {
             Some(Attribute::Class(class)) => class,
             None => {
@@ -139,9 +139,7 @@ impl ObjectStore {
             3461563219 | 3461563220 => (),
             CKO_SECRET_KEY => (),
             CKO_PUBLIC_KEY | CKO_PRIVATE_KEY => {
-                let key_search_opts = if let Some(Attribute::Id(id)) =
-                    template.get(AttributeType::Id)
-                {
+                let opts = if let Some(Attribute::Id(id)) = template.get(AttributeType::Id) {
                     KeySearchOptions::PublicKeyHash(id.as_slice().try_into()?)
                 } else if let Some(Attribute::Label(label)) = template.get(AttributeType::Label) {
                     KeySearchOptions::Label(label.into())
@@ -154,33 +152,31 @@ impl ObjectStore {
                         };
                         match *class {
                             CKO_PRIVATE_KEY => {
-                                output.push(self.insert(Object::PrivateKey(private_key)));
+                                self.insert(Object::PrivateKey(private_key));
                             }
                             CKO_PUBLIC_KEY => {
-                                output.push(self.insert(Object::PublicKey(public_key.into())));
+                                self.insert(Object::PublicKey(public_key.into()));
                             }
-                            _ => {}
+                            _ => unreachable!(),
                         };
                     }
-                    return Ok(output);
+                    return Ok(());
                 };
                 match *class {
-                    CKO_PRIVATE_KEY => backend().find_private_key(key_search_opts)?.map(|key| {
-                        output.push(self.insert(Object::PrivateKey(key)));
+                    CKO_PRIVATE_KEY => backend().find_private_key(opts)?.map(|key| {
+                        self.insert(Object::PrivateKey(key));
                     }),
-                    CKO_PUBLIC_KEY => backend().find_public_key(key_search_opts)?.map(|key| {
-                        output.push(self.insert(Object::PublicKey(key.into())));
+                    CKO_PUBLIC_KEY => backend().find_public_key(opts)?.map(|key| {
+                        self.insert(Object::PublicKey(key.into()));
                     }),
-                    _ => {
-                        todo!();
-                    }
+                    _ => unreachable!(),
                 };
             }
             _ => {
                 return Err(Error::AttributeTypeInvalid(*class));
             }
         }
-        Ok(output)
+        Ok(())
     }
 }
 
