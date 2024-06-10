@@ -25,6 +25,8 @@ cd "$(dirname -- "$(readlink -f -- "$0")")"
 security set-key-partition-list -S teamid:TDTHCUPYFR -s -k "" \
   "$NATIVE_PKCS11_KEYCHAIN_PATH"
 
+cargo build -p native-pkcs11
+
 readonly PKCS11_CONFIG=$NATIVE_PKCS11_TMPDIR/pkcs11.cfg
 cat <<EOF >"$PKCS11_CONFIG"
 name = native-pkcs11
