@@ -21,7 +21,7 @@ mod pkcs11_windows;
 pub use pkcs11_windows::*;
 
 #[cfg(target_os = "windows")]
-pub const CK_UNAVAILABLE_INFORMATION: u32 = std::u32::MAX;
+pub const CK_UNAVAILABLE_INFORMATION: u32 = u32::MAX;
 
 #[cfg(not(target_os = "windows"))]
 mod pkcs11_unix;
