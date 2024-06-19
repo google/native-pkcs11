@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::ops::Deref;
-use std::ffi::CString;
+use std::{collections::BTreeSet, ffi::CString};
 
 use pkcs11_sys::*;
 use strum_macros::Display;
@@ -114,7 +113,7 @@ impl TryFrom<CK_ATTRIBUTE_TYPE> for AttributeType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Attribute {
     AlwaysAuthenticate(bool),
     AlwaysSensitive(bool),
@@ -345,24 +344,34 @@ fn try_u8_into_bool(slice: &[u8]) -> Result<bool> {
     Ok(!matches!(as_byte, 0u8))
 }
 
-#[derive(Debug, Clone)]
-pub struct Attributes(Vec<Attribute>);
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Attributes(BTreeSet<Attribute>);
 
 impl Attributes {
     pub fn get(&self, type_: AttributeType) -> Option<&Attribute> {
         self.0.iter().find(|&attr| attr.attribute_type() == type_)
     }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
-impl Deref for Attributes {
-    type Target = Vec<Attribute>;
-    fn deref(&self) -> &Vec<Attribute> {
-        &self.0
+impl<'a> IntoIterator for &'a Attributes {
+    type Item = &'a Attribute;
+    type IntoIter = std::collections::btree_set::Iter<'a, Attribute>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
     }
 }
 
 impl From<Vec<Attribute>> for Attributes {
     fn from(value: Vec<Attribute>) -> Self {
-        Attributes(value)
+        Attributes(BTreeSet::from_iter(value))
     }
 }
