@@ -75,9 +75,9 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "cached"
-version = "0.51.3"
+version = "0.51.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd93a9f06ec296ca66b4c26fafa9ed63f32c473d7a708a5f28563ee64c948515"
+checksum = "0feb64151eed3da6107fddd2d717a6ca4b9dbd74e43784c55c841d1abfe5a295"
 dependencies = [
  "hashbrown",
  "instant",
@@ -943,9 +943,9 @@ dependencies = [
 
 [[package]]
 name = "strum"
-version = "0.26.2"
+version = "0.26.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d8cec3501a5194c432b2b7976db6b7d10ec95c253208b45f83f7136aa985e29"
+checksum = "8fec0f0aef304996cf250b31b5a10dee7980c85da9d759361292b8bca5a18f06"
 
 [[package]]
 name = "strum_macros"
