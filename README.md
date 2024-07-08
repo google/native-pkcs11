@@ -56,8 +56,10 @@ to version bump and release all crates in the workspace at once. It can be
 installed with `cargo install cargo-workspaces`.
 
 ```bash
+# Create a branch for the release PR
+git checkout -b release
 # Bump the version of all crates in the workspace
-cargo ws version --no-git-push
+cargo ws version --allow-branch=release --no-git-push
 # Publish all crates to crates.io
 cargo ws publish --no-git-push
 ```
