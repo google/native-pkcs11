@@ -420,7 +420,6 @@ dependencies = [
  "native-pkcs11-keychain",
  "native-pkcs11-traits",
  "native-pkcs11-windows",
- "once_cell",
  "pkcs11-sys",
  "serial_test",
  "thiserror",
@@ -437,7 +436,6 @@ dependencies = [
  "native-pkcs11-keychain",
  "native-pkcs11-traits",
  "native-pkcs11-windows",
- "once_cell",
  "p256",
  "pkcs1",
  "pkcs11-sys",
@@ -471,7 +469,6 @@ dependencies = [
 name = "native-pkcs11-traits"
 version = "0.2.19"
 dependencies = [
- "once_cell",
  "rand",
  "x509-cert",
 ]
