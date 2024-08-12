@@ -460,7 +460,6 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "serial_test",
- "spki",
  "thiserror",
  "tracing",
  "tracing-error",
