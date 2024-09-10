@@ -65,7 +65,12 @@ where
     match f() {
         Ok(()) => CKR_OK,
         Err(e) => {
-            tracing::error!(%e);
+            match e {
+                // Some PKCS #11 return values indicate routine conditions that
+                // should not be logged at the default log level.
+                Error::AttributeTypeInvalid(_) => tracing::debug!(%e),
+                _ => tracing::error!(%e),
+            }
             e.into()
         }
     }
