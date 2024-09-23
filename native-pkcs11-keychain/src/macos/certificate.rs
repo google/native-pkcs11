@@ -22,7 +22,7 @@ use rsa::{pkcs1::DecodeRsaPublicKey, pkcs8::AssociatedOid};
 use security_framework::{
     certificate::SecCertificate,
     identity::SecIdentity,
-    item::{add_item, AddRef, ItemAddOptions, ItemClass, Reference},
+    item::{AddRef, ItemAddOptions, ItemAddValue, ItemClass, Reference},
     key::SecKey,
     os::macos::identity::SecIdentityExt,
 };
@@ -112,13 +112,10 @@ impl native_pkcs11_traits::Certificate for KeychainCertificate {
 pub fn import_certificate(der: &[u8]) -> Result<SecCertificate> {
     let cert = SecCertificate::from_der(der)?;
 
-    let add_params = ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(
-        AddRef::Certificate(cert.clone()),
-    ))
-    .set_location(keychain::location()?)
-    .set_label(cert.subject_summary())
-    .to_dictionary();
-    add_item(add_params)?;
+    ItemAddOptions::new(ItemAddValue::Ref(AddRef::Certificate(cert.clone())))
+        .set_location(keychain::location()?)
+        .set_label(cert.subject_summary())
+        .add()?;
 
     Ok(cert)
 }
@@ -194,14 +191,12 @@ pub fn import_identity(certificate: &SecCertificate) -> Result<SecIdentity> {
     let keychain = keychain::keychain_or_default()?;
     let identity = SecIdentity::with_certificate(&[keychain], certificate)?;
 
-    let add_params = ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(
-        AddRef::Identity(identity.clone()),
-    ))
-    .set_location(keychain::location()?)
-    .set_label(certificate.subject_summary())
-    .to_dictionary();
+    let result = ItemAddOptions::new(ItemAddValue::Ref(AddRef::Identity(identity.clone())))
+        .set_location(keychain::location()?)
+        .set_label(certificate.subject_summary())
+        .add();
 
-    match add_item(add_params) {
+    match result {
         Ok(_) => Ok(identity),
         Err(e)
             if e.message() == Some("The specified item already exists in the keychain.".into()) =>

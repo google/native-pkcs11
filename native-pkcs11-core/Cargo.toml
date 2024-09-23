@@ -20,7 +20,7 @@ pkcs1 = { version = "0.7.5", default-features = false }
 pkcs11-sys = { version = "0.2.0", path = "../pkcs11-sys" }
 strum = "0.26.3"
 strum_macros = "0.26.4"
-thiserror = "1.0.63"
+thiserror = "1.0.64"
 tracing = "0.1.40"
 
 [dev-dependencies]
