@@ -385,20 +385,18 @@ mod test {
         // such that  they are visible to the next search query.
         std::thread::sleep(std::time::Duration::from_secs(1));
 
-        assert!(
-            crate::macos::keychain::item_search_options()?
-                .class(ItemClass::identity())
-                .limit(Limit::All)
-                .load_refs(true)
-                .search()?
-                .iter()
-                .any(|result| match result {
-                    security_framework::item::SearchResult::Ref(
-                        security_framework::item::Reference::Identity(id),
-                    ) => id.certificate().unwrap().subject() == cert.subject(),
-                    _ => false,
-                })
-        );
+        assert!(crate::macos::keychain::item_search_options()?
+            .class(ItemClass::identity())
+            .limit(Limit::All)
+            .load_refs(true)
+            .search()?
+            .iter()
+            .any(|result| match result {
+                security_framework::item::SearchResult::Ref(
+                    security_framework::item::Reference::Identity(id),
+                ) => id.certificate().unwrap().subject() == cert.subject(),
+                _ => false,
+            }));
 
         //  Clean up
         cert.delete()?;
