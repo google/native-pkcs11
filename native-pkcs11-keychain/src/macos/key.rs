@@ -266,10 +266,9 @@ pub fn generate_key(
         token: Some(security_framework::key::Token::Software),
         location,
         access_control: None,
-    }
-    .to_dictionary();
+    };
 
-    Ok(SecKey::generate(opts).map_err(|e| e.to_string())?)
+    Ok(SecKey::new(&opts).map_err(|e| e.to_string())?)
 }
 
 pub fn find_key(class: KeyClass, label: &str) -> Result<SecKey> {
@@ -347,7 +346,7 @@ pub fn find_all_keys(key_class: KeyClass) -> Result<Vec<SecKey>> {
 mod test {
     use core_foundation::base::{TCFType, ToVoid};
     use native_pkcs11_traits::{random_label, Backend};
-    use security_framework::item::{add_item, AddRef, ItemAddOptions, Limit};
+    use security_framework::item::{AddRef, ItemAddOptions, Limit};
     use security_framework_sys::item::{kSecAttrLabel, kSecValueRef};
     use serial_test::serial;
 
@@ -514,22 +513,19 @@ mod test {
         //  public key from SecKeyCopyPublicKey (`.public_key()` in rust).
 
         let label = random_label();
-        let key1 = SecKey::generate(
+        let key1 = SecKey::new(
             GenerateKeyOptions::default()
                 .set_key_type(KeyType::ec())
-                .set_label(&label)
-                .to_dictionary(),
+                .set_label(&label),
         )?;
 
         let pubkey_hash = key1.public_key().unwrap().application_label().unwrap();
 
-        add_item(
-            ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(AddRef::Key(
-                key1,
-            )))
-            .set_label(&label)
-            .to_dictionary(),
-        )?;
+        ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(AddRef::Key(
+            key1,
+        )))
+        .set_label(&label)
+        .add()?;
 
         //  NOTE(kcking): this fails to find the generated key, most likely
         //  because application_label is not automatically populated by
