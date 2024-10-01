@@ -15,11 +15,9 @@
 use std::{
     any::Any,
     hash::Hash,
-    sync::{Arc, RwLock},
+    sync::{Arc, LazyLock, RwLock},
 };
 
-pub use once_cell;
-use once_cell::sync::Lazy;
 use x509_cert::der::Decode;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -28,8 +26,8 @@ pub type Digest = [u8; 20];
 //  The Backend is first staged so it can be stored in a Box<dyn Backend>. This
 //  allows the Backend to be reference with `&'static`.
 static STAGED_BACKEND: RwLock<Option<Box<dyn Backend>>> = RwLock::new(None);
-static BACKEND: Lazy<Box<dyn Backend>> =
-    Lazy::new(|| STAGED_BACKEND.write().unwrap().take().unwrap());
+static BACKEND: LazyLock<Box<dyn Backend>> =
+    LazyLock::new(|| STAGED_BACKEND.write().unwrap().take().unwrap());
 
 /// Stores a backend to later be returned by all calls `crate::backend()`.
 pub fn register_backend(backend: Box<dyn Backend>) {
