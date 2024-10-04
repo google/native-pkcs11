@@ -101,6 +101,7 @@ impl Object {
                 AttributeType::AlwaysAuthenticate => Some(Attribute::AlwaysAuthenticate(false)),
                 AttributeType::Class => Some(Attribute::Class(CKO_PRIVATE_KEY)),
                 AttributeType::Decrypt => Some(Attribute::Decrypt(false)),
+                AttributeType::Derive => Some(Attribute::Derive(false)),
                 AttributeType::EcParams => {
                     Some(Attribute::EcParams(p256::NistP256::OID.to_der().ok()?))
                 }
@@ -111,6 +112,7 @@ impl Object {
                     native_pkcs11_traits::KeyAlgorithm::Ecc => CKK_EC,
                 })),
                 AttributeType::Label => Some(Attribute::Label(private_key.label())),
+                AttributeType::Local => Some(Attribute::Local(false)),
                 AttributeType::Modulus => {
                     let modulus = private_key
                         .find_public_key(backend())
@@ -160,7 +162,9 @@ impl Object {
             },
             Object::PublicKey(pk) => match type_ {
                 AttributeType::Class => Some(Attribute::Class(CKO_PUBLIC_KEY)),
+                AttributeType::Derive => Some(Attribute::Derive(false)),
                 AttributeType::Label => Some(Attribute::Label(pk.label())),
+                AttributeType::Local => Some(Attribute::Local(false)),
                 AttributeType::Modulus => {
                     let key = pk.to_der();
                     let key = RsaPublicKey::from_der(&key).unwrap();
