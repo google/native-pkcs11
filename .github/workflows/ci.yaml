@@ -37,7 +37,7 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
       - run: rustup toolchain install nightly --profile minimal --component rustfmt
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
+      - uses: actions/cache@2cdf405574d6ef1f33a1d12acccd3ae82f47b3f2
         with:
           path: |
             ~/.cargo/bin/
@@ -78,7 +78,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           targets: aarch64-apple-darwin,x86_64-apple-darwin
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
+      - uses: actions/cache@2cdf405574d6ef1f33a1d12acccd3ae82f47b3f2
         with:
           path: |
             ~/.cargo/bin/
