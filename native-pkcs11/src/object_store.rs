@@ -214,9 +214,8 @@ mod tests {
 
         let label = &format!("objectstore test {}", random_label());
 
-        let key = backend()
-            .generate_key(native_pkcs11_traits::KeyAlgorithm::Rsa, Some(label))
-            .unwrap();
+        let key =
+            backend().generate_key(native_pkcs11_traits::KeyAlgorithm::Rsa, Some(label)).unwrap();
 
         let mut store = ObjectStore::default();
 

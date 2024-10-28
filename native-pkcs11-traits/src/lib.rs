@@ -68,11 +68,7 @@ pub enum SignatureAlgorithm {
     RsaPkcs1v15Sha384,
     RsaPkcs1v15Sha256,
     RsaPkcs1v15Sha512,
-    RsaPss {
-        digest: DigestType,
-        mask_generation_function: DigestType,
-        salt_length: u64,
-    },
+    RsaPss { digest: DigestType, mask_generation_function: DigestType, salt_length: u64 },
 }
 
 pub trait PrivateKey: Send + Sync {
@@ -89,9 +85,7 @@ pub trait PrivateKey: Send + Sync {
 
 impl std::fmt::Debug for dyn PrivateKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("PrivateKey")
-            .field("label", &self.label())
-            .finish_non_exhaustive()
+        f.debug_struct("PrivateKey").field("label", &self.label()).finish_non_exhaustive()
     }
 }
 
@@ -211,9 +205,5 @@ pub trait Backend: Send + Sync {
 pub fn random_label() -> String {
     use rand::{distr::Alphanumeric, Rng};
     String::from("bumpkey ")
-        + &rand::rng()
-            .sample_iter(&Alphanumeric)
-            .take(32)
-            .map(char::from)
-            .collect::<String>()
+        + &rand::rng().sample_iter(&Alphanumeric).take(32).map(char::from).collect::<String>()
 }

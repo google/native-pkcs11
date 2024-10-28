@@ -149,10 +149,8 @@ impl Backend for KeychainBackend {
         let keys = sec_keys
             .into_iter()
             .filter_map(|sec_key| {
-                let label: Option<String> = sec_key
-                    .attributes()
-                    .find(unsafe { kSecAttrLabel }.to_void())
-                    .map(|label| {
+                let label: Option<String> =
+                    sec_key.attributes().find(unsafe { kSecAttrLabel }.to_void()).map(|label| {
                         unsafe { CFString::wrap_under_get_rule(label.cast()) }.to_string()
                     });
                 let label: String = label.unwrap_or_default();
@@ -172,10 +170,8 @@ impl Backend for KeychainBackend {
         let keys = sec_keys
             .into_iter()
             .filter_map(|sec_key| {
-                let label: Option<String> = sec_key
-                    .attributes()
-                    .find(unsafe { kSecAttrLabel }.to_void())
-                    .map(|label| {
+                let label: Option<String> =
+                    sec_key.attributes().find(unsafe { kSecAttrLabel }.to_void()).map(|label| {
                         unsafe { CFString::wrap_under_get_rule(label.cast()) }.to_string()
                     });
                 let label: String = label.unwrap_or_default();

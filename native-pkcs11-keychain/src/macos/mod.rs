@@ -43,10 +43,7 @@ impl std::error::Error for Error {}
 
 impl<E: Into<ErrorKind>> From<E> for Error {
     fn from(e: E) -> Self {
-        Error {
-            error: e.into(),
-            context: SpanTrace::capture(),
-        }
+        Error { error: e.into(), context: SpanTrace::capture() }
     }
 }
 

@@ -38,100 +38,46 @@ mod generate {
         // https://github.com/rust-lang/rust-bindgen/issues/1594
         fn int_macro(&self, name: &str, _: i64) -> Option<callbacks::IntKind> {
             if ["CK_TRUE", "CK_FALSE"].contains(&name) {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_BBOOL",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_BBOOL", is_signed: false })
             } else if name.starts_with("CK_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_ULONG",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_ULONG", is_signed: false })
             } else if name.starts_with("CKA_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_ATTRIBUTE_TYPE",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_ATTRIBUTE_TYPE", is_signed: false })
             } else if name.starts_with("CKC_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_CERTIFICATE_TYPE",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_CERTIFICATE_TYPE", is_signed: false })
             } else if name.starts_with("CKD_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_EC_KDF_TYPE",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_EC_KDF_TYPE", is_signed: false })
             } else if name.starts_with("CKF_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_FLAGS",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_FLAGS", is_signed: false })
             } else if name.starts_with("CKG_MGF1_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_RSA_PKCS_MGF_TYPE",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_RSA_PKCS_MGF_TYPE", is_signed: false })
             } else if name.starts_with("CKG_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_GENERATOR_FUNCTION",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_GENERATOR_FUNCTION", is_signed: false })
             } else if name.starts_with("CKH_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_HW_FEATURE_TYPE",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_HW_FEATURE_TYPE", is_signed: false })
             } else if name.starts_with("CKK_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_KEY_TYPE",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_KEY_TYPE", is_signed: false })
             } else if name.starts_with("CKM_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_MECHANISM_TYPE",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_MECHANISM_TYPE", is_signed: false })
             } else if name.starts_with("CKN_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_NOTIFICATION",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_NOTIFICATION", is_signed: false })
             } else if name.starts_with("CKO_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_OBJECT_CLASS",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_OBJECT_CLASS", is_signed: false })
             } else if name.starts_with("CKP_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_PROFILE_ID",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_PROFILE_ID", is_signed: false })
             } else if name.starts_with("CKR_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_RV",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_RV", is_signed: false })
             } else if name.starts_with("CKS_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_STATE",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_STATE", is_signed: false })
             } else if name.starts_with("CKU_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_USER_TYPE",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_USER_TYPE", is_signed: false })
             } else if name.starts_with("CKZ_") {
                 Some(callbacks::IntKind::Custom {
                     name: "CK_RSA_PKCS_OAEP_SOURCE_TYPE",
                     is_signed: false,
                 })
             } else if name.starts_with("CRYPTOKI_VERSION_") {
-                Some(callbacks::IntKind::Custom {
-                    name: "CK_BYTE",
-                    is_signed: false,
-                })
+                Some(callbacks::IntKind::Custom { name: "CK_BYTE", is_signed: false })
             } else {
                 None
             }
@@ -173,9 +119,7 @@ mod generate {
 
         let bindings = bindings.generate().expect("failed to generate bindings");
 
-        bindings
-            .write_to_file(target_specific_output_path())
-            .expect("failed to write bindings");
+        bindings.write_to_file(target_specific_output_path()).expect("failed to write bindings");
     }
 }
 
