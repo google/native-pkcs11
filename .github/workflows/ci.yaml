@@ -36,7 +36,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
-      - run: rustup toolchain install nightly --profile minimal --component rustfmt
+      - run: rustup update --no-self-update stable
       - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a
         with:
           path: |
@@ -55,13 +55,16 @@ jobs:
           for crate in native-pkcs11 native-pkcs11-core native-pkcs11-traits
           pkcs11-sys native-pkcs11-keychain native-pkcs11-windows; do cargo
           build --verbose -p $crate || exit 1 ; done
-      - run: cargo +nightly fmt -- --check
       - name: Run Clippy (default features)
         if: matrix.toolchain == 'stable'
-        run: cargo clippy --tests -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
       - name: Run Clippy (all features)
         if: matrix.toolchain == 'stable'
-        run: cargo clippy --tests --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Rust rustfmt
+        run: |
+          rustup toolchain install --no-self-update --profile=minimal --component=rustfmt nightly
+          cargo +nightly fmt -- --verbose --check
       - name: Run cargo-deny
         if: matrix.os == 'ubuntu-latest'
         uses: EmbarkStudios/cargo-deny-action@8371184bd11e21dcf8ac82ebf8c9c9f74ebf7268 # v1.6.3∂ß
