@@ -12,11 +12,11 @@ license.workspace = true
 custom-function-list = []
 
 [dependencies]
-cached = { version = "~0.52", default-features = false }
+cached = { version = "~0.54", default-features = false }
 native-pkcs11-core = { version = "^0.2.14", path = "../native-pkcs11-core" }
 native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
 pkcs11-sys = { version = "0.2.0", path = "../pkcs11-sys" }
-thiserror = "1"
+thiserror = "2"
 tracing = "0.1.40"
 tracing-error = "0.2.0"
 tracing-journald = "0.3"
@@ -26,7 +26,7 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 crate-type = ["lib", "cdylib"]
 
 [dev-dependencies]
-serial_test = { version = "3.1.1", default-features = false }
+serial_test = { version = "3.2.0", default-features = false }
 tracing = { version = "0.1.40", default-features = false }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = [
     "env-filter",
