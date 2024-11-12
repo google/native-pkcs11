@@ -8,7 +8,7 @@ targets = [
 
 [advisories]
 yanked = "deny"
-ignore = ["RUSTSEC-2023-0071", "RUSTSEC-2024-0384"]
+ignore = ["RUSTSEC-2023-0071"]
 
 [licenses]
 allow = ["Apache-2.0", "BSD-3-Clause", "ISC", "MIT", "Unicode-DFS-2016"]
