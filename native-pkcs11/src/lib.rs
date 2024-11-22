@@ -35,7 +35,7 @@ use std::{
 };
 
 use native_pkcs11_core::{
-    attribute::{Attribute, Attributes},
+    attribute::{Attribute, AttributeType, Attributes},
     mechanism::{parse_mechanism, SUPPORTED_SIGNATURE_MECHANISMS},
     object::{self, Object},
 };
@@ -589,10 +589,18 @@ cryptoki_fn!(
             };
             let mut result = Ok(());
             for attribute in template.iter_mut() {
-                let type_ = attribute
-                    .type_
-                    .try_into()
-                    .map_err(|_| Error::AttributeTypeInvalid(attribute.type_))?;
+                let type_ = match AttributeType::try_from(attribute.type_) {
+                    Ok(t) => t,
+                    Err(_) => {
+                        tracing::debug!(
+                            type_ = ?attribute.type_,
+                            "Unsupported attribute type - marking as unavailable"
+                        );
+                        attribute.ulValueLen = CK_UNAVAILABLE_INFORMATION;
+                        // result = Err(Error::AttributeTypeInvalid(attribute.type_));
+                        continue;
+                    }
+                };
                 if let Some(value) = object.attribute(type_) {
                     let value = value.as_raw_value();
                     attribute.ulValueLen = value.len() as CK_ULONG;

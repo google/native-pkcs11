@@ -11,6 +11,7 @@ license.workspace = true
 [dependencies]
 der = "0.7.9"
 native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
+spki = "0.7"
 pkcs1 = { version = "0.7.5", default-features = false }
 pkcs11-sys = { version = "0.2.24", path = "../pkcs11-sys" }
 pkcs8 = "0.10.2"

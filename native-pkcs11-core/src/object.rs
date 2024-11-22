@@ -14,7 +14,10 @@
 
 use std::{ffi::CString, fmt::Debug, sync::Arc};
 
-use der::{asn1::OctetString, Encode};
+use der::{
+    asn1::{ObjectIdentifier, OctetString},
+    Encode,
+};
 use native_pkcs11_traits::{
     backend,
     Certificate,
@@ -35,12 +38,10 @@ use pkcs11_sys::{
     CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
     CK_PROFILE_ID,
 };
+use spki::SubjectPublicKeyInfoRef;
 use tracing::debug;
 
 use crate::attribute::{Attribute, AttributeType, Attributes};
-
-const P256_OID: pkcs8::ObjectIdentifier =
-    pkcs8::ObjectIdentifier::new_unwrap("1.2.840.10045.3.1.7");
 
 #[derive(Debug)]
 pub struct DataObject {
@@ -74,6 +75,33 @@ impl Clone for Object {
     }
 }
 
+fn extract_ec_params(der_bytes: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
+    let spki: SubjectPublicKeyInfoRef<'_> = SubjectPublicKeyInfoRef::try_from(der_bytes).unwrap();
+    // For EC keys, the algorithm parameters contain the curve OID
+    // For EC keys, the subject public key is the EC point
+    Some((
+        ObjectIdentifier::from_bytes(spki.algorithm.parameters.unwrap().value())
+            .unwrap()
+            .to_der()
+            .unwrap(),
+        OctetString::new(spki.subject_public_key.raw_bytes()).unwrap().to_der().unwrap(),
+    ))
+}
+
+fn extract_rsa_params(der_bytes: &[u8]) -> Option<(Vec<u8>, Vec<u8>, u64)> {
+    // Parse the DER-encoded SPKI
+    let spki: SubjectPublicKeyInfoRef<'_> = SubjectPublicKeyInfoRef::try_from(der_bytes).unwrap();
+    // Parse the RSA public key bytes from the SPKI
+    let rsa_pubkey = RsaPublicKey::from_der(spki.subject_public_key.raw_bytes()).ok()?;
+    let modulus = rsa_pubkey.modulus.as_bytes();
+
+    Some((
+        modulus.to_vec(),
+        rsa_pubkey.public_exponent.as_bytes().to_vec(),
+        (modulus.len() * 8) as u64,
+    ))
+}
+
 impl Object {
     pub fn attribute(&self, type_: AttributeType) -> Option<Attribute> {
         match self {
@@ -102,7 +130,19 @@ impl Object {
                 AttributeType::Class => Some(Attribute::Class(CKO_PRIVATE_KEY)),
                 AttributeType::Decrypt => Some(Attribute::Decrypt(false)),
                 AttributeType::Derive => Some(Attribute::Derive(false)),
-                AttributeType::EcParams => Some(Attribute::EcParams(P256_OID.to_der().ok()?)),
+                AttributeType::EcParams | AttributeType::EcPoint => {
+                    if private_key.algorithm() != KeyAlgorithm::Ecc {
+                        return None;
+                    }
+                    private_key.find_public_key(backend()).ok().flatten().and_then(|public_key| {
+                        let der_bytes = public_key.to_der();
+                        extract_ec_params(&der_bytes).map(|(params, point)| match type_ {
+                            AttributeType::EcParams => Attribute::EcParams(params),
+                            AttributeType::EcPoint => Attribute::EcPoint(point),
+                            _ => unreachable!(),
+                        })
+                    })
+                }
                 AttributeType::Extractable => Some(Attribute::Extractable(false)),
                 AttributeType::Id => Some(Attribute::Id(private_key.public_key_hash())),
                 AttributeType::KeyType => Some(Attribute::KeyType(match private_key.algorithm() {
@@ -111,31 +151,28 @@ impl Object {
                 })),
                 AttributeType::Label => Some(Attribute::Label(private_key.label())),
                 AttributeType::Local => Some(Attribute::Local(false)),
-                AttributeType::Modulus => {
-                    let modulus = private_key.find_public_key(backend()).ok().flatten().and_then(
-                        |public_key| {
-                            let der = public_key.to_der();
-                            RsaPublicKey::from_der(&der)
-                                .map(|pk| pk.modulus.as_bytes().to_vec())
-                                .ok()
-                        },
-                    );
-                    modulus.map(Attribute::Modulus)
+                AttributeType::Modulus
+                | AttributeType::ModulusBits
+                | AttributeType::PublicExponent => {
+                    if private_key.algorithm() != KeyAlgorithm::Rsa {
+                        return None;
+                    }
+                    private_key.find_public_key(backend()).ok().flatten().and_then(|public_key| {
+                        let der_bytes = public_key.to_der();
+                        extract_rsa_params(&der_bytes).map(
+                            |(modulus, exponent, bits)| match type_ {
+                                AttributeType::Modulus => Attribute::Modulus(modulus),
+                                AttributeType::ModulusBits => Attribute::ModulusBits(bits),
+                                AttributeType::PublicExponent => {
+                                    Attribute::PublicExponent(exponent)
+                                }
+                                _ => unreachable!(),
+                            },
+                        )
+                    })
                 }
                 AttributeType::NeverExtractable => Some(Attribute::NeverExtractable(true)),
                 AttributeType::Private => Some(Attribute::Private(true)),
-                AttributeType::PublicExponent => {
-                    let public_exponent =
-                        private_key.find_public_key(backend()).ok().flatten().and_then(
-                            |public_key| {
-                                let der = public_key.to_der();
-                                RsaPublicKey::from_der(&der)
-                                    .map(|pk| pk.public_exponent.as_bytes().to_vec())
-                                    .ok()
-                            },
-                        );
-                    public_exponent.map(Attribute::PublicExponent)
-                }
                 AttributeType::Sensitive => Some(Attribute::Sensitive(true)),
                 AttributeType::Sign => Some(Attribute::Sign(true)),
                 AttributeType::SignRecover => Some(Attribute::SignRecover(false)),
@@ -157,32 +194,43 @@ impl Object {
             },
             Object::PublicKey(pk) => match type_ {
                 AttributeType::Class => Some(Attribute::Class(CKO_PUBLIC_KEY)),
+                AttributeType::Verify => Some(Attribute::Verify(true)),
+                AttributeType::VerifyRecover => Some(Attribute::VerifyRecover(false)),
+                AttributeType::Wrap => Some(Attribute::Wrap(false)),
+                AttributeType::Encrypt => Some(Attribute::Encrypt(false)),
                 AttributeType::Derive => Some(Attribute::Derive(false)),
                 AttributeType::Label => Some(Attribute::Label(pk.label())),
                 AttributeType::Local => Some(Attribute::Local(false)),
-                AttributeType::Modulus => {
-                    let key = pk.to_der();
-                    let key = RsaPublicKey::from_der(&key).unwrap();
-                    Some(Attribute::Modulus(key.modulus.as_bytes().to_vec()))
-                }
-                AttributeType::PublicExponent => {
-                    let key = pk.to_der();
-                    let key = RsaPublicKey::from_der(&key).unwrap();
-                    Some(Attribute::Modulus(key.public_exponent.as_bytes().to_vec()))
+                AttributeType::Modulus
+                | AttributeType::ModulusBits
+                | AttributeType::PublicExponent => {
+                    if pk.algorithm() != KeyAlgorithm::Rsa {
+                        return None;
+                    }
+                    let der_bytes = pk.to_der();
+                    extract_rsa_params(&der_bytes).map(|(modulus, exponent, bits)| match type_ {
+                        AttributeType::Modulus => Attribute::Modulus(modulus),
+                        AttributeType::ModulusBits => Attribute::ModulusBits(bits),
+                        AttributeType::PublicExponent => Attribute::PublicExponent(exponent),
+                        _ => unreachable!(),
+                    })
                 }
                 AttributeType::KeyType => Some(Attribute::KeyType(match pk.algorithm() {
                     native_pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
                     native_pkcs11_traits::KeyAlgorithm::Ecc => CKK_EC,
                 })),
                 AttributeType::Id => Some(Attribute::Id(pk.public_key_hash())),
-                AttributeType::EcPoint => {
+                AttributeType::EcParams | AttributeType::EcPoint => {
                     if pk.algorithm() != KeyAlgorithm::Ecc {
                         return None;
                     }
-                    let wrapped = OctetString::new(pk.to_der()).ok()?;
-                    Some(Attribute::EcPoint(wrapped.to_der().ok()?))
+                    let der_bytes = pk.to_der();
+                    extract_ec_params(&der_bytes).map(|(params, point)| match type_ {
+                        AttributeType::EcParams => Attribute::EcParams(params),
+                        AttributeType::EcPoint => Attribute::EcPoint(point),
+                        _ => unreachable!(),
+                    })
                 }
-                AttributeType::EcParams => Some(Attribute::EcParams(P256_OID.to_der().ok()?)),
                 _ => {
                     debug!("public_key: type_ unimplemented: {:?}", type_);
                     None
