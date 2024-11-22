@@ -21,7 +21,7 @@ use std::{
 use x509_cert::der::Decode;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-pub type Digest = [u8; 20];
+pub type Digest = [u8; 64];
 
 //  The Backend is first staged so it can be stored in a Box<dyn Backend>. This
 //  allows the Backend to be reference with `&'static`.
