@@ -405,6 +405,7 @@ dependencies = [
 name = "native-pkcs11-core"
 version = "0.2.22"
 dependencies = [
+ "der",
  "native-pkcs11-keychain",
  "native-pkcs11-traits",
  "native-pkcs11-windows",
@@ -412,6 +413,7 @@ dependencies = [
  "pkcs1",
  "pkcs11-sys",
  "serial_test",
+ "spki",
  "strum",
  "strum_macros",
  "thiserror 2.0.7",
