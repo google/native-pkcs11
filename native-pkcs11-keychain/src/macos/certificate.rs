@@ -259,11 +259,7 @@ pub fn self_signed_certificate(key_algorithm: Algorithm, private_key: &SecKey) -
     ])
     .to_der()?;
 
-    let basic_constraints = BasicConstraints {
-        ca: false,
-        path_len_constraint: None,
-    }
-    .to_der()?;
+    let basic_constraints = BasicConstraints { ca: false, path_len_constraint: None }.to_der()?;
 
     let sk_and_ak_id = random_serial_number();
     let sk_id = SubjectKeyIdentifier(OctetString::new(sk_and_ak_id)?).to_der()?;

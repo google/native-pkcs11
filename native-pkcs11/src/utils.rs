@@ -16,10 +16,7 @@ use std::io::Write;
 
 pub fn right_pad_string_to_array<const N: usize>(s: impl Into<String>) -> [u8; N] {
     let mut s: String = s.into();
-    let new_len = (0..=N)
-        .rev()
-        .find(|idx| s.is_char_boundary(*idx))
-        .unwrap_or(0);
+    let new_len = (0..=N).rev().find(|idx| s.is_char_boundary(*idx)).unwrap_or(0);
     s.truncate(new_len);
 
     let mut out = [b' '; N];

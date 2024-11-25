@@ -94,15 +94,11 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
         security_framework_sys::key::Algorithm::ECDSASignatureMessageX962SHA256,
         test_payload.as_bytes(),
     )?;
-    if !generated_key
-        .public_key()
-        .ok_or("no pubkey")?
-        .verify_signature(
-            security_framework_sys::key::Algorithm::ECDSASignatureMessageX962SHA256,
-            test_payload.as_bytes(),
-            &signature,
-        )?
-    {
+    if !generated_key.public_key().ok_or("no pubkey")?.verify_signature(
+        security_framework_sys::key::Algorithm::ECDSASignatureMessageX962SHA256,
+        test_payload.as_bytes(),
+        &signature,
+    )? {
         Err("signature verification failed")?;
     }
 
@@ -149,9 +145,7 @@ fn unpersisted_public_key() -> Result<(), native_pkcs11_keychain::Error> {
 
     let pubkey_hash = key1.public_key().unwrap().application_label().unwrap();
 
-    ItemAddOptions::new(ItemAddValue::Ref(AddRef::Key(key1)))
-        .set_label(&label)
-        .add()?;
+    ItemAddOptions::new(ItemAddValue::Ref(AddRef::Key(key1))).set_label(&label).add()?;
 
     let found_key = KeychainBackend {}
         .find_private_key(native_pkcs11_traits::KeySearchOptions::Label(label))
