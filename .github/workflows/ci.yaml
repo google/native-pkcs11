@@ -37,7 +37,7 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
       - run: rustup toolchain install nightly --profile minimal --component rustfmt
-      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a
+      - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
         with:
           path: |
             ~/.cargo/bin/
@@ -64,7 +64,7 @@ jobs:
         run: cargo clippy --tests --all-features -- -D warnings
       - name: Run cargo-deny
         if: matrix.os == 'ubuntu-latest'
-        uses: EmbarkStudios/cargo-deny-action@f87fcad0e65efa7cbdec993036c394fa9be14262 # v1.6.3∂ß
+        uses: EmbarkStudios/cargo-deny-action@e2f4ede4a4e60ea15ff31bc0647485d80c66cfba # v1.6.3∂ß
 
   test:
     strategy:
@@ -78,7 +78,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           targets: aarch64-apple-darwin,x86_64-apple-darwin
-      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a
+      - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
         with:
           path: |
             ~/.cargo/bin/
