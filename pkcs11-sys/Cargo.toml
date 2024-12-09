@@ -9,4 +9,4 @@ repository.workspace = true
 license.workspace = true
 
 [build-dependencies]
-bindgen = { version = "0.70.1", optional = true }
+bindgen = { version = "0.71.1", optional = true }
