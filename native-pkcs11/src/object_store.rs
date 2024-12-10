@@ -171,8 +171,8 @@ impl ObjectStore {
     }
 
     fn find_with_backend_all_public_keys(&mut self) -> Result<()> {
-        for private_key in backend().find_all_private_keys()? {
-            self.insert(Object::PrivateKey(private_key));
+        for public_key in backend().find_all_public_keys()? {
+            self.insert(Object::PublicKey(public_key));
         }
         Ok(())
     }
