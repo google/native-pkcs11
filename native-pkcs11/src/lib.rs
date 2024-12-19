@@ -16,8 +16,8 @@
 #![allow(clippy::missing_safety_doc)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
-pub use native_pkcs11_core::Error;
 use ctor::ctor;
+pub use native_pkcs11_core::Error;
 use native_pkcs11_traits::backend;
 use tracing::metadata::LevelFilter;
 use tracing_error::ErrorLayer;
