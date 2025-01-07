@@ -14,6 +14,7 @@
 
 use std::{ffi::CString, fmt::Debug, sync::Arc};
 
+use der::{asn1::OctetString, Encode};
 use native_pkcs11_traits::{
     backend,
     Certificate,
@@ -22,10 +23,7 @@ use native_pkcs11_traits::{
     PrivateKey,
     PublicKey,
 };
-use p256::pkcs8::{
-    der::{asn1::OctetString, Encode},
-    AssociatedOid,
-};
+use p256::NistP256;
 use pkcs1::{der::Decode, RsaPublicKey};
 use pkcs11_sys::{
     CKC_X_509,
@@ -38,6 +36,7 @@ use pkcs11_sys::{
     CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
     CK_PROFILE_ID,
 };
+use pkcs8::AssociatedOid;
 use tracing::debug;
 
 use crate::attribute::{Attribute, AttributeType, Attributes};
@@ -102,9 +101,7 @@ impl Object {
                 AttributeType::Class => Some(Attribute::Class(CKO_PRIVATE_KEY)),
                 AttributeType::Decrypt => Some(Attribute::Decrypt(false)),
                 AttributeType::Derive => Some(Attribute::Derive(false)),
-                AttributeType::EcParams => {
-                    Some(Attribute::EcParams(p256::NistP256::OID.to_der().ok()?))
-                }
+                AttributeType::EcParams => Some(Attribute::EcParams(NistP256::OID.to_der().ok()?)),
                 AttributeType::Extractable => Some(Attribute::Extractable(false)),
                 AttributeType::Id => Some(Attribute::Id(private_key.public_key_hash())),
                 AttributeType::KeyType => Some(Attribute::KeyType(match private_key.algorithm() {

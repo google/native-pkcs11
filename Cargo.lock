@@ -405,12 +405,14 @@ dependencies = [
 name = "native-pkcs11-core"
 version = "0.2.23"
 dependencies = [
+ "der",
  "native-pkcs11-keychain",
  "native-pkcs11-traits",
  "native-pkcs11-windows",
  "p256",
  "pkcs1",
  "pkcs11-sys",
+ "pkcs8",
  "serial_test",
  "strum",
  "strum_macros",
