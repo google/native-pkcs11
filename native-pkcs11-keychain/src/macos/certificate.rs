@@ -209,7 +209,7 @@ pub fn import_identity(certificate: &SecCertificate) -> Result<SecIdentity> {
 
 pub fn random_serial_number() -> [u8; 16] {
     use rand::Rng;
-    rand::thread_rng().gen::<u128>().to_be_bytes()
+    rand::thread_rng().r#gen::<u128>().to_be_bytes()
 }
 
 const EXTENDED_KEY_USAGE_SERVER_AUTHENTICATION: ObjectIdentifier =

@@ -79,7 +79,7 @@ where
 macro_rules! cryptoki_fn {
     (fn $name:ident ( $($arg:ident : $type:ty),* $(,)?) $body:block) => {
         #[tracing::instrument]
-        #[no_mangle]
+        #[unsafe(no_mangle)]
         pub extern "C" fn $name($($arg: $type),*) -> CK_RV {
             // TODO(bweeks): should this be `expr` instead of `block`?
             result_to_rv(|| $body)
@@ -87,7 +87,7 @@ macro_rules! cryptoki_fn {
     };
     (unsafe fn $name:ident ( $($arg:ident : $type:ty),* $(,)?) $body:block) => {
         #[tracing::instrument]
-        #[no_mangle]
+        #[unsafe(no_mangle)]
         pub unsafe extern "C" fn $name($($arg: $type),*) -> CK_RV {
             // TODO(bweeks): should this be `expr` instead of `block`?
             result_to_rv(|| $body)
