@@ -63,19 +63,7 @@ pub enum ErrorKind {
     Generic(String),
 
     #[error("{0}")]
-    Der(#[from] x509_cert::der::Error),
-
-    #[error("{0}")]
     SecurityFramework(#[from] security_framework::base::Error),
-
-    #[error("{0}")]
-    Spki(#[from] x509_cert::spki::Error),
-
-    #[error("{0}")]
-    P256(#[from] p256::elliptic_curve::Error),
-
-    #[error("{0}")]
-    Pkcs1(#[from] rsa::pkcs1::Error),
 
     #[error("{0:?}")]
     UnsupportedSignatureAlgorithm(SignatureAlgorithm),
