@@ -39,14 +39,12 @@ fn key_lifecycle() -> Result<(), native_pkcs11_keychain::Error> {
     use macos::*;
     use security_framework::item::{ItemAddValue, Location};
     let label = &random_label();
-    let opts = GenerateKeyOptions {
-        key_type: Some(KeyType::ec()),
-        size_in_bits: None,
-        label: Some(label.into()),
-        token: Some(security_framework::key::Token::SecureEnclave),
-        location: Some(security_framework::item::Location::DataProtectionKeychain),
-        access_control: None,
-    };
+
+    let mut opts = GenerateKeyOptions::default();
+    opts.set_key_type(KeyType::ec());
+    opts.set_label(label);
+    opts.set_token(security_framework::key::Token::SecureEnclave);
+    opts.set_location(security_framework::item::Location::DataProtectionKeychain);
 
     let generated_key = security_framework::key::SecKey::new(&opts)?;
 

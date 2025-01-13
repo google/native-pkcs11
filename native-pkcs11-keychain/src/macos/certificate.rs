@@ -365,7 +365,7 @@ mod test {
         use crate::key::generate_key;
 
         let label = random_label();
-        let key = generate_key(Algorithm::RSA, &label, Some(keychain::location()?))?;
+        let key = generate_key(Algorithm::RSA, &label, keychain::location()?)?;
 
         let cert = self_signed_certificate(Algorithm::RSA, &key)?;
 

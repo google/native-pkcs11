@@ -20,6 +20,9 @@ skip = [
     { name = "regex-syntax", version = "=0.6.29" },
     { name = "thiserror-impl", version = "=1.0.69" },
     { name = "thiserror", version = "=1.0.69" },
+    { name = "windows_x86_64_gnu", version = "=0.52.6" },
+    { name = "windows_x86_64_msvc", version = "=0.52.6" },
+    { name = "windows-targets", version = "=0.52.6" },
 ]
 
 [sources]

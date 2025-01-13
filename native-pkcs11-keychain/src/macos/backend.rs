@@ -138,7 +138,7 @@ impl Backend for KeychainBackend {
             native_pkcs11_traits::KeyAlgorithm::Ecc => Algorithm::ECC,
         };
         let label = label.unwrap_or("");
-        Ok(generate_key(alg, label, Some(keychain::location()?))
+        Ok(generate_key(alg, label, keychain::location()?)
             .map(|key| KeychainPrivateKey::new(key, label, None).map(Arc::new))??)
     }
 
