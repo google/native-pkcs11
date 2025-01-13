@@ -20,7 +20,7 @@ pub use native_pkcs11_core::Error;
 use native_pkcs11_traits::backend;
 use tracing::metadata::LevelFilter;
 use tracing_error::ErrorLayer;
-use tracing_subscriber::{fmt::format::FmtSpan, prelude::*, EnvFilter, Registry};
+use tracing_subscriber::{EnvFilter, Registry, fmt::format::FmtSpan, prelude::*};
 mod object_store;
 mod sessions;
 mod utils;
@@ -29,14 +29,14 @@ use std::{
     cmp,
     slice,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Once,
+        atomic::{AtomicBool, Ordering},
     },
 };
 
 use native_pkcs11_core::{
     attribute::{Attribute, Attributes},
-    mechanism::{parse_mechanism, SUPPORTED_SIGNATURE_MECHANISMS},
+    mechanism::{SUPPORTED_SIGNATURE_MECHANISMS, parse_mechanism},
     object::{self, Object},
 };
 use pkcs11_sys::*;
@@ -134,7 +134,7 @@ macro_rules! valid_slot {
 }
 
 //  Export necessary items for registering a custom Backend.
-pub use pkcs11_sys::{CKR_OK, CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV};
+pub use pkcs11_sys::{CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV, CKR_OK};
 pub static mut FUNC_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
     // In this structure ‘version’ is the cryptoki specification version number. The major and minor
     // versions must be set to 0x02 and 0x28 indicating a version 2.40 compatible structure.

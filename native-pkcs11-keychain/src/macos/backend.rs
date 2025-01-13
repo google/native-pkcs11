@@ -24,15 +24,15 @@ use security_framework_sys::item::kSecAttrLabel;
 use tracing::instrument;
 
 use crate::{
-    certificate::{find_all_certificates, KeychainCertificate},
+    certificate::{KeychainCertificate, find_all_certificates},
     key::{
+        Algorithm,
+        KeychainPrivateKey,
+        KeychainPublicKey,
         find_all_keys,
         find_key,
         find_key2,
         generate_key,
-        Algorithm,
-        KeychainPrivateKey,
-        KeychainPublicKey,
     },
     keychain,
 };

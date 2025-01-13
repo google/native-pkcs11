@@ -16,21 +16,21 @@ use std::collections::HashMap;
 
 use cached::{Cached, TimedCache};
 use native_pkcs11_core::{
-    attribute::{Attribute, AttributeType, Attributes},
     Result,
+    attribute::{Attribute, AttributeType, Attributes},
 };
-use native_pkcs11_traits::{backend, KeySearchOptions};
+use native_pkcs11_traits::{KeySearchOptions, backend};
 use pkcs11_sys::{
+    CK_OBJECT_HANDLE,
     CKO_CERTIFICATE,
     CKO_PRIVATE_KEY,
     CKO_PUBLIC_KEY,
     CKO_SECRET_KEY,
     CKP_BASELINE_PROVIDER,
-    CK_OBJECT_HANDLE,
 };
 use tracing::{instrument, warn};
 
-use crate::{object::Object, Error};
+use crate::{Error, object::Object};
 
 #[derive(Debug)]
 pub struct ObjectStore {
@@ -200,7 +200,7 @@ impl Default for ObjectStore {
 mod tests {
     use std::vec;
 
-    use native_pkcs11_traits::{backend, random_label, KeyAlgorithm};
+    use native_pkcs11_traits::{KeyAlgorithm, backend, random_label};
     use pkcs11_sys::CKO_PRIVATE_KEY;
     use serial_test::serial;
 
