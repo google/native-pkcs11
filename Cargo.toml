@@ -14,8 +14,8 @@ authors = [
     "Brandon Weeks <bweeks@google.com>",
     "Kevin King <kcking@google.com>",
 ]
-edition = "2021"
-rust-version = "1.80"
+edition = "2024"
+rust-version = "1.85"
 repository = "https://github.com/google/native-pkcs11"
 license = "Apache-2.0"
 

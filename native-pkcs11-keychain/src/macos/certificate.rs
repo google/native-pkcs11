@@ -28,15 +28,17 @@ use security_framework::{
 };
 use security_framework_sys::base::errSecItemNotFound;
 use x509_cert::{
+    Certificate,
+    TbsCertificate,
     der::{
-        asn1::{GeneralizedTime, Ia5String, OctetString},
-        oid::ObjectIdentifier,
         Decode,
         Encode,
+        asn1::{GeneralizedTime, Ia5String, OctetString},
+        oid::ObjectIdentifier,
     },
     ext::{
+        Extension,
         pkix::{
-            name::GeneralName,
             AuthorityKeyIdentifier,
             BasicConstraints,
             ExtendedKeyUsage,
@@ -44,21 +46,19 @@ use x509_cert::{
             KeyUsages,
             SubjectAltName,
             SubjectKeyIdentifier,
+            name::GeneralName,
         },
-        Extension,
     },
     name::{Name, RdnSequence},
     serial_number::SerialNumber,
-    spki::{der::asn1::BitString, EncodePublicKey, SubjectPublicKeyInfo},
+    spki::{EncodePublicKey, SubjectPublicKeyInfo, der::asn1::BitString},
     time::Validity,
-    Certificate,
-    TbsCertificate,
 };
 
 use crate::{
+    Result,
     key::{Algorithm, KeychainPublicKey},
     keychain,
-    Result,
 };
 
 pub struct KeychainCertificate {
@@ -209,7 +209,7 @@ pub fn import_identity(certificate: &SecCertificate) -> Result<SecIdentity> {
 
 pub fn random_serial_number() -> [u8; 16] {
     use rand::Rng;
-    rand::thread_rng().gen::<u128>().to_be_bytes()
+    rand::thread_rng().r#gen::<u128>().to_be_bytes()
 }
 
 const EXTENDED_KEY_USAGE_SERVER_AUTHENTICATION: ObjectIdentifier =
@@ -380,18 +380,20 @@ mod test {
         // such that  they are visible to the next search query.
         std::thread::sleep(std::time::Duration::from_secs(1));
 
-        assert!(crate::macos::keychain::item_search_options()?
-            .class(ItemClass::identity())
-            .limit(Limit::All)
-            .load_refs(true)
-            .search()?
-            .iter()
-            .any(|result| match result {
-                security_framework::item::SearchResult::Ref(
-                    security_framework::item::Reference::Identity(id),
-                ) => id.certificate().unwrap().subject() == cert.subject(),
-                _ => false,
-            }));
+        assert!(
+            crate::macos::keychain::item_search_options()?
+                .class(ItemClass::identity())
+                .limit(Limit::All)
+                .load_refs(true)
+                .search()?
+                .iter()
+                .any(|result| match result {
+                    security_framework::item::SearchResult::Ref(
+                        security_framework::item::Reference::Identity(id),
+                    ) => id.certificate().unwrap().subject() == cert.subject(),
+                    _ => false,
+                })
+        );
 
         //  Clean up
         cert.delete()?;
