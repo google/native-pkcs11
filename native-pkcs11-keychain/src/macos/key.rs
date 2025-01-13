@@ -466,11 +466,8 @@ mod test {
         for _ in 0..20 {
             handles.push(std::thread::spawn(try_gen_key));
         }
-        assert!(handles
-            .into_iter()
-            .map(|h| h.join().unwrap())
-            //  fold so we don't early exit other threads
-            .all(|b| b));
+        //  fold so we don't early exit other threads
+        assert!(handles.into_iter().all(|h| h.join().unwrap()));
     }
 
     #[test]
