@@ -1,6 +1,6 @@
 [package]
 name = "native-pkcs11-windows"
-version = "0.2.23"
+version = "0.2.24"
 description = "[wip] native-pkcs11 backend for windows."
 authors.workspace = true
 edition.workspace = true
