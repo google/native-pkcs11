@@ -26,13 +26,6 @@ fn keychain() -> Result<Option<SecKeychain>> {
     }
 }
 
-pub(crate) fn keychain_or_default() -> Result<SecKeychain> {
-    match keychain()? {
-        Some(keychain) => Ok(keychain),
-        None => Ok(SecKeychain::default()?),
-    }
-}
-
 pub(crate) fn location() -> Result<Location> {
     match keychain()? {
         Some(keychain) => Ok(Location::FileKeychain(keychain)),
