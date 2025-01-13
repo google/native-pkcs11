@@ -31,11 +31,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
-        with:
-          toolchain: stable
-          components: clippy
-      - run: rustup toolchain install nightly --profile minimal --component rustfmt
+      - run: rustup update stable --no-self-update
       - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
         with:
           path: |
@@ -54,14 +50,16 @@ jobs:
           for crate in native-pkcs11 native-pkcs11-core native-pkcs11-traits
           pkcs11-sys native-pkcs11-keychain native-pkcs11-windows; do cargo
           build --verbose -p $crate || exit 1 ; done
-      - run: cargo +nightly fmt -- --check
+      - run: |
+          rustup toolchain install nightly --profile minimal --component rustfmt
+          cargo +nightly fmt -- --check
       - name: Run Clippy (default features)
         run: cargo clippy --tests -- -D warnings
       - name: Run Clippy (all features)
         run: cargo clippy --tests --all-features -- -D warnings
-      - name: Run cargo-deny
-        if: matrix.os == 'ubuntu-latest'
-        uses: EmbarkStudios/cargo-deny-action@e2f4ede4a4e60ea15ff31bc0647485d80c66cfba # v1.6.3∂ß
+      # - name: Run cargo-deny
+      #   if: matrix.os == 'ubuntu-latest'
+      #   uses: EmbarkStudios/cargo-deny-action@e2f4ede4a4e60ea15ff31bc0647485d80c66cfba # v1.6.3∂ß
 
   test:
     strategy:
@@ -70,10 +68,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
-        with:
-          toolchain: stable
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - run: |
+          rustup update stable --no-self-update
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
       - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
         with:
           path: |

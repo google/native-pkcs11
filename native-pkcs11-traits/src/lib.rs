@@ -203,7 +203,7 @@ pub trait Backend: Send + Sync {
 }
 
 pub fn random_label() -> String {
-    use rand::{distr::Alphanumeric, Rng};
+    use rand::{Rng, distr::Alphanumeric};
     String::from("bumpkey ")
         + &rand::rng().sample_iter(&Alphanumeric).take(32).map(char::from).collect::<String>()
 }

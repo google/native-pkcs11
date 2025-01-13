@@ -14,13 +14,13 @@
 
 use std::{
     collections::HashMap,
-    sync::{self, atomic::Ordering, Arc, LazyLock},
+    sync::{self, Arc, LazyLock, atomic::Ordering},
 };
 
 use native_pkcs11_traits::{PrivateKey, SignatureAlgorithm};
 use pkcs11_sys::{CK_BYTE_PTR, CK_FLAGS, CK_OBJECT_HANDLE, CK_SESSION_HANDLE, CK_ULONG_PTR};
 
-use crate::{object_store::ObjectStore, Error, Result};
+use crate::{Error, Result, object_store::ObjectStore};
 
 // "Valid session handles in Cryptoki always have nonzero values."
 #[cfg(not(target_os = "windows"))]

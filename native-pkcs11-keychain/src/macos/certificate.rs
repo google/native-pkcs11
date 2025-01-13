@@ -18,7 +18,7 @@ use security_framework::{
 };
 use security_framework_sys::base::errSecItemNotFound;
 
-use crate::{key::KeychainPublicKey, Result};
+use crate::{Result, key::KeychainPublicKey};
 
 pub(crate) struct KeychainCertificate {
     pub label: String,

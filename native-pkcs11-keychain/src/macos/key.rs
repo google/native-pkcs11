@@ -334,13 +334,13 @@ pub fn find_all_keys(key_class: KeyClass) -> Result<Vec<SecKey>> {
 #[cfg(test)]
 mod test {
     use core_foundation::base::{TCFType, ToVoid};
-    use native_pkcs11_traits::{random_label, Backend};
+    use native_pkcs11_traits::{Backend, random_label};
     use security_framework::item::{AddRef, ItemAddOptions, Limit};
     use security_framework_sys::item::{kSecAttrLabel, kSecValueRef};
     use serial_test::serial;
 
     use super::*;
-    use crate::{keychain, KeychainBackend};
+    use crate::{KeychainBackend, keychain};
     #[test]
     #[serial]
     fn key_label() -> crate::Result<()> {
