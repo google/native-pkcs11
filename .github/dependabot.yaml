@@ -22,6 +22,8 @@ updates:
       cargo:
         patterns:
           - "*"
+    reviewers:
+      - "brandonweeks"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -31,3 +33,5 @@ updates:
       github-actions:
         patterns:
           - "*"
+    reviewers:
+      - "brandonweeks"
