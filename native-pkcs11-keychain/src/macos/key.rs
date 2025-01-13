@@ -249,24 +249,18 @@ impl PublicKey for KeychainPublicKey {
 }
 
 #[instrument(skip(location))]
-pub fn generate_key(
-    algorithm: Algorithm,
-    label: &str,
-    location: Option<Location>,
-) -> Result<SecKey> {
+pub fn generate_key(algorithm: Algorithm, label: &str, location: Location) -> Result<SecKey> {
     let (ty, size) = match algorithm {
         Algorithm::RSA => (KeyType::rsa(), 2048),
         Algorithm::ECC => (KeyType::ec(), 256),
     };
 
-    let opts = GenerateKeyOptions {
-        key_type: Some(ty),
-        size_in_bits: Some(size),
-        label: Some(label.into()),
-        token: Some(security_framework::key::Token::Software),
-        location,
-        access_control: None,
-    };
+    let mut opts = GenerateKeyOptions::default();
+    opts.set_key_type(ty);
+    opts.set_size_in_bits(size);
+    opts.set_label(label);
+    opts.set_token(security_framework::key::Token::Software);
+    opts.set_location(location);
 
     Ok(SecKey::new(&opts).map_err(|e| e.to_string())?)
 }
@@ -356,7 +350,7 @@ mod test {
     #[serial]
     fn key_label() -> crate::Result<()> {
         let label = random_label();
-        let key = generate_key(Algorithm::RSA, &label, Some(keychain::location()?))?;
+        let key = generate_key(Algorithm::RSA, &label, keychain::location()?)?;
 
         let mut found = false;
         for res in crate::keychain::item_search_options()?
@@ -413,7 +407,7 @@ mod test {
         ] {
             let label = &random_label();
 
-            let key = generate_key(key_alg, label, Some(keychain::location()?))?;
+            let key = generate_key(key_alg, label, keychain::location()?)?;
 
             let first_pubkey = key
                 .public_key()
@@ -450,7 +444,7 @@ mod test {
     fn stress_test_keygen() {
         let try_gen_key = || -> bool {
             let label = random_label();
-            match generate_key(Algorithm::RSA, &label, Some(keychain::location().unwrap())) {
+            match generate_key(Algorithm::RSA, &label, keychain::location().unwrap()) {
                 Ok(key) => {
                     let _ = key.delete();
                     true
@@ -473,8 +467,8 @@ mod test {
     #[test]
     #[ignore = "https://github.com/google/native-pkcs11/issues/302"]
     fn keychain_pubkey_hash_find() -> Result<()> {
-        let key1 = generate_key(Algorithm::ECC, &random_label(), Some(keychain::location()?))?;
-        let key2 = generate_key(Algorithm::ECC, &random_label(), Some(keychain::location()?))?;
+        let key1 = generate_key(Algorithm::ECC, &random_label(), keychain::location()?)?;
+        let key2 = generate_key(Algorithm::ECC, &random_label(), keychain::location()?)?;
         assert_ne!(key1.application_label(), key2.application_label());
 
         for keyclass in [KeyClass::public(), KeyClass::private()] {
