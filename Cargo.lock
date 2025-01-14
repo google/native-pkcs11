@@ -292,6 +292,7 @@ dependencies = [
  "pkcs11-sys",
  "pkcs8",
  "serial_test",
+ "spki",
  "strum",
  "strum_macros",
  "thiserror 2.0.11",
