@@ -14,7 +14,10 @@
 
 use std::{ffi::CString, fmt::Debug, sync::Arc};
 
-use der::{asn1::OctetString, Encode};
+use der::{
+    asn1::{ObjectIdentifier, OctetString},
+    Encode,
+};
 use native_pkcs11_traits::{
     backend,
     Certificate,
@@ -23,11 +26,7 @@ use native_pkcs11_traits::{
     PrivateKey,
     PublicKey,
 };
-
-use spki::SubjectPublicKeyInfoRef;
 use pkcs1::{der::Decode, RsaPublicKey};
-use der::{asn1::OctetString, asn1::ObjectIdentifier, Encode};
-
 use pkcs11_sys::{
     CKC_X_509,
     CKK_EC,
@@ -39,6 +38,7 @@ use pkcs11_sys::{
     CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
     CK_PROFILE_ID,
 };
+use spki::SubjectPublicKeyInfoRef;
 use tracing::debug;
 
 use crate::attribute::{Attribute, AttributeType, Attributes};
@@ -83,8 +83,14 @@ fn extract_ec_params(der_bytes: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
     // For EC keys, the algorithm parameters contain the curve OID
     // For EC keys, the subject public key is the EC point
     Some((
-        ObjectIdentifier::from_bytes(spki.algorithm.parameters.unwrap().value()).unwrap().to_der().unwrap(),
-        OctetString::new(spki.subject_public_key.raw_bytes()).unwrap().to_der().unwrap(),
+        ObjectIdentifier::from_bytes(spki.algorithm.parameters.unwrap().value())
+            .unwrap()
+            .to_der()
+            .unwrap(),
+        OctetString::new(spki.subject_public_key.raw_bytes())
+            .unwrap()
+            .to_der()
+            .unwrap(),
     ))
 }
 
@@ -140,12 +146,10 @@ impl Object {
                         .flatten()
                         .and_then(|public_key| {
                             let der_bytes = public_key.to_der();
-                            extract_ec_params(&der_bytes).map(|(params, point)| {
-                                match type_ {
-                                    AttributeType::EcParams => Attribute::EcParams(params),
-                                    AttributeType::EcPoint => Attribute::EcPoint(point),
-                                    _ => unreachable!()
-                                }
+                            extract_ec_params(&der_bytes).map(|(params, point)| match type_ {
+                                AttributeType::EcParams => Attribute::EcParams(params),
+                                AttributeType::EcPoint => Attribute::EcPoint(point),
+                                _ => unreachable!(),
                             })
                         })
                 }
@@ -157,7 +161,9 @@ impl Object {
                 })),
                 AttributeType::Label => Some(Attribute::Label(private_key.label())),
                 AttributeType::Local => Some(Attribute::Local(false)),
-                AttributeType::Modulus | AttributeType::ModulusBits | AttributeType::PublicExponent => {
+                AttributeType::Modulus
+                | AttributeType::ModulusBits
+                | AttributeType::PublicExponent => {
                     if private_key.algorithm() != KeyAlgorithm::Rsa {
                         return None;
                     }
@@ -171,8 +177,10 @@ impl Object {
                                 match type_ {
                                     AttributeType::Modulus => Attribute::Modulus(modulus),
                                     AttributeType::ModulusBits => Attribute::ModulusBits(bits),
-                                    AttributeType::PublicExponent => Attribute::PublicExponent(exponent),
-                                    _ => unreachable!()
+                                    AttributeType::PublicExponent => {
+                                        Attribute::PublicExponent(exponent)
+                                    }
+                                    _ => unreachable!(),
                                 }
                             })
                         })
@@ -207,18 +215,18 @@ impl Object {
                 AttributeType::Derive => Some(Attribute::Derive(false)),
                 AttributeType::Label => Some(Attribute::Label(pk.label())),
                 AttributeType::Local => Some(Attribute::Local(false)),
-                AttributeType::Modulus | AttributeType::ModulusBits | AttributeType::PublicExponent => {
+                AttributeType::Modulus
+                | AttributeType::ModulusBits
+                | AttributeType::PublicExponent => {
                     if pk.algorithm() != KeyAlgorithm::Rsa {
                         return None;
                     }
                     let der_bytes = pk.to_der();
-                    extract_rsa_params(&der_bytes).map(|(modulus, exponent, bits)| {
-                        match type_ {
-                            AttributeType::Modulus => Attribute::Modulus(modulus),
-                            AttributeType::ModulusBits => Attribute::ModulusBits(bits),
-                            AttributeType::PublicExponent => Attribute::PublicExponent(exponent),
-                            _ => unreachable!()
-                        }
+                    extract_rsa_params(&der_bytes).map(|(modulus, exponent, bits)| match type_ {
+                        AttributeType::Modulus => Attribute::Modulus(modulus),
+                        AttributeType::ModulusBits => Attribute::ModulusBits(bits),
+                        AttributeType::PublicExponent => Attribute::PublicExponent(exponent),
+                        _ => unreachable!(),
                     })
                 }
                 AttributeType::KeyType => Some(Attribute::KeyType(match pk.algorithm() {
@@ -231,12 +239,10 @@ impl Object {
                         return None;
                     }
                     let der_bytes = pk.to_der();
-                    extract_ec_params(&der_bytes).map(|(params, point)| {
-                        match type_ {
-                            AttributeType::EcParams => Attribute::EcParams(params),
-                            AttributeType::EcPoint => Attribute::EcPoint(point),
-                            _ => unreachable!()
-                        }
+                    extract_ec_params(&der_bytes).map(|(params, point)| match type_ {
+                        AttributeType::EcParams => Attribute::EcParams(params),
+                        AttributeType::EcPoint => Attribute::EcPoint(point),
+                        _ => unreachable!(),
                     })
                 }
                 _ => {
