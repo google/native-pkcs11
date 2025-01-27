@@ -160,10 +160,7 @@ impl PrivateKey for KeychainPrivateKey {
 
 fn sec_key_algorithm(sec_key: &SecKey) -> Result<KeyAlgorithm> {
     let attributes = sec_key.attributes();
-    if attributes
-        .find(unsafe { kSecAttrTokenID }.to_void())
-        .is_some()
-    {
+    if attributes.find(unsafe { kSecAttrTokenID }.to_void()).is_some() {
         //  The only possible kSecAttrtokenID is kSecAttrTokenIDSecureEnclave.
         //
         //  SecureEnclave keys do not have kSecAttrKeyType populated, but we can
@@ -194,9 +191,7 @@ pub struct KeychainPublicKey {
 impl KeychainPublicKey {
     #[instrument]
     pub fn new(sec_key: SecKey, label: impl Into<String> + Debug) -> Result<Self> {
-        let der = sec_key
-            .external_representation()
-            .ok_or("no external representation")?;
+        let der = sec_key.external_representation().ok_or("no external representation")?;
         let key_ty = sec_key_algorithm(&sec_key)?;
         Ok(Self {
             public_key_hash: sec_key.application_label().ok_or("no application_label")?,
@@ -396,14 +391,8 @@ mod test {
     #[serial]
     fn key_lifecycle() -> Result<()> {
         for (key_alg, sig_alg) in [
-            (
-                Algorithm::ECC,
-                security_framework_sys::key::Algorithm::ECDSASignatureDigestX962,
-            ),
-            (
-                Algorithm::RSA,
-                security_framework_sys::key::Algorithm::RSASignatureDigestPKCS1v15Raw,
-            ),
+            (Algorithm::ECC, security_framework_sys::key::Algorithm::ECDSASignatureDigestX962),
+            (Algorithm::RSA, security_framework_sys::key::Algorithm::RSASignatureDigestPKCS1v15Raw),
         ] {
             let label = &random_label();
 
@@ -427,10 +416,7 @@ mod test {
             let sig_valid = loaded_pubkey.verify_signature(sig_alg, &payload, &signature)?;
             assert!(sig_valid);
 
-            assert_eq!(
-                loaded_pubkey.external_representation().unwrap().to_vec(),
-                first_pubkey
-            );
+            assert_eq!(loaded_pubkey.external_representation().unwrap().to_vec(), first_pubkey);
 
             loaded_key.public_key().ok_or("no pubkey")?.delete()?;
             loaded_key.delete()?;
@@ -505,18 +491,14 @@ mod test {
 
         let label = random_label();
         let key1 = SecKey::new(
-            GenerateKeyOptions::default()
-                .set_key_type(KeyType::ec())
-                .set_label(&label),
+            GenerateKeyOptions::default().set_key_type(KeyType::ec()).set_label(&label),
         )?;
 
         let pubkey_hash = key1.public_key().unwrap().application_label().unwrap();
 
-        ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(AddRef::Key(
-            key1,
-        )))
-        .set_label(&label)
-        .add()?;
+        ItemAddOptions::new(security_framework::item::ItemAddValue::Ref(AddRef::Key(key1)))
+            .set_label(&label)
+            .add()?;
 
         //  NOTE(kcking): this fails to find the generated key, most likely
         //  because application_label is not automatically populated by

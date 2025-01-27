@@ -133,15 +133,13 @@ impl From<Mechanism> for SignatureAlgorithm {
             Mechanism::RsaPkcsSha256 => SignatureAlgorithm::RsaPkcs1v15Sha256,
             Mechanism::RsaPkcsSha384 => SignatureAlgorithm::RsaPkcs1v15Sha384,
             Mechanism::RsaPkcsSha512 => SignatureAlgorithm::RsaPkcs1v15Sha512,
-            Mechanism::RsaPss {
-                digest_algorithm,
-                mask_generation_function,
-                salt_length,
-            } => SignatureAlgorithm::RsaPss {
-                digest: digest_algorithm,
-                mask_generation_function,
-                salt_length,
-            },
+            Mechanism::RsaPss { digest_algorithm, mask_generation_function, salt_length } => {
+                SignatureAlgorithm::RsaPss {
+                    digest: digest_algorithm,
+                    mask_generation_function,
+                    salt_length,
+                }
+            }
         }
     }
 }

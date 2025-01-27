@@ -58,9 +58,7 @@ impl Session {
             Some(sign_ctx) => sign_ctx,
             None => return Err(Error::OperationNotInitialized),
         };
-        let data = data
-            .or(sign_ctx.payload.as_deref())
-            .ok_or(Error::OperationNotInitialized)?;
+        let data = data.or(sign_ctx.payload.as_deref()).ok_or(Error::OperationNotInitialized)?;
         let signature = match sign_ctx.private_key.sign(&sign_ctx.algorithm, data) {
             Ok(sig) => sig,
             Err(e) => {
@@ -94,13 +92,7 @@ pub struct Session {
 
 pub fn create(flags: CK_FLAGS) -> CK_SESSION_HANDLE {
     let handle = NEXT_SESSION_HANDLE.fetch_add(1, Ordering::SeqCst);
-    SESSIONS.lock().unwrap().insert(
-        handle,
-        Session {
-            flags,
-            ..Default::default()
-        },
-    );
+    SESSIONS.lock().unwrap().insert(handle, Session { flags, ..Default::default() });
     handle
 }
 

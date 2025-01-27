@@ -286,18 +286,18 @@ impl TryFrom<CK_ATTRIBUTE> for Attribute {
             AttributeType::AlwaysSensitive => {
                 Ok(Attribute::AlwaysSensitive(try_u8_into_bool(val)?))
             }
-            AttributeType::Application => Ok(Attribute::Application(CString::from_vec_with_nul(
-                val.to_vec(),
-            )?)),
+            AttributeType::Application => {
+                Ok(Attribute::Application(CString::from_vec_with_nul(val.to_vec())?))
+            }
             AttributeType::CertificateCategory => Ok(Attribute::CertificateCategory(
                 CK_CERTIFICATE_CATEGORY::from_ne_bytes(val.try_into()?),
             )),
-            AttributeType::CertificateType => Ok(Attribute::CertificateType(
-                CK_CERTIFICATE_TYPE::from_ne_bytes(val.try_into()?),
-            )),
-            AttributeType::Class => Ok(Attribute::Class(CK_OBJECT_CLASS::from_ne_bytes(
-                val.try_into()?,
-            ))),
+            AttributeType::CertificateType => {
+                Ok(Attribute::CertificateType(CK_CERTIFICATE_TYPE::from_ne_bytes(val.try_into()?)))
+            }
+            AttributeType::Class => {
+                Ok(Attribute::Class(CK_OBJECT_CLASS::from_ne_bytes(val.try_into()?)))
+            }
             AttributeType::Coefficient => Ok(Attribute::Coefficient(val.to_vec())),
             AttributeType::Decrypt => Ok(Attribute::Decrypt(try_u8_into_bool(val)?)),
             AttributeType::Derive => Ok(Attribute::Derive(try_u8_into_bool(val)?)),
@@ -309,15 +309,15 @@ impl TryFrom<CK_ATTRIBUTE> for Attribute {
             AttributeType::Extractable => Ok(Attribute::Extractable(try_u8_into_bool(val)?)),
             AttributeType::Id => Ok(Attribute::Id(val.to_vec())),
             AttributeType::Issuer => Ok(Attribute::Issuer(val.to_vec())),
-            AttributeType::KeyType => Ok(Attribute::KeyType(CK_KEY_TYPE::from_ne_bytes(
-                val.try_into()?,
-            ))),
+            AttributeType::KeyType => {
+                Ok(Attribute::KeyType(CK_KEY_TYPE::from_ne_bytes(val.try_into()?)))
+            }
             AttributeType::Label => Ok(Attribute::Label(String::from_utf8(val.to_vec())?)),
             AttributeType::Local => Ok(Attribute::Local(try_u8_into_bool(val)?)),
             AttributeType::Modulus => Ok(Attribute::Modulus(val.to_vec())),
-            AttributeType::ModulusBits => Ok(Attribute::ModulusBits(CK_ULONG::from_ne_bytes(
-                val.try_into()?,
-            ))),
+            AttributeType::ModulusBits => {
+                Ok(Attribute::ModulusBits(CK_ULONG::from_ne_bytes(val.try_into()?)))
+            }
             AttributeType::NeverExtractable => {
                 Ok(Attribute::NeverExtractable(try_u8_into_bool(val)?))
             }
@@ -325,9 +325,9 @@ impl TryFrom<CK_ATTRIBUTE> for Attribute {
             AttributeType::Prime2 => Ok(Attribute::Prime2(val.to_vec())),
             AttributeType::Private => Ok(Attribute::Private(try_u8_into_bool(val)?)),
             AttributeType::PrivateExponent => Ok(Attribute::PrivateExponent(val.to_vec())),
-            AttributeType::ProfileId => Ok(Attribute::ProfileId(CK_ULONG::from_ne_bytes(
-                val.try_into()?,
-            ))),
+            AttributeType::ProfileId => {
+                Ok(Attribute::ProfileId(CK_ULONG::from_ne_bytes(val.try_into()?)))
+            }
             AttributeType::PublicExponent => Ok(Attribute::PublicExponent(val.to_vec())),
             AttributeType::Sensitive => Ok(Attribute::Sensitive(try_u8_into_bool(val)?)),
             AttributeType::SerialNumber => Ok(Attribute::SerialNumber(val.to_vec())),
@@ -338,9 +338,9 @@ impl TryFrom<CK_ATTRIBUTE> for Attribute {
             AttributeType::Trusted => Ok(Attribute::Trusted(try_u8_into_bool(val)?)),
             AttributeType::Unwrap => Ok(Attribute::Unwrap(try_u8_into_bool(val)?)),
             AttributeType::Value => Ok(Attribute::Value(val.to_vec())),
-            AttributeType::ValueLen => Ok(Attribute::ValueLen(CK_ULONG::from_ne_bytes(
-                val.try_into()?,
-            ))),
+            AttributeType::ValueLen => {
+                Ok(Attribute::ValueLen(CK_ULONG::from_ne_bytes(val.try_into()?)))
+            }
             AttributeType::Verify => Ok(Attribute::Verify(try_u8_into_bool(val)?)),
             AttributeType::VerifyRecover => Ok(Attribute::VerifyRecover(try_u8_into_bool(val)?)),
             AttributeType::Wrap => Ok(Attribute::Wrap(try_u8_into_bool(val)?)),
