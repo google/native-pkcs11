@@ -78,9 +78,9 @@ impl Object {
     pub fn attribute(&self, type_: AttributeType) -> Option<Attribute> {
         match self {
             Object::Certificate(cert) => match type_ {
-                AttributeType::CertificateCategory => Some(Attribute::CertificateCategory(
-                    CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
-                )),
+                AttributeType::CertificateCategory => {
+                    Some(Attribute::CertificateCategory(CK_CERTIFICATE_CATEGORY_UNSPECIFIED))
+                }
                 AttributeType::CertificateType => Some(Attribute::CertificateType(CKC_X_509)),
                 AttributeType::Class => Some(Attribute::Class(CKO_CERTIFICATE)),
                 AttributeType::Id => Some(Attribute::Id(cert.public_key().public_key_hash())),
@@ -112,31 +112,28 @@ impl Object {
                 AttributeType::Label => Some(Attribute::Label(private_key.label())),
                 AttributeType::Local => Some(Attribute::Local(false)),
                 AttributeType::Modulus => {
-                    let modulus = private_key
-                        .find_public_key(backend())
-                        .ok()
-                        .flatten()
-                        .and_then(|public_key| {
+                    let modulus = private_key.find_public_key(backend()).ok().flatten().and_then(
+                        |public_key| {
                             let der = public_key.to_der();
                             RsaPublicKey::from_der(&der)
                                 .map(|pk| pk.modulus.as_bytes().to_vec())
                                 .ok()
-                        });
+                        },
+                    );
                     modulus.map(Attribute::Modulus)
                 }
                 AttributeType::NeverExtractable => Some(Attribute::NeverExtractable(true)),
                 AttributeType::Private => Some(Attribute::Private(true)),
                 AttributeType::PublicExponent => {
-                    let public_exponent = private_key
-                        .find_public_key(backend())
-                        .ok()
-                        .flatten()
-                        .and_then(|public_key| {
-                            let der = public_key.to_der();
-                            RsaPublicKey::from_der(&der)
-                                .map(|pk| pk.public_exponent.as_bytes().to_vec())
-                                .ok()
-                        });
+                    let public_exponent =
+                        private_key.find_public_key(backend()).ok().flatten().and_then(
+                            |public_key| {
+                                let der = public_key.to_der();
+                                RsaPublicKey::from_der(&der)
+                                    .map(|pk| pk.public_exponent.as_bytes().to_vec())
+                                    .ok()
+                            },
+                        );
                     public_exponent.map(Attribute::PublicExponent)
                 }
                 AttributeType::Sensitive => Some(Attribute::Sensitive(true)),
