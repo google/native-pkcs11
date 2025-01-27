@@ -6,10 +6,6 @@ targets = [
     { triple = "x86_64-unknown-linux-gnu" },
 ]
 
-[advisories]
-yanked = "deny"
-ignore = ["RUSTSEC-2023-0071"]
-
 [licenses]
 allow = ["Apache-2.0", "BSD-3-Clause", "ISC", "MIT", "Unicode-DFS-2016"]
 
@@ -23,6 +19,7 @@ skip = [
     { name = "windows_x86_64_gnu", version = "=0.52.6" },
     { name = "windows_x86_64_msvc", version = "=0.52.6" },
     { name = "windows-targets", version = "=0.52.6" },
+    { name = "zerocopy", version = "=0.7.35" },
 ]
 
 [sources]
