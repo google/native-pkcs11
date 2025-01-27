@@ -1,6 +1,6 @@
 [package]
 name = "native-pkcs11-windows"
-version = "0.2.24"
+version = "0.2.25"
 description = "[wip] native-pkcs11 backend for windows."
 authors.workspace = true
 edition.workspace = true
@@ -9,7 +9,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
+native-pkcs11-traits = { version = "0.2.24", path = "../native-pkcs11-traits" }
 
 [target.'cfg(target_os="windows")'.dependencies.windows]
 version = "0.59.0"
