@@ -36,7 +36,7 @@
 #if defined(_WIN32) || defined(CRYPTOKI_FORCE_WIN32)
 #endif
 
-#include "third_party/pkcs11/pkcs11.h"
+#include "../third_party/pkcs11/pkcs11.h"
 
 #if defined(_WIN32) || defined(CRYPTOKI_FORCE_WIN32)
 #pragma pack(pop, cryptoki)
