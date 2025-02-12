@@ -16,6 +16,7 @@
 #![allow(clippy::missing_safety_doc)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
+use ctor::ctor;
 pub use native_pkcs11_core::Error;
 use native_pkcs11_traits::backend;
 use tracing::metadata::LevelFilter;
@@ -28,10 +29,7 @@ mod utils;
 use std::{
     cmp,
     slice,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Once,
-    },
+    sync::atomic::{AtomicBool, Ordering},
 };
 
 use native_pkcs11_core::{
@@ -209,35 +207,41 @@ pub static mut FUNC_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
     C_WaitForSlotEvent: Some(C_WaitForSlotEvent),
 };
 
-static TRACING_INIT: Once = Once::new();
+#[ctor]
+fn init_tracing() {
+    let env_filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::WARN.into())
+        .from_env_lossy();
+    let force_stderr = std::env::var("NATIVE_PKCS11_LOG_STDERR").is_ok();
+    if !force_stderr {
+        if let Ok(journald_layer) = tracing_journald::layer() {
+            let subscriber = Registry::default()
+                .with(journald_layer.with_syslog_identifier("native-pkcs11".into()))
+                .with(env_filter)
+                .with(ErrorLayer::default());
+            if let Err(e) = tracing::subscriber::set_global_default(subscriber) {
+                eprintln!("failed to initialize logging: {e}");
+            }
+            return;
+        }
+    }
+
+    let subscriber = Registry::default()
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_writer(std::io::stderr)
+                .with_span_events(FmtSpan::ENTER),
+        )
+        .with(env_filter)
+        .with(ErrorLayer::default());
+
+    if let Err(e) = tracing::subscriber::set_global_default(subscriber) {
+        eprintln!("failed to initialize logging: {e}");
+    }
+}
 
 cryptoki_fn!(
     fn C_Initialize(pInitArgs: CK_VOID_PTR) {
-        TRACING_INIT.call_once(|| {
-            let env_filter = EnvFilter::builder()
-                .with_default_directive(LevelFilter::WARN.into())
-                .from_env_lossy();
-            let force_stderr = std::env::var("NATIVE_PKCS11_LOG_STDERR").is_ok();
-            if !force_stderr {
-                if let Ok(journald_layer) = tracing_journald::layer() {
-                    _ = Registry::default()
-                        .with(journald_layer.with_syslog_identifier("native-pkcs11".into()))
-                        .with(env_filter)
-                        .with(ErrorLayer::default())
-                        .try_init();
-                    return;
-                }
-            }
-            _ = Registry::default()
-                .with(
-                    tracing_subscriber::fmt::layer()
-                        .with_writer(std::io::stderr)
-                        .with_span_events(FmtSpan::ENTER),
-                )
-                .with(env_filter)
-                .with(ErrorLayer::default())
-                .try_init();
-        });
         if !pInitArgs.is_null() {
             let args = unsafe { *(pInitArgs as CK_C_INITIALIZE_ARGS_PTR) };
             if !args.pReserved.is_null() {
