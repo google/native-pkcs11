@@ -1,0 +1,8 @@
+Supported mechanisms:
+  RSA-PKCS, sign
+  SHA1-RSA-PKCS, sign
+  SHA256-RSA-PKCS, sign
+  SHA384-RSA-PKCS, sign
+  SHA512-RSA-PKCS, sign
+  ECDSA, sign
+  RSA-PKCS-PSS, sign
