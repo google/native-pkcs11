@@ -12,6 +12,7 @@ license.workspace = true
 custom-function-list = []
 
 [dependencies]
+ctor = { version = "0.2" }
 cached = { version = "~0.54", default-features = false }
 native-pkcs11-core = { version = "^0.2.24", path = "../native-pkcs11-core" }
 native-pkcs11-traits = { version = "0.2.0", path = "../native-pkcs11-traits" }
