@@ -14,17 +14,19 @@
 
 use std::{ffi::CString, fmt::Debug, sync::Arc};
 
-use der::{asn1::OctetString, Encode};
+use der::{Encode, asn1::OctetString};
 use native_pkcs11_traits::{
-    backend,
     Certificate,
     CertificateExt,
     KeyAlgorithm,
     PrivateKey,
     PublicKey,
+    backend,
 };
-use pkcs1::{der::Decode, RsaPublicKey};
+use pkcs1::{RsaPublicKey, der::Decode};
 use pkcs11_sys::{
+    CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
+    CK_PROFILE_ID,
     CKC_X_509,
     CKK_EC,
     CKK_RSA,
@@ -32,8 +34,6 @@ use pkcs11_sys::{
     CKO_PRIVATE_KEY,
     CKO_PROFILE,
     CKO_PUBLIC_KEY,
-    CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
-    CK_PROFILE_ID,
 };
 use tracing::debug;
 

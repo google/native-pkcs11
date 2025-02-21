@@ -17,10 +17,10 @@ use std::{ffi::OsString, ops::Deref, str::FromStr, sync::Arc};
 
 use native_pkcs11_traits::Backend;
 use windows::{
-    core::Interface,
     Security::Cryptography::Certificates::CertificateStores,
     Storage::Streams::{Buffer, IBuffer},
     Win32::System::WinRT::IBufferByteAccess,
+    core::Interface,
 };
 
 //  https://stackoverflow.com/questions/2742739/how-do-i-know-what-the-storename-of-a-certificate-is
