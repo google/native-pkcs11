@@ -1,6 +1,6 @@
 [package]
 name = "native-pkcs11-core"
-version = "0.2.25"
+version = "0.2.26"
 description = "Shared cross-platform PKCS#11 module logic for native-pkcs11."
 authors.workspace = true
 edition.workspace = true
@@ -10,7 +10,7 @@ license.workspace = true
 
 [dependencies]
 der = "0.7.9"
-native-pkcs11-traits = { version = "0.2.24", path = "../native-pkcs11-traits" }
+native-pkcs11-traits = { version = "0.2.25", path = "../native-pkcs11-traits" }
 pkcs1 = { version = "0.7.5", default-features = false }
 pkcs11-sys = { version = "0.2.25", path = "../pkcs11-sys" }
 pkcs8 = "0.10.2"
@@ -23,7 +23,7 @@ tracing = "0.1.41"
 serial_test = { version = "3.2.0", default-features = false }
 
 [target.'cfg(target_os="macos")'.dependencies]
-native-pkcs11-keychain = { version = "0.2.25", path = "../native-pkcs11-keychain" }
+native-pkcs11-keychain = { version = "0.2.26", path = "../native-pkcs11-keychain" }
 
 [target.'cfg(target_os="windows")'.dependencies]
-native-pkcs11-windows = { version = "0.2.25", path = "../native-pkcs11-windows" }
+native-pkcs11-windows = { version = "0.2.26", path = "../native-pkcs11-windows" }
