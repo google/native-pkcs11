@@ -1,6 +1,6 @@
 [package]
 name = "native-pkcs11-keychain"
-version = "0.2.25"
+version = "0.2.26"
 description = "native-pkcs11 backend for macos keychain."
 authors.workspace = true
 edition.workspace = true
@@ -9,7 +9,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-native-pkcs11-traits = { version = "0.2.24", path = "../native-pkcs11-traits" }
+native-pkcs11-traits = { version = "0.2.25", path = "../native-pkcs11-traits" }
 thiserror = "2"
 tracing = "0.1.41"
 tracing-error = { version = "0.2.1", default-features = false }
