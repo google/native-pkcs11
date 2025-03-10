@@ -1,6 +1,6 @@
 [package]
 name = "native-pkcs11-traits"
-version = "0.2.24"
+version = "0.2.25"
 description = "Traits for implementing and interactive with native-pkcs11 module backends."
 authors.workspace = true
 edition.workspace = true
