@@ -21,7 +21,7 @@ jobs:
       - name: Install Rust toolchain
         run: rustup update stable --no-self-update
       - name: Run release-plz
-        uses: release-plz/action@704937995982d7590add777dbdb2bf7aa94a6cf6
+        uses: release-plz/action@476794ede164c5137bfc3a1dc6ed3675275690f9
         with:
           command: release
         env:
@@ -43,7 +43,7 @@ jobs:
         with:
           toolchain: stable
       - name: Run release-plz
-        uses: release-plz/action@704937995982d7590add777dbdb2bf7aa94a6cf6
+        uses: release-plz/action@476794ede164c5137bfc3a1dc6ed3675275690f9
         with:
           command: release-pr
         env:
