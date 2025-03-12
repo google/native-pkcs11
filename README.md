@@ -1,4 +1,4 @@
-# `native-pkcs11`
+# native-pkcs11
 
 > pkcs11 module for native credential stores
 
@@ -8,18 +8,39 @@ certificate stores (MacOS Keychain, Windows Platform Key Provider) out of the
 box. It can also be extended with a custom backend (see
 [this section](#building-a-custom-backend)).
 
-## Host Software Compatibility
+## Features
 
-Software compatibility is a core goal of `native-pkcs11`. It is currently tested
-with
+*   **Native Credential Store Support:** `native-pkcs11` seamlessly integrates with native credential stores like the macOS Keychain and Windows Platform Key Provider.
+*   **Extensible Architecture:** Add support for custom credential stores by implementing the `native_pkcs11_traits::Backend` trait.
+*   **Broad Compatibility:** Tested and compatible with OpenSSH, OpenVPN, Chrome, and Firefox.
+* **Java support:** This library can also be used with java. The `tests/java/SunPKCS11ProviderTest.java` has a test case for that.
 
-- openssh
-- openvpn
-- Chrome
-- Firefox
+## Getting Started
 
-If a `native-pkcs11` module does not work for your software, please file an
-issue.
+### Installation
+
+To use `native-pkcs11`, you'll need to build the library from source.
+
+1.  **Clone the Repository:** Clone the `native-pkcs11` repository to your local machine.
+2.  **Build:** Build the library with `cargo build`.
+
+### Usage
+
+#### macOS
+
+1.  **Create a Keychain:** Create a temporary keychain using the `tests/create_keychain.sh` script.
+2.  **Set Environment Variable:** Set the `NATIVE_PKCS11_KEYCHAIN_PATH` environment variable to the path of your keychain.
+3.  **Run:** Run `cargo test`.
+
+#### Windows
+
+Support for Windows is currently under development.
+
+#### Java
+
+1. **Install:**  Install the `SunPKCS11Provider` following the instructions on this page: [https://docs.oracle.com/en/java/javase/21/security/pkcs11-reference-guide1.html](https://docs.oracle.com/en/java/javase/21/security/pkcs11-reference-guide1.html)
+2. **Configure:** Configure the SunPKCS11Provider using the `tests/java/SunPKCS11ProviderTest.java` as an example.
+3. **Run:** Run the tests using the `tests/java/run.sh` script.
 
 ## Building a Custom Backend
 
@@ -28,38 +49,3 @@ a new credential store. Backends are registered in the exported
 `C_GetFunctionList` function. In order to register your own backend, enable the
 `custom-function-list` feature on `native-pkcs11` and export the method from
 your crate. For example:
-
-```rs
-use native_pkcs11::{CKR_OK, CK_FUNCTION_LIST_PTR_PTR, CK_RV, FUNC_LIST};
-#[no_mangle]
-pub extern "C" fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) -> CK_RV {
-    native_pkcs11_traits::register_backend(Box::new(backend::MyBackend {}));
-    unsafe { *ppFunctionList = &mut FUNC_LIST };
-    return CKR_OK;
-}
-```
-
-## Running tests
-
-### macOS
-
-Create a tempory keychain and set `NATIVE_PKCS11_KEYCHAIN_PATH` to run `cargo test` without endless password prompts.
-```
-$ . tests/create_keychain.sh
-$ cargo test
-```
-
-## Releasing
-
-The [`cargo-ws`](https://github.com/pksunkara/cargo-workspaces) tool can be used
-to version bump and release all crates in the workspace at once. It can be
-installed with `cargo install cargo-workspaces`.
-
-```bash
-# Create a branch for the release PR
-git checkout -b release
-# Bump the version of all crates in the workspace
-cargo ws version --allow-branch=release --no-git-push
-# Publish all crates to crates.io
-cargo ws publish --no-git-push
-```
