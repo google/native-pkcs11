@@ -1,0 +1,11 @@
+Available slots:
+Slot 0 (0x1): Platform Cryptography Support
+  token label        : native-pkcs11 fake backend
+  token manufacturer : google
+  token model        : software
+  token flags        : PIN pad present, token initialized, readonly
+  hardware version   : 0.0
+  firmware version   : 0.0
+  serial num         : 0000000000000000
+  pin min/max        : 0/0
+  uri                : pkcs11:model=software;manufacturer=google;serial=0000000000000000;token=native-pkcs11%20fake%20backend

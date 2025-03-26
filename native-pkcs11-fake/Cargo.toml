@@ -1,0 +1,19 @@
+[package]
+name = "native-pkcs11-fake"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+
+[dependencies]
+native-pkcs11 = { path = "../native-pkcs11", features = [
+    "custom-function-list",
+] }
+native-pkcs11-traits = { path = "../native-pkcs11-traits" }
+test-cdylib = "1.1.0"
