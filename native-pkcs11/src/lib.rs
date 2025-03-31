@@ -16,15 +16,6 @@
 #![allow(clippy::missing_safety_doc)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
-pub use native_pkcs11_core::Error;
-use native_pkcs11_traits::backend;
-use tracing::metadata::LevelFilter;
-use tracing_error::ErrorLayer;
-use tracing_subscriber::{EnvFilter, Registry, fmt::format::FmtSpan, prelude::*};
-mod object_store;
-mod sessions;
-mod utils;
-
 use std::{
     cmp,
     slice,
@@ -34,17 +25,28 @@ use std::{
     },
 };
 
+pub use native_pkcs11_core::Error;
 use native_pkcs11_core::{
     attribute::{Attribute, Attributes},
     mechanism::{SUPPORTED_SIGNATURE_MECHANISMS, parse_mechanism},
     object::{self, Object},
 };
+use native_pkcs11_traits::backend;
 use pkcs11_sys::*;
+use tracing::metadata::LevelFilter;
+use tracing_error::ErrorLayer;
+use tracing_subscriber::{EnvFilter, Registry, fmt::format::FmtSpan, prelude::*};
 
 use crate::{
     sessions::{FindContext, SignContext},
     utils::right_pad_string_to_array,
 };
+
+#[cfg(feature = "fake-backend")]
+mod fake_backend;
+mod object_store;
+mod sessions;
+mod utils;
 
 const LIBRARY_DESCRIPTION: &[u8; 32] = b"                                ";
 const MANUFACTURER_ID: &[u8; 32] = b"google                          ";
