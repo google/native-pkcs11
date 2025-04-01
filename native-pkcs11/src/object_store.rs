@@ -123,7 +123,7 @@ impl ObjectStore {
             CKO_SECRET_KEY => (),
             CKO_PUBLIC_KEY | CKO_PRIVATE_KEY => {
                 let opts = if let Some(Attribute::Id(id)) = template.get(AttributeType::Id) {
-                    KeySearchOptions::PublicKeyHash(id.as_slice().try_into()?)
+                    KeySearchOptions::Label(String::from_utf8(id.clone())?)
                 } else if let Some(Attribute::Label(label)) = template.get(AttributeType::Label) {
                     KeySearchOptions::Label(label.into())
                 } else {
