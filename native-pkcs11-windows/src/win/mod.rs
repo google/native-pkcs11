@@ -114,6 +114,10 @@ impl Backend for WindowsBackend {
 pub struct WindowsCertificate {}
 
 impl native_pkcs11_traits::Certificate for WindowsCertificate {
+    fn id(&self) -> Vec<u8> {
+        todo!()
+    }
+
     fn label(&self) -> String {
         todo!()
     }

@@ -83,7 +83,7 @@ impl Object {
                 }
                 AttributeType::CertificateType => Some(Attribute::CertificateType(CKC_X_509)),
                 AttributeType::Class => Some(Attribute::Class(CKO_CERTIFICATE)),
-                AttributeType::Id => Some(Attribute::Id(cert.public_key().public_key_hash())),
+                AttributeType::Id => Some(Attribute::Id(cert.id())),
                 AttributeType::Issuer => Some(Attribute::Issuer(cert.issuer())),
                 AttributeType::Label => Some(Attribute::Label(cert.label())),
                 AttributeType::Token => Some(Attribute::Token(true)),
@@ -104,7 +104,7 @@ impl Object {
                 AttributeType::Derive => Some(Attribute::Derive(false)),
                 AttributeType::EcParams => Some(Attribute::EcParams(P256_OID.to_der().ok()?)),
                 AttributeType::Extractable => Some(Attribute::Extractable(false)),
-                AttributeType::Id => Some(Attribute::Id(private_key.public_key_hash())),
+                AttributeType::Id => Some(Attribute::Id(private_key.id())),
                 AttributeType::KeyType => Some(Attribute::KeyType(match private_key.algorithm() {
                     native_pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
                     native_pkcs11_traits::KeyAlgorithm::Ecc => CKK_EC,
@@ -174,7 +174,7 @@ impl Object {
                     native_pkcs11_traits::KeyAlgorithm::Rsa => CKK_RSA,
                     native_pkcs11_traits::KeyAlgorithm::Ecc => CKK_EC,
                 })),
-                AttributeType::Id => Some(Attribute::Id(pk.public_key_hash())),
+                AttributeType::Id => Some(Attribute::Id(pk.id())),
                 AttributeType::EcPoint => {
                     if pk.algorithm() != KeyAlgorithm::Ecc {
                         return None;
