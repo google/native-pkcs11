@@ -84,8 +84,8 @@ fn sigalg_to_seckeyalg(
 #[derive(Debug)]
 pub struct KeychainPrivateKey {
     sec_key: SecKey,
+    id: Vec<u8>,
     label: String,
-    public_key_hash: Vec<u8>,
     algorithm: KeyAlgorithm,
     pub_key: Option<KeychainPublicKey>,
 }
@@ -97,13 +97,11 @@ impl KeychainPrivateKey {
         label: impl Into<String> + Debug,
         pub_key: Option<KeychainPublicKey>,
     ) -> Result<Self> {
-        let label = label.into();
-        let public_key_hash = sec_key.application_label().ok_or("no application_label")?;
         Ok(Self {
             algorithm: sec_key_algorithm(&sec_key)?,
+            id: sec_key.application_label().ok_or("no application_label")?,
             sec_key,
-            label,
-            public_key_hash,
+            label: label.into(),
             pub_key,
         })
     }
@@ -111,13 +109,8 @@ impl KeychainPrivateKey {
 
 impl PrivateKey for KeychainPrivateKey {
     #[instrument]
-    fn public_key_hash(&self) -> Vec<u8> {
-        self.public_key_hash.clone()
-    }
-
-    #[instrument]
     fn id(&self) -> Vec<u8> {
-        self.public_key_hash.clone()
+        self.id.clone()
     }
 
     #[instrument]
@@ -187,9 +180,9 @@ fn sec_key_algorithm(sec_key: &SecKey) -> Result<KeyAlgorithm> {
 #[derive(Debug, Clone)]
 pub struct KeychainPublicKey {
     pub sec_key: SecKey,
+    id: Vec<u8>,
     pub label: String,
     der: Vec<u8>,
-    public_key_hash: Vec<u8>,
     algorithm: KeyAlgorithm,
 }
 
@@ -199,7 +192,7 @@ impl KeychainPublicKey {
         let der = sec_key.external_representation().ok_or("no external representation")?;
         let key_ty = sec_key_algorithm(&sec_key)?;
         Ok(Self {
-            public_key_hash: sec_key.application_label().ok_or("no application_label")?,
+            id: sec_key.application_label().ok_or("no application_label")?,
             sec_key,
             label: label.into(),
             der: der.to_vec(),
@@ -210,13 +203,8 @@ impl KeychainPublicKey {
 
 impl PublicKey for KeychainPublicKey {
     #[instrument]
-    fn public_key_hash(&self) -> Vec<u8> {
-        self.public_key_hash.clone()
-    }
-
-    #[instrument]
     fn id(&self) -> Vec<u8> {
-        self.public_key_hash.clone()
+        self.id.clone()
     }
 
     #[instrument]
@@ -535,7 +523,7 @@ mod test {
             })?
             .unwrap();
 
-        assert_eq!(pubkey_hash, found_key.public_key_hash());
+        assert_eq!(pubkey_hash, found_key.id());
 
         Ok(())
     }
