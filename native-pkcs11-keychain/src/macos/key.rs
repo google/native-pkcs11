@@ -116,6 +116,11 @@ impl PrivateKey for KeychainPrivateKey {
     }
 
     #[instrument]
+    fn id(&self) -> Vec<u8> {
+        self.public_key_hash.clone()
+    }
+
+    #[instrument]
     fn label(&self) -> String {
         self.label.clone()
     }
@@ -206,6 +211,11 @@ impl KeychainPublicKey {
 impl PublicKey for KeychainPublicKey {
     #[instrument]
     fn public_key_hash(&self) -> Vec<u8> {
+        self.public_key_hash.clone()
+    }
+
+    #[instrument]
+    fn id(&self) -> Vec<u8> {
         self.public_key_hash.clone()
     }
 

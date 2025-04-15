@@ -85,6 +85,12 @@ impl Backend for KeychainBackend {
                 .and_then(|sec_key| KeychainPublicKey::new(sec_key, "").ok())
         };
         let opt_key = match query {
+            native_pkcs11_traits::KeySearchOptions::Id(id) => find_key2(KeyClass::private(), &id)?
+                .map(|sec_key| {
+                    let cert = find_pubkey_for_seckey(&sec_key);
+                    KeychainPrivateKey::new(sec_key, "", cert)
+                })
+                .transpose()?,
             native_pkcs11_traits::KeySearchOptions::Label(label) => {
                 find_key(KeyClass::private(), &label)
                     .ok()
@@ -112,6 +118,9 @@ impl Backend for KeychainBackend {
         query: native_pkcs11_traits::KeySearchOptions,
     ) -> native_pkcs11_traits::Result<Option<Box<dyn native_pkcs11_traits::PublicKey>>> {
         let opt_key = match query {
+            native_pkcs11_traits::KeySearchOptions::Id(id) => find_key2(KeyClass::public(), &id)?
+                .map(|sec_key| KeychainPublicKey::new(sec_key, ""))
+                .transpose()?,
             native_pkcs11_traits::KeySearchOptions::Label(label) => {
                 find_key(KeyClass::public(), &label)
                     .ok()

@@ -73,6 +73,7 @@ pub enum SignatureAlgorithm {
 
 pub trait PrivateKey: Send + Sync {
     fn public_key_hash(&self) -> Vec<u8>;
+    fn id(&self) -> Vec<u8>;
     fn label(&self) -> String;
     fn sign(&self, algorithm: &SignatureAlgorithm, data: &[u8]) -> Result<Vec<u8>>;
     fn delete(&self);
@@ -106,6 +107,7 @@ impl Hash for dyn PrivateKey {
 
 pub trait PublicKey: Send + Sync + std::fmt::Debug {
     fn public_key_hash(&self) -> Vec<u8>;
+    fn id(&self) -> Vec<u8>;
     fn label(&self) -> String;
     fn to_der(&self) -> Vec<u8>;
     fn verify(&self, algorithm: &SignatureAlgorithm, data: &[u8], signature: &[u8]) -> Result<()>;
@@ -129,6 +131,7 @@ impl Hash for dyn PublicKey {
 }
 
 pub trait Certificate: Send + Sync + std::fmt::Debug {
+    fn id(&self) -> Vec<u8>;
     fn label(&self) -> String;
     fn to_der(&self) -> Vec<u8>;
     fn public_key(&self) -> &dyn PublicKey;
@@ -178,6 +181,7 @@ impl<T: Certificate + ?Sized> CertificateExt for T {}
 pub enum KeySearchOptions {
     //  TODO(kcking): search keys by _both_ label and public key hash as that is how
     //  they are de-duped and referenced.
+    Id(Vec<u8>),
     Label(String),
     PublicKeyHash(Digest),
 }
