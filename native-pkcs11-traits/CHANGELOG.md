@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/google/native-pkcs11/compare/native-pkcs11-traits-v0.2.25...native-pkcs11-traits-v0.3.0) - 2025-04-15
+
+### Other
+
+- Replace public key hash with ID
+- Move ID generation to backend
+
 ## [0.2.25](https://github.com/google/native-pkcs11/compare/native-pkcs11-traits-v0.2.24...native-pkcs11-traits-v0.2.25) - 2025-03-18
 
 ### Other
