@@ -21,7 +21,6 @@ use std::{
 use x509_cert::der::Decode;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-pub type Digest = [u8; 20];
 
 //  The Backend is first staged so it can be stored in a Box<dyn Backend>. This
 //  allows the Backend to be reference with `&'static`.
@@ -72,15 +71,13 @@ pub enum SignatureAlgorithm {
 }
 
 pub trait PrivateKey: Send + Sync {
-    fn public_key_hash(&self) -> Vec<u8>;
     fn id(&self) -> Vec<u8>;
     fn label(&self) -> String;
     fn sign(&self, algorithm: &SignatureAlgorithm, data: &[u8]) -> Result<Vec<u8>>;
     fn delete(&self);
     fn algorithm(&self) -> KeyAlgorithm;
     fn find_public_key(&self, backend: &dyn Backend) -> Result<Option<Box<dyn PublicKey>>> {
-        let pubkey_hash: Digest = self.public_key_hash().as_slice().try_into()?;
-        backend.find_public_key(KeySearchOptions::PublicKeyHash(pubkey_hash))
+        backend.find_public_key(KeySearchOptions::Id(self.id()))
     }
 }
 
@@ -92,7 +89,7 @@ impl std::fmt::Debug for dyn PrivateKey {
 
 impl PartialEq for dyn PrivateKey {
     fn eq(&self, other: &Self) -> bool {
-        self.public_key_hash() == other.public_key_hash() && self.label() == other.label()
+        self.id() == other.id() && self.label() == other.label()
     }
 }
 
@@ -100,13 +97,12 @@ impl Eq for dyn PrivateKey {}
 impl Hash for dyn PrivateKey {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.type_id().hash(state);
-        self.public_key_hash().hash(state);
+        self.id().hash(state);
         self.label().hash(state);
     }
 }
 
 pub trait PublicKey: Send + Sync + std::fmt::Debug {
-    fn public_key_hash(&self) -> Vec<u8>;
     fn id(&self) -> Vec<u8>;
     fn label(&self) -> String;
     fn to_der(&self) -> Vec<u8>;
@@ -117,7 +113,7 @@ pub trait PublicKey: Send + Sync + std::fmt::Debug {
 
 impl PartialEq for dyn PublicKey {
     fn eq(&self, other: &Self) -> bool {
-        self.public_key_hash() == other.public_key_hash() && self.label() == other.label()
+        self.id() == other.id() && self.label() == other.label()
     }
 }
 
@@ -125,7 +121,7 @@ impl Eq for dyn PublicKey {}
 impl Hash for dyn PublicKey {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.type_id().hash(state);
-        self.public_key_hash().hash(state);
+        self.id().hash(state);
         self.label().hash(state);
     }
 }
@@ -179,11 +175,10 @@ impl<T: Certificate + ?Sized> CertificateExt for T {}
 
 #[derive(Debug)]
 pub enum KeySearchOptions {
-    //  TODO(kcking): search keys by _both_ label and public key hash as that is how
-    //  they are de-duped and referenced.
+    //  TODO(kcking): search keys by _both_ id and label as that is how they are
+    // de-duped and referenced.
     Id(Vec<u8>),
     Label(String),
-    PublicKeyHash(Digest),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -52,7 +52,7 @@ impl std::fmt::Debug for KeychainCertificate {
 
 impl native_pkcs11_traits::Certificate for KeychainCertificate {
     fn id(&self) -> Vec<u8> {
-        self.public_key().public_key_hash()
+        self.public_key().id()
     }
 
     fn label(&self) -> String {

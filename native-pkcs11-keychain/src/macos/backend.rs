@@ -100,14 +100,6 @@ impl Backend for KeychainBackend {
                     })
                     .transpose()?
             }
-            native_pkcs11_traits::KeySearchOptions::PublicKeyHash(public_key_hash) => {
-                find_key2(KeyClass::private(), &public_key_hash)?
-                    .map(|sec_key| {
-                        let cert = find_pubkey_for_seckey(&sec_key);
-                        KeychainPrivateKey::new(sec_key, "", cert)
-                    })
-                    .transpose()?
-            }
         };
         Ok(opt_key.map(|sec_key| Arc::new(sec_key) as _))
     }
@@ -125,11 +117,6 @@ impl Backend for KeychainBackend {
                 find_key(KeyClass::public(), &label)
                     .ok()
                     .map(|sec_key| KeychainPublicKey::new(sec_key, label))
-                    .transpose()?
-            }
-            native_pkcs11_traits::KeySearchOptions::PublicKeyHash(public_key_hash) => {
-                find_key2(KeyClass::public(), &public_key_hash)?
-                    .map(|sec_key| KeychainPublicKey::new(sec_key, ""))
                     .transpose()?
             }
         };
