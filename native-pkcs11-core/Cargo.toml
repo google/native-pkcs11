@@ -9,7 +9,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-der = "0.7.9"
+der = "0.7.10"
 native-pkcs11-traits = { version = "0.2.25", path = "../native-pkcs11-traits" }
 pkcs1 = { version = "0.7.5", default-features = false }
 pkcs11-sys = { version = "0.2.25", path = "../pkcs11-sys" }
