@@ -1,6 +1,6 @@
 [package]
 name = "native-pkcs11-keychain"
-version = "0.2.26"
+version = "0.2.27"
 description = "native-pkcs11 backend for macos keychain."
 authors.workspace = true
 edition.workspace = true

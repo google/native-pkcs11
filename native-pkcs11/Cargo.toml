@@ -1,6 +1,6 @@
 [package]
 name = "native-pkcs11"
-version = "0.2.26"
+version = "0.2.27"
 description = "Cross-platform PKCS#11 module written in rust. Can be extended with custom credential backends."
 authors.workspace = true
 edition.workspace = true
