@@ -48,8 +48,7 @@ impl Deref for Bytes {
     fn deref(&self) -> &Self::Target {
         let interop = self.0.cast::<IBufferByteAccess>().unwrap();
         let data_ptr = unsafe { interop.Buffer() }.unwrap();
-        let s = unsafe { std::slice::from_raw_parts(data_ptr, self.0.Length().unwrap() as usize) };
-        s
+        unsafe { std::slice::from_raw_parts(data_ptr, self.0.Length().unwrap() as usize) }
     }
 }
 
