@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.26](https://github.com/google/native-pkcs11/compare/pkcs11-sys-v0.2.25...pkcs11-sys-v0.2.26) - 2025-06-16
+
+### Other
+
+- Bump the cargo group across 1 directory with 2 updates ([#431](https://github.com/google/native-pkcs11/pull/431))
+
 ## [0.2.25](https://github.com/google/native-pkcs11/compare/pkcs11-sys-v0.2.24...pkcs11-sys-v0.2.25) - 2025-02-21
 
 ### Other
