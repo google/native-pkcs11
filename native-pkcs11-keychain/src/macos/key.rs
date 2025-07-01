@@ -434,7 +434,7 @@ mod test {
                     true
                 }
                 Err(e) => {
-                    eprintln!("{:?}", e);
+                    eprintln!("{e:?}");
                     false
                 }
             }
