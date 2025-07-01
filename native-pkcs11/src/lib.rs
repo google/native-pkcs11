@@ -1100,7 +1100,7 @@ pub mod tests {
         );
         assert_eq!(C_Finalize(ptr::null_mut()), CKR_OK);
         // Expect CKR_ARGUMENTS_BAD if pReserved is not null.
-        args.pReserved = 1 as *mut u32 as *mut std::ffi::c_void;
+        args.pReserved = std::ptr::dangling_mut::<u32>() as *mut std::ffi::c_void;
         assert_eq!(
             C_Initialize(&mut args as CK_C_INITIALIZE_ARGS_PTR as *mut std::ffi::c_void),
             CKR_ARGUMENTS_BAD
@@ -1113,7 +1113,10 @@ pub mod tests {
         test_init();
         assert_eq!(C_Initialize(ptr::null_mut()), CKR_OK);
         // Expect CKR_ARGUMENTS_BAD if pReserved is not null.
-        assert_eq!(C_Finalize(1 as *mut u32 as *mut std::ffi::c_void), CKR_ARGUMENTS_BAD);
+        assert_eq!(
+            C_Finalize(std::ptr::dangling_mut::<u32>() as *mut std::ffi::c_void),
+            CKR_ARGUMENTS_BAD
+        );
         assert_eq!(C_Finalize(ptr::null_mut()), CKR_OK);
         assert_eq!(C_Finalize(ptr::null_mut()), CKR_CRYPTOKI_NOT_INITIALIZED);
     }

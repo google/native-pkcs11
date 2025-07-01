@@ -108,7 +108,7 @@ impl ObjectStore {
                 return Err(Error::Todo("no class attribute".to_string()));
             }
             class => {
-                return Err(Error::Todo(format!("class {:?} not implemented", class)));
+                return Err(Error::Todo(format!("class {class:?} not implemented")));
             }
         };
         match *class {
