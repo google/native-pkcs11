@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 use cached::{Cached, TimedCache};
 use native_pkcs11_core::{
@@ -179,7 +179,7 @@ impl Default for ObjectStore {
             objects: HashMap::from([(1, Object::Profile(CKP_BASELINE_PROVIDER))]),
             handles_by_object: HashMap::from([(Object::Profile(CKP_BASELINE_PROVIDER), 1)]),
             next_object_handle: 2,
-            query_cache: TimedCache::with_lifespan(10),
+            query_cache: TimedCache::with_lifespan(Duration::from_secs(10)),
         }
     }
 }
