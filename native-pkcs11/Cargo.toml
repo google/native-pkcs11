@@ -20,7 +20,7 @@ thiserror = "2"
 tracing = "0.1.41"
 tracing-error = "0.2.1"
 tracing-journald = "0.3"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 
 [lib]
 crate-type = ["lib", "cdylib"]
@@ -28,7 +28,7 @@ crate-type = ["lib", "cdylib"]
 [dev-dependencies]
 serial_test = { version = "3.2.0", default-features = false }
 tracing = { version = "0.1.41", default-features = false }
-tracing-subscriber = { version = "0.3.19", default-features = false, features = [
+tracing-subscriber = { version = "0.3.20", default-features = false, features = [
     "env-filter",
 ] }
 
