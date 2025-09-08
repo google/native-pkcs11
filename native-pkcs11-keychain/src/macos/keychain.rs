@@ -14,7 +14,7 @@
 
 use security_framework::{
     item::{ItemSearchOptions, Location},
-    os::macos::{item::ItemSearchOptionsExt, keychain::SecKeychain},
+    os::macos::keychain::SecKeychain,
 };
 
 use crate::Result;
