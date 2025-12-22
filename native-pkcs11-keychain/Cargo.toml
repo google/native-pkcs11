@@ -11,7 +11,7 @@ license.workspace = true
 [dependencies]
 native-pkcs11-traits = { version = "0.2.25", path = "../native-pkcs11-traits" }
 thiserror = "2"
-tracing = "0.1.43"
+tracing = "0.1.44"
 tracing-error = { version = "0.2.1", default-features = false }
 
 [dev-dependencies]
