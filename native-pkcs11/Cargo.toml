@@ -17,7 +17,7 @@ native-pkcs11-core = { version = "^0.2.26", path = "../native-pkcs11-core" }
 native-pkcs11-traits = { version = "0.2.25", path = "../native-pkcs11-traits" }
 pkcs11-sys = { version = "0.2.25", path = "../pkcs11-sys" }
 thiserror = "2"
-tracing = "0.1.43"
+tracing = "0.1.44"
 tracing-error = "0.2.1"
 tracing-journald = "0.3"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
@@ -27,7 +27,7 @@ crate-type = ["lib", "cdylib"]
 
 [dev-dependencies]
 serial_test = { version = "3.2.0", default-features = false }
-tracing = { version = "0.1.43", default-features = false }
+tracing = { version = "0.1.44", default-features = false }
 tracing-subscriber = { version = "0.3.22", default-features = false, features = [
     "env-filter",
 ] }
