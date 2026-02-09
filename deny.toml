@@ -7,19 +7,11 @@ targets = [
 ]
 
 [licenses]
-allow = ["Apache-2.0", "BSD-3-Clause", "ISC", "MIT", "Unicode-DFS-2016"]
+allow = ["Apache-2.0", "MIT", "Unicode-3.0"]
 
 [bans]
 multiple-versions = "deny"
 skip = [
-    { name = "regex-automata", version = "=0.1.10" },
-    { name = "regex-syntax", version = "=0.6.29" },
-    { name = "thiserror-impl", version = "=1.0.69" },
-    { name = "thiserror", version = "=1.0.69" },
-    { name = "windows_x86_64_gnu", version = "=0.52.6" },
-    { name = "windows_x86_64_msvc", version = "=0.52.6" },
-    { name = "windows-targets", version = "=0.52.6" },
-    { name = "zerocopy", version = "=0.7.35" },
 ]
 
 [sources]
