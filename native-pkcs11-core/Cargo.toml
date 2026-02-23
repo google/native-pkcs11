@@ -14,13 +14,13 @@ native-pkcs11-traits = { version = "0.2.25", path = "../native-pkcs11-traits" }
 pkcs1 = { version = "0.7.5", default-features = false }
 pkcs11-sys = { version = "0.2.25", path = "../pkcs11-sys" }
 pkcs8 = "0.10.2"
-strum = "0.27"
-strum_macros = "0.27"
+strum = "0.28"
+strum_macros = "0.28"
 thiserror = "2"
 tracing = "0.1.44"
 
 [dev-dependencies]
-serial_test = { version = "3.3.1", default-features = false }
+serial_test = { version = "3.4.0", default-features = false }
 
 [target.'cfg(target_os="macos")'.dependencies]
 native-pkcs11-keychain = { version = "0.2.26", path = "../native-pkcs11-keychain" }
