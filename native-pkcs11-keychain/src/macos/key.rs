@@ -21,6 +21,7 @@ use security_framework::{
     key::{GenerateKeyOptions, KeyType, SecKey},
 };
 // TODO(bweeks,kcking): remove dependency on security-framework-sys crate.
+#[allow(deprecated)]
 use security_framework_sys::item::{
     kSecAttrKeyType,
     kSecAttrKeyTypeEC,
@@ -165,6 +166,7 @@ fn sec_key_algorithm(sec_key: &SecKey) -> Result<KeyAlgorithm> {
         //  assume they are Ecc.
         return Ok(KeyAlgorithm::Ecc);
     }
+    #[allow(deprecated)]
     let key_ty = sec_key
         .attributes()
         .find(unsafe { kSecAttrKeyType }.to_void())
