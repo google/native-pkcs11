@@ -14,7 +14,10 @@
 
 use std::{ffi::CString, fmt::Debug, sync::Arc};
 
-use der::{Encode, asn1::OctetString};
+use der::{
+    Encode,
+    asn1::{ObjectIdentifier, OctetString},
+};
 use native_pkcs11_traits::{
     Certificate,
     CertificateExt,
@@ -39,8 +42,7 @@ use tracing::debug;
 
 use crate::attribute::{Attribute, AttributeType, Attributes};
 
-const P256_OID: pkcs8::ObjectIdentifier =
-    pkcs8::ObjectIdentifier::new_unwrap("1.2.840.10045.3.1.7");
+const P256_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.10045.3.1.7");
 
 #[derive(Debug)]
 pub struct DataObject {
