@@ -57,12 +57,11 @@ checksum = "5dd9dc738b7a8311c7ade152424974d8115f2cdad61e8dab8dac9f2362298510"
 
 [[package]]
 name = "cached"
-version = "0.59.0"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53b6f5d101f0f6322c8646a45b7c581a673e476329040d97565815c2461dd0c4"
+checksum = "0fddee1beae7a67a67cfe13f0833b44716f219359ac6c433099e1ae0faaee933"
 dependencies = [
  "hashbrown 0.16.1",
- "once_cell",
  "parking_lot",
  "thiserror",
  "web-time",
