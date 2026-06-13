@@ -14,7 +14,7 @@
 
 use std::{collections::HashMap, time::Duration};
 
-use cached::{Cached, TimedCache};
+use cached::{Cached, TtlCache};
 use native_pkcs11_core::{
     Result,
     attribute::{Attribute, AttributeType, Attributes},
@@ -37,7 +37,7 @@ pub struct ObjectStore {
     objects: HashMap<CK_OBJECT_HANDLE, Object>,
     handles_by_object: HashMap<Object, CK_OBJECT_HANDLE>,
     next_object_handle: CK_OBJECT_HANDLE,
-    query_cache: TimedCache<Attributes, Vec<CK_OBJECT_HANDLE>>,
+    query_cache: TtlCache<Attributes, Vec<CK_OBJECT_HANDLE>>,
 }
 
 impl ObjectStore {
@@ -179,7 +179,10 @@ impl Default for ObjectStore {
             objects: HashMap::from([(1, Object::Profile(CKP_BASELINE_PROVIDER))]),
             handles_by_object: HashMap::from([(Object::Profile(CKP_BASELINE_PROVIDER), 1)]),
             next_object_handle: 2,
-            query_cache: TimedCache::with_lifespan(Duration::from_secs(10)),
+            query_cache: TtlCache::builder()
+                .ttl(Duration::from_secs(10))
+                .build()
+                .expect("ttl is set"),
         }
     }
 }
