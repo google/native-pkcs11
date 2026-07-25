@@ -9,7 +9,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-der = "0.7.10"
+der = "0.8.1"
 native-pkcs11-traits = { version = "0.2.25", path = "../native-pkcs11-traits" }
 pkcs1 = { version = "0.7.5", default-features = false }
 pkcs11-sys = { version = "0.2.25", path = "../pkcs11-sys" }
@@ -20,7 +20,7 @@ thiserror = "2"
 tracing = "0.1.44"
 
 [dev-dependencies]
-serial_test = { version = "3.4.0", default-features = false }
+serial_test = { version = "3.5.0", default-features = false }
 
 [target.'cfg(target_os="macos")'.dependencies]
 native-pkcs11-keychain = { version = "0.2.26", path = "../native-pkcs11-keychain" }
