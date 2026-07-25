@@ -229,7 +229,7 @@ impl PublicKey for KeychainPublicKey {
         let algorithm = sigalg_to_seckeyalg(algorithm)?;
         let result = self.sec_key.verify_signature(algorithm, data, signature)?;
         if !result {
-            return Err("verify failed")?;
+            Err("verify failed")?;
         }
         Ok(())
     }
