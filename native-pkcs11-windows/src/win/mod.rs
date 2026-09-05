@@ -54,7 +54,8 @@ impl Deref for Bytes {
 
 impl Bytes {
     pub fn as_buffer_ref(&self) -> IBuffer {
-        //  TODO(kcking): is this safe, or do we need to ensure Self outlives IBuffer
+        //  TODO(kcking): is this safe, or do we need to ensure Self outlives
+        // IBuffer
         self.0.cast().unwrap()
     }
 }

@@ -1326,7 +1326,8 @@ pub mod tests {
             CKR_OK
         );
         assert_eq!(C_CloseSession(handle), CKR_OK);
-        // Expect CKR_SESSION_HANDLE_INVALID if the session has already been closed.
+        // Expect CKR_SESSION_HANDLE_INVALID if the session has already been
+        // closed.
         assert_eq!(C_CloseSession(handle), CKR_SESSION_HANDLE_INVALID);
         // Expect CKR_SESSION_HANDLE_INVALID if hSession is not a valid handle.
         assert_eq!(C_CloseSession(CK_INVALID_HANDLE), CKR_SESSION_HANDLE_INVALID);
