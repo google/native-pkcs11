@@ -251,16 +251,17 @@ cryptoki_fn!(
     }
 );
 
-cryptoki_fn!(
-    fn C_Finalize(pReserved: CK_VOID_PTR) {
+pub extern "C" fn C_Finalize(pReserved: CK_VOID_PTR) -> CK_RV {
+    // TODO(bweeks): should this be `expr` instead of `block`?
+    result_to_rv(|| {
         initialized!();
         if !pReserved.is_null() {
             return Err(Error::ArgumentsBad);
         }
         INITIALIZED.store(false, Ordering::SeqCst);
         Ok(())
-    }
-);
+    })
+}
 
 cryptoki_fn!(
     unsafe fn C_GetInfo(pInfo: CK_INFO_PTR) {
@@ -471,14 +472,16 @@ cryptoki_fn!(
     }
 );
 
-cryptoki_fn!(
-    fn C_CloseAllSessions(slotID: CK_SLOT_ID) {
+#[no_mangle]
+pub extern "C" fn C_CloseAllSessions(slotID: CK_SLOT_ID) -> CK_RV {
+    // TODO(bweeks): should this be `expr` instead of `block`?
+    result_to_rv(|| {
         initialized!();
         valid_slot!(slotID);
         sessions::close_all();
         Ok(())
-    }
-);
+    })
+}
 
 cryptoki_fn!(
     unsafe fn C_GetSessionInfo(hSession: CK_SESSION_HANDLE, pInfo: CK_SESSION_INFO_PTR) {
