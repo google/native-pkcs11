@@ -67,9 +67,10 @@ impl Session {
             }
         };
         if !pSignature.is_null() {
-            // TODO(bweeks): This will cause a second sign call when this function is
-            // called again with an appropriately-sized buffer. Do we really need to
-            // sign twice for ECDSA? Consider storing the signature in the ctx for the next
+            // TODO(bweeks): This will cause a second sign call when this
+            // function is called again with an appropriately-sized
+            // buffer. Do we really need to sign twice for ECDSA?
+            // Consider storing the signature in the ctx for the next
             // call.
             if (unsafe { *pulSignatureLen } as usize) < signature.len() {
                 return Err(Error::BufferTooSmall);

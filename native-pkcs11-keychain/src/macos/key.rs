@@ -63,7 +63,8 @@ fn sigalg_to_seckeyalg(
             mask_generation_function,
             salt_length,
         } => {
-            //  SecurityFramework only supports digest == mgf, salt_length == len(digest).
+            //  SecurityFramework only supports digest == mgf, salt_length ==
+            // len(digest).
             if digest != mask_generation_function || digest.digest_len() != *salt_length as usize {
                 return Err(crate::ErrorKind::UnsupportedSignatureAlgorithm(
                     signature_algorithm.clone(),
