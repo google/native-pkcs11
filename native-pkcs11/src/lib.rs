@@ -218,15 +218,13 @@ cryptoki_fn!(
                 .with_default_directive(LevelFilter::WARN.into())
                 .from_env_lossy();
             let force_stderr = std::env::var("NATIVE_PKCS11_LOG_STDERR").is_ok();
-            if !force_stderr {
-                if let Ok(journald_layer) = tracing_journald::layer() {
-                    _ = Registry::default()
-                        .with(journald_layer.with_syslog_identifier("native-pkcs11".into()))
-                        .with(env_filter)
-                        .with(ErrorLayer::default())
-                        .try_init();
-                    return;
-                }
+            if !force_stderr && let Ok(journald_layer) = tracing_journald::layer() {
+                _ = Registry::default()
+                    .with(journald_layer.with_syslog_identifier("native-pkcs11".into()))
+                    .with(env_filter)
+                    .with(ErrorLayer::default())
+                    .try_init();
+                return;
             }
             _ = Registry::default()
                 .with(

@@ -15,7 +15,7 @@ authors = [
     "Kevin King <kcking@google.com>",
 ]
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.93.1"
 repository = "https://github.com/google/native-pkcs11"
 license = "Apache-2.0"
 
