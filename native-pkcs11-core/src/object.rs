@@ -194,10 +194,10 @@ impl Object {
     }
 
     pub fn matches(&self, others: &Attributes) -> bool {
-        if let Some(class) = others.get(AttributeType::Class) {
-            if *class != self.attribute(AttributeType::Class).unwrap() {
-                return false;
-            }
+        if let Some(class) = others.get(AttributeType::Class)
+            && *class != self.attribute(AttributeType::Class).unwrap()
+        {
+            return false;
         }
         for other in others {
             if let Some(attr) = self.attribute(other.attribute_type()) {

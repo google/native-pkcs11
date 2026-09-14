@@ -79,10 +79,10 @@ pub fn find_all_certificates() -> Result<Vec<SecIdentity>> {
         .limit(99)
         .search();
 
-    if let Err(e) = results {
-        if e.code() == errSecItemNotFound {
-            return Ok(vec![]);
-        }
+    if let Err(e) = results
+        && e.code() == errSecItemNotFound
+    {
+        return Ok(vec![]);
     }
 
     let loaded_identites = results?
