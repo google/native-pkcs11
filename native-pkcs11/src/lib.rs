@@ -136,8 +136,9 @@ macro_rules! valid_slot {
 //  Export necessary items for registering a custom Backend.
 pub use pkcs11_sys::{CK_FUNCTION_LIST, CK_FUNCTION_LIST_PTR_PTR, CK_RV, CKR_OK};
 pub static mut FUNC_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
-    // In this structure ‘version’ is the cryptoki specification version number. The major and minor
-    // versions must be set to 0x02 and 0x28 indicating a version 2.40 compatible structure.
+    // In this structure ‘version’ is the cryptoki specification version number.
+    // The major and minor versions must be set to 0x02 and 0x28 indicating a
+    // version 2.40 compatible structure.
     version: CK_VERSION { major: 2, minor: 4 },
     C_Initialize: Some(C_Initialize),
     C_Finalize: Some(C_Finalize),
